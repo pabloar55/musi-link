@@ -4,11 +4,9 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/firebase_options.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   //FirebaseCrashlytics.instance.crash();
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -23,16 +21,11 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        appBar: AppBar(title: Text("Musi.link"),),
         bottomNavigationBar: NavigationBar(
           destinations: [
-            NavigationDestination(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.search),
-              label: 'Search',
-            ),
+            NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
             NavigationDestination(
               icon: Icon(Icons.library_music),
               label: 'Library',
@@ -40,7 +33,7 @@ class MainApp extends StatelessWidget {
           ],
         ),
         body: Center(
-          child: ElevatedButton(onPressed: null, child: Icon( Icons.music_note)),
+          child: ElevatedButton(onPressed: null, child: Icon(Icons.music_note)),
         ),
       ),
     );
