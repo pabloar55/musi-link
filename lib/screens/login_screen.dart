@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/core/spotify_service.dart';
+import 'package:spotify_sdk/spotify_sdk.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,19 +22,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text("Conectar Spotify"),
                 ),
-                // En el botón de "Ver Estadísticas"
-                /*ElevatedButton(
+                   // List<Map<String, String>> _misCanciones = [];
+                ElevatedButton(
                   onPressed: () async {
-                    try {
-                      var tracks = await _spotifyService.getTopTracks();
-                      print("Tus top tracks: $tracks");
-                      // Aquí actualizarías el estado para mostrarlo en una lista
-                    } catch (e) {
-                      print(e);
+
+                    // 2. Pedir las canciones
+                    var canciones = await SpotifyService.instance.getTopTracks();
+                    
+                   /* // 3. Actualizar la pantalla
+                    setState(() {
+                      _misCanciones = canciones;
+                    });*/
+                    
+                    // Imprimir en consola para verlas ya
+                    for (var c in canciones) {
+                      print("🎵 ${c['title']} - ${c['artist']}");
                     }
-                  },
-                  child: Text("Cargar Top Tracks"),
-                )*/
+                                    },
+                  child: Text("Ver mis Top Tracks"),
+                )
               ],
             );
   }
