@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/firebase_options.dart';
+import 'package:musi_link/screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,6 @@ void main() async {
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -33,9 +33,9 @@ class MainApp extends StatelessWidget {
           ],
         ),
         body: Center(
-          child: ElevatedButton(onPressed: null, child: Icon(Icons.music_note)),
-        ),
-      ),
+            child: LoginScreen()
+        )
+    )
     );
   }
 }
