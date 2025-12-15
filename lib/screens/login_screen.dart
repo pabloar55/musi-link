@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/core/spotify_service.dart';
+import 'package:musi_link/screens/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,9 +19,25 @@ class _LoginScreenState extends State<LoginScreen> {
         Spacer(),
         ElevatedButton(
           onPressed: () async {
-            await _spotifyService.authorizeAndConnect();
+            var result = await _spotifyService.authorizeAndConnect();
+            if (!context.mounted) return;
+            if (result) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MainScreen()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Error al conectar con Spotify")),
+              );
+            }
           },
-          child: Text("Conectar Spotify"),
+          child: Row(
+            children: [
+              Text("Conectar Spotify"),
+              Icon(FontAwesomeIcons.spotify),
+            ],
+          ),
         ),
         Spacer(),
         /*List<Map<String, String>> _misCanciones = [];

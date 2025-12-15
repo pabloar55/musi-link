@@ -1,58 +1,35 @@
-import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:spotify_sdk/spotify_sdk.dart';
-import 'package:musi_link/core/check_spotify_auth.dart';
 
 class SpotifyService {
   // Singleton
   SpotifyService._();
   static final SpotifyService instance = SpotifyService._();
-
+  static const String _tokenKey = 'spotify_access_token';
+  static const FlutterSecureStorage _storage = FlutterSecureStorage();
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? "";
   final String _redirectUrl = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? "";
   String _accessToken = "";
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // Función ÚNICA para conectar
-  Future<void> authorizeAndConnect() async {
+  Future<bool> authorizeAndConnect() async {
     try {
-      print("Iniciando autenticación");
-
-      // PASO 1: Obtener el Token (Esto abre la app de Spotify y pide permiso)
       _accessToken = await SpotifySdk.getAccessToken(
         clientId: _clientId,
         redirectUrl: _redirectUrl,
-        // IMPORTANTE: 'app-remote-control' es obligatorio para conectar después
-        scope:
-            "app-remote-control,user-modify-playback-state,playlist-read-private,user-top-read",
+        scope: "app-remote-control,user-modify-playback-state,playlist-read-private,user-top-read",
       );
 
       if (_accessToken.isEmpty) {
-        print("No se obtuvo el token. El usuario canceló o hubo error.");
-        return;
+        return false;
       }
 
-      print("Token obtenido: $_accessToken");
+        await saveToken(_accessToken);
+        return true;
 
-      // Guardar el token para la próxima vez que abra la app
-      await CheckSpotifyAuth.saveToken(_accessToken);
-
-      print("Conectando al App Remote...");
-      var result = await SpotifySdk.connectToSpotifyRemote(
-        clientId: _clientId,
-        redirectUrl: _redirectUrl,
-      );
-
-      if (result) {
-        print("¡CONEXIÓN TOTALMENTE EXITOSA!");
-      } else {
-        print("Falló la conexión al Remote (pero tenemos token)");
-      }
     } on PlatformException catch (e) {
-      // Manejo específico de errores
+
       if (e.code == 'UserNotAuthorizedException') {
         print(
           "Error de Autorización: Revisa el SHA-1 en el Dashboard de Spotify.",
@@ -62,52 +39,42 @@ class SpotifyService {
       } else {
         print("Error de Plataforma: ${e.code} - ${e.message}");
       }
-    } catch (e) {
-      print("Error general: $e");
-    }
+      return false;
+    } 
   }
-
-  Future<List<Map<String, String>>> getTopTracks() async {
+    static Future<bool> isUserLoggedIn() async {
     try {
-      // time_range: 'short_term' (mes), 'medium_term' (6 meses), 'long_term' (siempre)
-      // limit: número de canciones (máx 50)
-      final url = Uri.parse(
-        'https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=10',
-      );
-
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer $_accessToken', // Usamos el token aquí
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List<dynamic> items = data['items'];
-
-        // Mapeamos los datos para sacar solo Titulo y Artista
-        List<Map<String, String>> tracks = items.map((item) {
-          final trackName = item['name'];
-          final artistName = item['artists'][0]['name']; // Primer artista
-          final imageUrl = item['album']['images'][0]['url']; // Carátula
-
-          return {
-            'title': trackName.toString(),
-            'artist': artistName.toString(),
-            'image': imageUrl.toString(),
-          };
-        }).toList();
-
-        print("🔥 Top Tracks descargados: ${tracks.length}");
-        return tracks;
-      } else {
-        print("❌ Error API: ${response.statusCode} - ${response.body}");
-        return [];
-      }
+      final token = await _storage.read(key: _tokenKey);
+      return token != null && token.isNotEmpty;
     } catch (e) {
-      print("❌ Error de conexión: $e");
-      return [];
+      print("Error al verificar token: $e");
+      return false;
     }
   }
+
+  static Future<String?> getSavedToken() async {
+    try {
+      return await _storage.read(key: _tokenKey);
+    } catch (e) {
+      print("Error al obtener token: $e");
+      return null;
+    }
+  }
+
+  static Future<void> saveToken(String token) async {
+    try {
+      await _storage.write(key: _tokenKey, value: token);
+    } catch (e) {
+      print("Error al guardar token: $e");
+    }
+  }
+
+  static Future<void> deleteToken() async {
+    try {
+      await _storage.delete(key: _tokenKey);
+    } catch (e) {
+      print("Error al eliminar token: $e");
+    }
+  }
+
 }

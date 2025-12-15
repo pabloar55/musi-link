@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class StatsScreen extends StatefulWidget {
+  const StatsScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.red,
+      color: Colors.amber,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text("K vida")],
+        children: [Text("Stats")],
         
       ),
     );
