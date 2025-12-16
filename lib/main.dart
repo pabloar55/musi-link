@@ -4,7 +4,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:musi_link/core/spotify_service.dart';
-import 'package:musi_link/firebase_options.dart';
+import 'package:musi_link/core/firebase_options.dart';
 import 'package:musi_link/screens/login_screen.dart';
 import 'package:musi_link/screens/main_screen.dart';
 
@@ -43,7 +43,6 @@ class _MainAppState extends State<MainApp> {
         future: _isLoggedInFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );

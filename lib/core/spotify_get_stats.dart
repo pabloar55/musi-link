@@ -1,22 +1,23 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-import 'package:musi_link/core/spotify_service.dart';
+import 'package:musi_link/core/tokens.dart';
 
 class SpotifyGetStats {
-  final _accessToken = SpotifyService.getSavedToken();
   Future<List<Map<String, String>>> getTopTracks() async {
     try {
+      print("----------Obteniendo top tracks...---------");
       // time_range: 'short_term' (mes), 'medium_term' (6 meses), 'long_term' (siempre)
       // limit: número de canciones (máx 50)
       final url = Uri.parse(
         'https://api.spotify.com/v1/me/top/tracks?time_range=medium_term&limit=10',
       );
 
+      final token = await Tokens.getSavedToken();
+
       final response = await http.get(
         url,
         headers: {
-          'Authorization': 'Bearer $_accessToken',
+          'Authorization': 'Bearer $token',
         },
       );
 

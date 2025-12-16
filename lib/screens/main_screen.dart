@@ -49,7 +49,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
         selectedIndex: currentPageIndex,
-        
+
         onDestinationSelected: (int index) {
           _pageController.animateToPage(
             index,

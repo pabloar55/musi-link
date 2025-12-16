@@ -14,51 +14,43 @@ class _LoginScreenState extends State<LoginScreen> {
   final SpotifyService _spotifyService = SpotifyService.instance;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Spacer(),
-        ElevatedButton(
-          onPressed: () async {
-            var result = await _spotifyService.authorizeAndConnect();
-            if (!context.mounted) return;
-            if (result) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => MainScreen()),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Error al conectar con Spotify")),
-              );
-            }
-          },
-          child: Row(
-            children: [
-              Text("Conectar Spotify"),
-              Icon(FontAwesomeIcons.spotify),
-            ],
-          ),
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Spacer(),
+            Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  var result = await _spotifyService.authorizeAndConnect();
+                  if (!context.mounted) return;
+                  if (result) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainScreen()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Error al conectar con Spotify"),
+                      ),
+                    );
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Conectar Spotify"),
+                    SizedBox(width: 10),
+                    Icon(FontAwesomeIcons.spotify),
+                  ],
+                ),
+              ),
+            ),
+            Spacer(),
+          ],
         ),
-        Spacer(),
-        /*List<Map<String, String>> _misCanciones = [];
-        ElevatedButton(
-          onPressed: () async {
-            // 2. Pedir las canciones
-            var canciones = await SpotifyService.instance.getTopTracks();
-
-            /* // 3. Actualizar la pantalla
-                    setState(() {
-                      _misCanciones = canciones;
-                    });*/
-
-            // Imprimir en consola para verlas ya
-            for (var c in canciones) {
-              print("🎵 ${c['title']} - ${c['artist']}");
-            }
-          },
-          child: Text("Ver mis Top Tracks"),
-        ),*/
-      ],
+      ),
     );
   }
 }
