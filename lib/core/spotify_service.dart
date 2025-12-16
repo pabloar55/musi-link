@@ -11,11 +11,11 @@ class SpotifyService {
   final String _redirectUrl = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? "";
 
   Future<bool> authorizeAndConnect() async {
-    var _accessToken = await getNewToken();
-    if (_accessToken == null) {
+    var accessToken = await getNewToken();
+    if (accessToken == null) {
       return false;
     }
-    await Tokens.saveToken(_accessToken);
+    await Tokens.saveToken(accessToken);
     return true;
   }
 
