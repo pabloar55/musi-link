@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:musi_link/core/spotify_service.dart';
 
@@ -7,19 +8,30 @@ class Tokens {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
   static Future<String?> getSavedToken() async {
     try {
-      var fechaGuardado = DateTime.parse(
-        await _storage.read(key: _timeKey) ?? "",
-      );
+      final timeString = await _storage.read(key: _timeKey);
+
+      // Si no hay fecha guardada, no hay token válido
+      if (timeString == null || timeString.isEmpty) {
+        return null;
+      }
+
+      final fechaGuardado = DateTime.tryParse(timeString);
+      if (fechaGuardado == null) {
+        return null;
+      }
+
+      // Si han pasado 58+ minutos, el token expiró → pedir uno nuevo
       if (DateTime.now().difference(fechaGuardado).inMinutes >= 58) {
-        var tokenNuevo = await SpotifyService.instance.getNewToken();
+        final tokenNuevo = await SpotifyService.instance.getNewToken();
         if (tokenNuevo != null) {
           await saveToken(tokenNuevo);
         }
         return tokenNuevo;
       }
+
       return await _storage.read(key: _tokenKey);
     } catch (e) {
-      print("Error al obtener token: $e");
+      debugPrint("Error al obtener token: $e");
       return null;
     }
   }
@@ -29,15 +41,16 @@ class Tokens {
       await _storage.write(key: _timeKey, value: DateTime.now().toString());
       await _storage.write(key: _tokenKey, value: token);
     } catch (e) {
-      print("Error al guardar token: $e");
+      debugPrint("Error al guardar token: $e");
     }
   }
 
   static Future<void> deleteToken() async {
     try {
       await _storage.delete(key: _tokenKey);
+      await _storage.delete(key: _timeKey);
     } catch (e) {
-      print("Error al eliminar token: $e");
+      debugPrint("Error al eliminar token: $e");
     }
   }
 }

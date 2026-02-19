@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:musi_link/core/tokens.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
@@ -24,7 +25,7 @@ class SpotifyService {
       final token = await Tokens.getSavedToken();
       return token != null && token.isNotEmpty;
     } catch (e) {
-      print("Error al verificar token: $e");
+      debugPrint("Error al verificar token: $e");
       return false;
     }
   }
@@ -38,7 +39,7 @@ class SpotifyService {
             "app-remote-control,user-modify-playback-state,playlist-read-private,user-top-read",
       );
     } on Exception catch (e) {
-      print(e.toString());
+      debugPrint(e.toString());
       return null;
     }
   }
