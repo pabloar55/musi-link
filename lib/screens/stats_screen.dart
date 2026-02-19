@@ -18,8 +18,14 @@ class _StatsScreenState extends State<StatsScreen>
   ContentType _selectedContent = ContentType.tracks;
   TimeRange _selectedTimeRange = TimeRange.shortTerm;
 
+  // Caché en memoria: guarda resultados por combinación tipo+rango
+  // para no repetir llamadas a la API innecesariamente
+  final Map<String, List<Map<String, String>>> _cache = {};
+
   @override
   bool get wantKeepAlive => true;
+
+  String _cacheKey() => '${_selectedContent.name}_${_selectedTimeRange.name}';
 
   @override
   void initState() {
@@ -35,11 +41,25 @@ class _StatsScreenState extends State<StatsScreen>
     };
     
     final timeRange = timeRangeMap[_selectedTimeRange]!;
-    
+    final key = _cacheKey();
+
+    // Si ya tenemos datos en caché, los devolvemos directamente
+    if (_cache.containsKey(key)) {
+      _dataFuture = Future.value(_cache[key]);
+      return;
+    }
+
+    // Si no hay caché, llamamos a la API y guardamos el resultado
     if (_selectedContent == ContentType.tracks) {
-      _dataFuture = SpotifyGetStats.instance.getTopTracks(10, timeRange);
+      _dataFuture = SpotifyGetStats.instance.getTopTracks(10, timeRange).then((result) {
+        _cache[key] = result;
+        return result;
+      });
     } else {
-      _dataFuture = SpotifyGetStats.instance.getTopArtists(10, timeRange);
+      _dataFuture = SpotifyGetStats.instance.getTopArtists(10, timeRange).then((result) {
+        _cache[key] = result;
+        return result;
+      });
     }
   }
 
@@ -68,12 +88,10 @@ class _StatsScreenState extends State<StatsScreen>
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: _selectedContent == ContentType.tracks
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: _selectedContent == ContentType.tracks
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('Tracks', style: TextStyle(fontSize: 12)),
                   ),
@@ -88,12 +106,10 @@ class _StatsScreenState extends State<StatsScreen>
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: _selectedContent == ContentType.artists
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: _selectedContent == ContentType.artists
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('Artists', style: TextStyle(fontSize: 12)),
                   ),
@@ -114,12 +130,10 @@ class _StatsScreenState extends State<StatsScreen>
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      backgroundColor: _selectedTimeRange == TimeRange.shortTerm
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: _selectedTimeRange == TimeRange.shortTerm
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('4 weeks', style: TextStyle(fontSize: 11)),
                   ),
@@ -134,12 +148,10 @@ class _StatsScreenState extends State<StatsScreen>
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      backgroundColor: _selectedTimeRange == TimeRange.mediumTerm
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: _selectedTimeRange == TimeRange.mediumTerm
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('6 months', style: TextStyle(fontSize: 11)),
                   ),
@@ -154,12 +166,10 @@ class _StatsScreenState extends State<StatsScreen>
                           },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: _selectedTimeRange == TimeRange.longTerm
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: _selectedTimeRange == TimeRange.longTerm
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('1 year', style: TextStyle(fontSize: 11)),
                   ),

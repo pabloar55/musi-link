@@ -39,40 +39,59 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      themeMode: ThemeMode.system,
       darkTheme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark, // Define que la app es oscura
+        brightness: Brightness.dark,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF1DB954),
-          
-          surface: Color(0xFF050505),
-          onPrimary: Colors.black,
+          primary: Color(0xFF1DB954),       
+          onPrimary: Colors.black,          // Texto sobre verde
+          secondary: Color(0xFF1ED760),     // Verde más claro para acentos
           onSecondary: Colors.black,
-          onSurface: Colors.white,
+          surface: Color(0xFF121212),        // Fondo principal oscuro
+          onSurface: Colors.white,          // Texto sobre fondo
+          surfaceContainerHighest: Color(0xFF2A2A2A), // Botones inactivos, cards
+          error: Color(0xFFCF6679),
+          onError: Colors.black,
         ),
-        // Estilo global de las Cards
         cardTheme: CardThemeData(
           color: const Color(0xFF181818),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF121212),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Color(0xFF181818),
+          indicatorColor: Color(0xFF1DB954),
+        ),
       ),
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF1AA34A),
-          secondary: Color(0xFFBA55D3),
-          
-          surface: Colors.white,
-          onPrimary: Colors.white,
-          onSurface: Color(0xFF121212),
+          primary: Color(0xFF1AA34A),       // Verde Spotify (más oscuro para light)
+          onPrimary: Colors.white,          // Texto sobre verde
+          secondary: Color(0xFF1DB954),     // Verde para acentos
+          onSecondary: Colors.white,
+          surface: Colors.white,            // Fondo principal
+          onSurface: Color(0xFF121212),     // Texto sobre fondo
+          surfaceContainerHighest: Color(0xFFE8E8E8), // Botones inactivos, cards
+          error: Color(0xFFB00020),
+          onError: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFFF8F9FA),
           foregroundColor: Color(0xFF121212),
           elevation: 0,
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Color(0xFFF8F9FA),
+          indicatorColor: Color(0xFF1AA34A),
         ),
       ),
       home: FutureBuilder<bool>(
