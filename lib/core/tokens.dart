@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:musi_link/core/spotify_service.dart';
 
 class Tokens {
+
+  // Callback para obtener un nuevo token cuando el actual expire. 
+  static Future<String?> Function()? onTokenExpired; 
+
   static const String _tokenKey = 'spotify_access_token';
   static const String _timeKey = 'time';
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
+
   static Future<String?> getSavedToken() async {
     try {
       final timeString = await _storage.read(key: _timeKey);
@@ -22,7 +26,7 @@ class Tokens {
 
       // Si han pasado 58+ minutos, el token expiró, se pide uno nuevo
       if (DateTime.now().difference(fechaGuardado).inMinutes >= 58) {
-        final tokenNuevo = await SpotifyService.instance.getNewToken();
+        final tokenNuevo = await onTokenExpired?.call();
         if (tokenNuevo != null) {
           await saveToken(tokenNuevo);
         }

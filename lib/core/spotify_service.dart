@@ -5,7 +5,10 @@ import 'package:spotify_sdk/spotify_sdk.dart';
 
 class SpotifyService {
   // Singleton
-  SpotifyService._();
+  SpotifyService._() {
+    // Inyecta el callback de refresh en Tokens para romper la dependencia circular
+    Tokens.onTokenExpired = () => getNewToken();
+  }
   static final SpotifyService instance = SpotifyService._();
 
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? "";
