@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/components/artist_tile.dart';
+import 'package:musi_link/components/filter_button.dart';
+import 'package:musi_link/components/track_tile.dart';
+import 'package:musi_link/core/models/artist.dart';
+import 'package:musi_link/core/models/track.dart';
 import 'package:musi_link/core/spotify_get_stats.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -14,16 +19,26 @@ enum TimeRange { shortTerm, mediumTerm, longTerm }
 
 class _StatsScreenState extends State<StatsScreen>
     with AutomaticKeepAliveClientMixin<StatsScreen> {
-  late Future<List<Map<String, String>>> _dataFuture;
+  late Future<List<dynamic>> _dataFuture;
   ContentType _selectedContent = ContentType.tracks;
   TimeRange _selectedTimeRange = TimeRange.shortTerm;
 
-  // Caché en memoria: guarda resultados por combinación tipo+rango
-  // para no repetir llamadas a la API innecesariamente
-  final Map<String, List<Map<String, String>>> _cache = {};
+  final Map<String, List<dynamic>> _cache = {};
 
   @override
   bool get wantKeepAlive => true;
+
+  static const _timeRangeMap = {
+    TimeRange.shortTerm: 'short_term',
+    TimeRange.mediumTerm: 'medium_term',
+    TimeRange.longTerm: 'long_term',
+  };
+
+  static const _timeRangeLabels = {
+    TimeRange.shortTerm: '4 weeks',
+    TimeRange.mediumTerm: '6 months',
+    TimeRange.longTerm: '1 year',
+  };
 
   String _cacheKey() => '${_selectedContent.name}_${_selectedTimeRange.name}';
 
@@ -34,33 +49,41 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   void _loadData() {
-    final timeRangeMap = {
-      TimeRange.shortTerm: 'short_term',
-      TimeRange.mediumTerm: 'medium_term',
-      TimeRange.longTerm: 'long_term',
-    };
-    
-    final timeRange = timeRangeMap[_selectedTimeRange]!;
+    final timeRange = _timeRangeMap[_selectedTimeRange]!;
     final key = _cacheKey();
 
-    // Si ya tenemos datos en caché, los devolvemos directamente
     if (_cache.containsKey(key)) {
       _dataFuture = Future.value(_cache[key]);
       return;
     }
 
-    // Si no hay caché, llamamos a la API y guardamos el resultado
+    final api = SpotifyGetStats.instance;
+
     if (_selectedContent == ContentType.tracks) {
-      _dataFuture = SpotifyGetStats.instance.getTopTracks(10, timeRange).then((result) {
+      _dataFuture = api.getTopTracks(10, timeRange).then((result) {
         _cache[key] = result;
         return result;
       });
     } else {
-      _dataFuture = SpotifyGetStats.instance.getTopArtists(10, timeRange).then((result) {
+      _dataFuture = api.getTopArtists(10, timeRange).then((result) {
         _cache[key] = result;
         return result;
       });
     }
+  }
+
+  void _onContentChanged(ContentType type) {
+    setState(() {
+      _selectedContent = type;
+      _loadData();
+    });
+  }
+
+  void _onTimeRangeChanged(TimeRange range) {
+    setState(() {
+      _selectedTimeRange = range;
+      _loadData();
+    });
   }
 
   @override
@@ -73,165 +96,78 @@ class _StatsScreenState extends State<StatsScreen>
           child: Column(
             spacing: 12,
             children: [
-              // Control para seleccionar Tracks o Artists
-              Row(
-                spacing: 8,
-                children: [
-                  ElevatedButton(
-                    onPressed: _selectedContent == ContentType.tracks
-                        ? null
-                        : () {
-                            setState(() {
-                              _selectedContent = ContentType.tracks;
-                              _loadData();
-                            });
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('Tracks', style: TextStyle(fontSize: 12)),
-                  ),
-                  ElevatedButton(
-                    onPressed: _selectedContent == ContentType.artists
-                        ? null
-                        : () {
-                            setState(() {
-                              _selectedContent = ContentType.artists;
-                              _loadData();
-                            });
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('Artists', style: TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-              // Control para seleccionar rango de tiempo
-              Row(
-                spacing: 8,
-                children: [
-                  ElevatedButton(
-                    onPressed: _selectedTimeRange == TimeRange.shortTerm
-                        ? null
-                        : () {
-                            setState(() {
-                              _selectedTimeRange = TimeRange.shortTerm;
-                              _loadData();
-                            });
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('4 weeks', style: TextStyle(fontSize: 11)),
-                  ),
-                  ElevatedButton(
-                    onPressed: _selectedTimeRange == TimeRange.mediumTerm
-                        ? null
-                        : () {
-                            setState(() {
-                              _selectedTimeRange = TimeRange.mediumTerm;
-                              _loadData();
-                            });
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('6 months', style: TextStyle(fontSize: 11)),
-                  ),
-                  ElevatedButton(
-                    onPressed: _selectedTimeRange == TimeRange.longTerm
-                        ? null
-                        : () {
-                            setState(() {
-                              _selectedTimeRange = TimeRange.longTerm;
-                              _loadData();
-                            });
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('1 year', style: TextStyle(fontSize: 11)),
-                  ),
-                ],
-              ),
+              _buildContentTypeFilter(),
+              _buildTimeRangeFilter(),
             ],
           ),
         ),
-        Expanded(
-          child: FutureBuilder<List<Map<String, String>>>(
-            future: _dataFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+        Expanded(child: _buildDataList()),
+      ],
+    );
+  }
 
-              final data = snapshot.data ?? [];
-              if (data.isEmpty) {
-                return const Center(child: Text('No hay datos disponibles'));
-              }
-
-              return ListView.builder(
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  final item = data[index];
-                  final image = item['image'];
-                  
-                  if (_selectedContent == ContentType.tracks) {
-                    return ListTile(
-                      leading: image != null && image.isNotEmpty
-                          ? Image.network(
-                              image,
-                              width: 56,
-                              height: 56,
-                              fit: BoxFit.cover,
-                            )
-                          : const Icon(Icons.music_note),
-                      title: Text(item['title'] ?? ''),
-                      subtitle: Text(item['artist'] ?? ''),
-                    );
-                  } else {
-                    return ListTile(
-                      leading: image != null && image.isNotEmpty
-                          ? Image.network(
-                              image,
-                              width: 56,
-                              height: 56,
-                              fit: BoxFit.cover,
-                            )
-                          : const Icon(Icons.music_note),
-                      title: Text(item['name'] ?? ''),
-                    );
-                  }
-                },
-              );
-            },
-          ),
+  Widget _buildContentTypeFilter() {
+    return Row(
+      spacing: 8,
+      children: [
+        FilterButton(
+          label: 'Tracks',
+          isSelected: _selectedContent == ContentType.tracks,
+          onPressed: () => _onContentChanged(ContentType.tracks),
+        ),
+        FilterButton(
+          label: 'Artists',
+          isSelected: _selectedContent == ContentType.artists,
+          onPressed: () => _onContentChanged(ContentType.artists),
         ),
       ],
+    );
+  }
+
+  Widget _buildTimeRangeFilter() {
+    return Row(
+      spacing: 8,
+      children: TimeRange.values.map((range) {
+        return FilterButton(
+          label: _timeRangeLabels[range]!,
+          isSelected: _selectedTimeRange == range,
+          onPressed: () => _onTimeRangeChanged(range),
+          fontSize: 11,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDataList() {
+    return FutureBuilder<List<dynamic>>(
+      future: _dataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        final data = snapshot.data ?? [];
+        if (data.isEmpty) {
+          return const Center(child: Text('No hay datos disponibles'));
+        }
+
+        return ListView.builder(
+          itemCount: data.length,
+          itemBuilder: (context, index) {
+            final item = data[index];
+            if (item is Track) {
+              return TrackTile(track: item);
+            } else if (item is Artist) {
+              return ArtistTile(artist: item);
+            }
+            return const SizedBox.shrink();
+          },
+        );
+      },
     );
   }
 }

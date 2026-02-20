@@ -20,7 +20,7 @@ class Tokens {
         return null;
       }
 
-      // Si han pasado 58+ minutos, el token expiró → pedir uno nuevo
+      // Si han pasado 58+ minutos, el token expiró, se pide uno nuevo
       if (DateTime.now().difference(fechaGuardado).inMinutes >= 58) {
         final tokenNuevo = await SpotifyService.instance.getNewToken();
         if (tokenNuevo != null) {
