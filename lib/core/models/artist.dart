@@ -1,20 +1,24 @@
 class Artist {
   final String name;
   final String imageUrl;
+  final List<String> genres;
 
   const Artist({
     required this.name,
     required this.imageUrl,
+    required this.genres,
   });
 
   factory Artist.fromJson(Map<String, dynamic> json) {
     final images = json['images'] as List<dynamic>?;
+    final genresList = json['genres'] as List<dynamic>?;
 
     return Artist(
       name: (json['name'] ?? 'Artista desconocido').toString(),
       imageUrl: (images != null && images.isNotEmpty)
           ? (images[0]['url'] ?? '').toString()
           : '',
+      genres: genresList?.map((g) => g.toString()).toList() ?? [],
     );
   }
 }

@@ -4,11 +4,12 @@ import 'package:musi_link/core/tokens.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 
 class SpotifyService {
-  // Singleton
+
   SpotifyService._() {
     // Inyecta el callback de refresh en Tokens para romper la dependencia circular
     Tokens.onTokenExpired = () => getNewToken();
   }
+    // Singleton
   static final SpotifyService instance = SpotifyService._();
 
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? "";

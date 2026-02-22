@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/components/artist_tile.dart';
 import 'package:musi_link/components/filter_button.dart';
+import 'package:musi_link/components/genre_tile.dart';
 import 'package:musi_link/components/track_tile.dart';
 import 'package:musi_link/core/models/artist.dart';
+import 'package:musi_link/core/models/genre.dart';
 import 'package:musi_link/core/models/track.dart';
 import 'package:musi_link/core/spotify_get_stats.dart';
 
@@ -13,7 +15,7 @@ class StatsScreen extends StatefulWidget {
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-enum ContentType { tracks, artists }
+enum ContentType { tracks, artists, genres }
 
 enum TimeRange { shortTerm, mediumTerm, longTerm }
 
@@ -28,7 +30,7 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   bool get wantKeepAlive => true;
 
-  static const _timeRangeMap = {
+  static const _timeRanges = {
     TimeRange.shortTerm: 'short_term',
     TimeRange.mediumTerm: 'medium_term',
     TimeRange.longTerm: 'long_term',
@@ -49,7 +51,7 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   void _loadData() {
-    final timeRange = _timeRangeMap[_selectedTimeRange]!;
+    final timeRange = _timeRanges[_selectedTimeRange]!;
     final key = _cacheKey();
 
     if (_cache.containsKey(key)) {
@@ -59,16 +61,22 @@ class _StatsScreenState extends State<StatsScreen>
 
     final api = SpotifyGetStats.instance;
 
-    if (_selectedContent == ContentType.tracks) {
-      _dataFuture = api.getTopTracks(10, timeRange).then((result) {
-        _cache[key] = result;
-        return result;
-      });
-    } else {
-      _dataFuture = api.getTopArtists(10, timeRange).then((result) {
-        _cache[key] = result;
-        return result;
-      });
+    switch (_selectedContent) {
+      case ContentType.tracks:
+        _dataFuture = api.getTopTracks(10, timeRange).then((result) {
+          _cache[key] = result;
+          return result;
+        });
+      case ContentType.artists:
+        _dataFuture = api.getTopArtists(10, timeRange).then((result) {
+          _cache[key] = result;
+          return result;
+        });
+      case ContentType.genres:
+        _dataFuture = api.getTopGenres(10, timeRange).then((result) {
+          _cache[key] = result;
+          return result;
+        });
     }
   }
 
@@ -120,6 +128,11 @@ class _StatsScreenState extends State<StatsScreen>
           isSelected: _selectedContent == ContentType.artists,
           onPressed: () => _onContentChanged(ContentType.artists),
         ),
+        FilterButton(
+          label: 'Genres',
+          isSelected: _selectedContent == ContentType.genres,
+          onPressed: () => _onContentChanged(ContentType.genres),
+        ),
       ],
     );
   }
@@ -163,6 +176,8 @@ class _StatsScreenState extends State<StatsScreen>
               return TrackTile(track: item);
             } else if (item is Artist) {
               return ArtistTile(artist: item);
+            } else if (item is Genre) {
+              return GenreTile(genre: item, rank: index + 1);
             }
             return const SizedBox.shrink();
           },
