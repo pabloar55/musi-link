@@ -4,12 +4,11 @@ import 'package:musi_link/core/tokens.dart';
 import 'package:spotify_sdk/spotify_sdk.dart';
 
 class SpotifyService {
-
   SpotifyService._() {
-    // Inyecta el callback de refresh en Tokens para romper la dependencia circular
+    // Callback de Tokens
     Tokens.onTokenExpired = () => getNewToken();
   }
-    // Singleton
+  // Singleton
   static final SpotifyService instance = SpotifyService._();
 
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? "";
@@ -26,8 +25,8 @@ class SpotifyService {
 
   static Future<bool> isUserLoggedIn() async {
     try {
-      final token = await Tokens.getSavedToken();
-      return token != null && token.isNotEmpty;
+      instance;
+      return await Tokens.hasValidToken();
     } catch (e) {
       debugPrint("Error al verificar token: $e");
       return false;

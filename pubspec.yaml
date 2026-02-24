@@ -11,9 +11,10 @@ dependencies:
   firebase_analytics: ^12.0.4
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
+  google_sign_in: ^6.2.2
+  firebase_crashlytics: ^5.0.5
   http: ^1.2.0  # Para llamadas a la API
   flutter_secure_storage: ^10.0.0 # Para guardar el token de forma segura
-  firebase_crashlytics: ^5.0.5
   spotify_sdk: ^3.0.2
   font_awesome_flutter: ^10.12.0 # Para iconos
   flutter_dotenv: ^6.0.0

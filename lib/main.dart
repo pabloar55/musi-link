@@ -1,13 +1,13 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:musi_link/core/spotify_service.dart';
 import 'package:musi_link/core/firebase_options.dart';
 import 'package:musi_link/core/theme/app_theme.dart';
-import 'package:musi_link/screens/login_screen.dart';
-import 'package:musi_link/screens/main_screen.dart';
+import 'package:musi_link/screens/auth_screen.dart';
+import 'package:musi_link/screens/spotify_connect_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,21 +20,8 @@ void main() async {
   runApp(const MainApp());
 }
 
-class MainApp extends StatefulWidget {
+class MainApp extends StatelessWidget {
   const MainApp({super.key});
-
-  @override
-  State<MainApp> createState() => _MainAppState();
-}
-
-class _MainAppState extends State<MainApp> {
-  late Future<bool> _isLoggedInFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _isLoggedInFuture = SpotifyService.isUserLoggedIn();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +29,8 @@ class _MainAppState extends State<MainApp> {
       themeMode: ThemeMode.system,
       darkTheme: AppTheme.darkTheme,
       theme: AppTheme.lightTheme,
-      home: FutureBuilder<bool>(
-        future: _isLoggedInFuture,
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
@@ -51,11 +38,13 @@ class _MainAppState extends State<MainApp> {
             );
           }
 
-          if (snapshot.hasData && snapshot.data == true) {
-            return const MainScreen();
-          } else {
-            return LoginScreen();
+          // Si hay usuario de Firebase → verificar/conectar Spotify
+          if (snapshot.hasData && snapshot.data != null) {
+            return const SpotifyConnectScreen();
           }
+
+          // Si no hay sesión de Firebase → pantalla de auth
+          return const AuthScreen();
         },
       ),
     );

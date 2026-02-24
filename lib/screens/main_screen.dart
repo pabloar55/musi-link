@@ -26,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Musi.link")),
+      appBar: AppBar(title: Image.asset('assets/images/logo.png', width: 150)),
 
       body: PageView(
         controller: _pageController,

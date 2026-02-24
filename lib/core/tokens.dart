@@ -10,30 +10,52 @@ class Tokens {
   static const String _timeKey = 'time';
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
+  /// Comprueba si hay un token guardado y no expirado, SIN intentar renovar.
+  static Future<bool> hasValidToken() async {
+    try {
+      final timeString = await _storage.read(key: _timeKey);
+      final fechaToken = timeString != null && timeString.isNotEmpty
+          ? DateTime.tryParse(timeString)
+          : null;
+
+      final bool expirado = fechaToken == null ||
+          DateTime.now().difference(fechaToken).inMinutes >= 58;
+
+      if (expirado) return false;
+
+      final tokenGuardado = await _storage.read(key: _tokenKey);
+      return tokenGuardado != null && tokenGuardado.isNotEmpty;
+    } catch (e) {
+      debugPrint("Error al verificar token: $e");
+      return false;
+    }
+  }
+
   static Future<String?> getSavedToken() async {
     try {
       final timeString = await _storage.read(key: _timeKey);
+      final fechaToken = timeString != null && timeString.isNotEmpty
+          ? DateTime.tryParse(timeString)
+          : null;
 
-      // Si no hay fecha guardada, no hay token válido
-      if (timeString == null || timeString.isEmpty) {
-        return null;
-      }
+      final bool expirado = fechaToken == null ||
+          DateTime.now().difference(fechaToken).inMinutes >= 58;
 
-      final fechaGuardado = DateTime.tryParse(timeString);
-      if (fechaGuardado == null) {
-        return null;
-      }
+      final tokenGuardado = await _storage.read(key: _tokenKey);
 
-      // Si han pasado 58+ minutos, el token expiró, se pide uno nuevo
-      if (DateTime.now().difference(fechaGuardado).inMinutes >= 58) {
+      if (tokenGuardado == null || expirado) {
+        debugPrint("⏰ Token nulo o expirado, intentando renovar...");
         final tokenNuevo = await onTokenExpired?.call();
         if (tokenNuevo != null) {
           await saveToken(tokenNuevo);
+          return tokenNuevo;
+        } else {
+          debugPrint("❌ No se pudo renovar el token");
+          return null;
         }
-        return tokenNuevo;
       }
 
-      return await _storage.read(key: _tokenKey);
+      return tokenGuardado;
     } catch (e) {
       debugPrint("Error al obtener token: $e");
       return null;
