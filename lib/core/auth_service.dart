@@ -10,17 +10,17 @@ class AuthService {
   static final AuthService instance = AuthService._();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  bool _googleInitialized = false;
+
+  Future<void> _ensureGoogleInitialized() async {
+    if (_googleInitialized) return;
+    await _googleSignIn.initialize();
+    _googleInitialized = true;
+  }
 
   /// Usuario actual de Firebase
   User? get currentUser => _auth.currentUser;
-
-  /// Stream de cambios en el estado de autenticación.
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
-
-  // ---------------------------------------------------------------------------
-  // Email + Contraseña
-  // ---------------------------------------------------------------------------
 
   /// Registra un nuevo usuario con email y contraseña.
   /// Crea también su perfil en Firestore.
@@ -72,20 +72,20 @@ class AuthService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Google Sign-In
-  // ---------------------------------------------------------------------------
-
   /// Inicia sesión con Google.
   /// Si es la primera vez, crea el perfil en Firestore.
   Future<User?> signInWithGoogle() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
+      await _ensureGoogleInitialized();
+
+      final googleUser = _googleSignIn.supportsAuthenticate()
+          ? await _googleSignIn.authenticate()
+          : await _googleSignIn.attemptLightweightAuthentication();
+
       if (googleUser == null) return null; // Usuario canceló
 
-      final googleAuth = await googleUser.authentication;
+      final googleAuth = googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -99,7 +99,6 @@ class AuthService {
             uid: user.uid,
             email: user.email ?? '',
             displayName: user.displayName ?? googleUser.displayName ?? '',
-            photoUrl: user.photoURL ?? googleUser.photoUrl ?? '',
           );
         } else {
           await UserService.instance.updateLastLogin(user.uid);
@@ -115,12 +114,9 @@ class AuthService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Cerrar sesión
-  // ---------------------------------------------------------------------------
-
-  /// Cierra sesión de Firebase y Google (si aplica).
+  /// Cierra sesión de Firebase y Google
   Future<void> signOut() async {
+    await _ensureGoogleInitialized();
     await _googleSignIn.signOut();
     await _auth.signOut();
   }

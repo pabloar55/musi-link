@@ -38,12 +38,12 @@ class MainApp extends StatelessWidget {
             );
           }
 
-          // Si hay usuario de Firebase → verificar/conectar Spotify
+          // Si hay usuario de Firebase
           if (snapshot.hasData && snapshot.data != null) {
             return const SpotifyConnectScreen();
           }
 
-          // Si no hay sesión de Firebase → pantalla de auth
+          // Si no hay sesión de Firebase
           return const AuthScreen();
         },
       ),

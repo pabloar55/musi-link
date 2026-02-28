@@ -15,7 +15,6 @@ class UserService {
     required String uid,
     required String email,
     required String displayName,
-    String photoUrl = '',
   }) async {
     try {
       final now = DateTime.now();
@@ -23,7 +22,6 @@ class UserService {
         uid: uid,
         email: email,
         displayName: displayName,
-        photoUrl: photoUrl,
         createdAt: now,
         lastLogin: now,
       );
@@ -68,12 +66,23 @@ class UserService {
     }
   }
 
-  /// Vincula el Spotify ID al perfil del usuario.
-  Future<void> linkSpotifyId(String uid, String spotifyId) async {
+  /// Vincula datos de Spotify (id y foto de perfil) al usuario.
+  Future<void> linkSpotifyProfile(
+    String uid, {
+    required String spotifyId,
+    required String photoUrl,
+  }) async {
     try {
-      await _usersRef.doc(uid).update({'spotifyId': spotifyId});
+      final updates = <String, dynamic>{
+        'spotifyId': spotifyId,
+      };
+      if (photoUrl.trim().isNotEmpty) {
+        updates['photoUrl'] = photoUrl;
+      }
+
+      await _usersRef.doc(uid).update(updates);
     } catch (e) {
-      debugPrint("❌ Error al vincular Spotify ID: $e");
+      debugPrint("❌ Error al vincular perfil de Spotify: $e");
     }
   }
 

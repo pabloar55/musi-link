@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/core/auth_service.dart';
 
 /// Pantalla de autenticación con Firebase.
@@ -30,10 +31,6 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Acciones
-  // ---------------------------------------------------------------------------
-
   Future<void> _submitEmailForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -56,7 +53,6 @@ class _AuthScreenState extends State<AuthScreen> {
       if (user == null && mounted) {
         _showError("No se pudo autenticar. Inténtalo de nuevo.");
       }
-      // La navegación la gestiona el StreamBuilder de main.dart
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
@@ -73,7 +69,6 @@ class _AuthScreenState extends State<AuthScreen> {
       if (user == null && mounted) {
         _showError("No se pudo iniciar sesión con Google.");
       }
-      // La navegación la gestiona el StreamBuilder de main.dart
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
@@ -109,10 +104,6 @@ class _AuthScreenState extends State<AuthScreen> {
         return 'Error de autenticación ($code).';
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // UI
-  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +250,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   height: 48,
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signInWithGoogle,
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    icon: const Icon(FontAwesomeIcons.google, size: 20),
                     label: const Text("Continuar con Google"),
                   ),
                 ),

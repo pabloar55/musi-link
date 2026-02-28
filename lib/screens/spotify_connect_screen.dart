@@ -23,13 +23,16 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     _checkExistingToken();
   }
 
-  /// Si ya hay un token de Spotify válido, salta directamente a MainScreen.
+  /// Si ya hay credenciales de Spotify guardadas, intenta restaurar la sesión.
+  /// El paquete `spotify` renueva el token automáticamente con el refresh_token.
   Future<void> _checkExistingToken() async {
-    final isLoggedIn = await SpotifyService.isUserLoggedIn();
-    if (isLoggedIn && mounted) {
+    // Intentar restaurar sesión silenciosamente (refresh automático si expiró)
+    final restored = await _spotifyService.tryRestoreSession();
+    if (restored && mounted) {
       _goToMain();
       return;
     }
+    // No hay credenciales o falló → mostrar botón "Conectar Spotify"
     if (mounted) setState(() => _isLoading = false);
   }
 

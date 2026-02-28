@@ -1,81 +1,79 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:musi_link/core/models/artist.dart';
+import 'package:musi_link/core/models/artist.dart' as app;
 import 'package:musi_link/core/models/genre.dart';
-import 'package:musi_link/core/models/track.dart';
-import 'package:musi_link/core/tokens.dart';
+import 'package:musi_link/core/models/track.dart' as app;
+import 'package:musi_link/core/spotify_service.dart';
+import 'package:spotify/spotify.dart' show TimeRange;
 
+/// Obtiene estadísticas del usuario vía el paquete `spotify`.
+///
+/// Usa [SpotifyService.api] que ya maneja token refresh automáticamente.
 class SpotifyGetStats {
   SpotifyGetStats._();
   static final SpotifyGetStats instance = SpotifyGetStats._();
 
-  static const String _baseUrl = 'https://api.spotify.com/v1/me/top';
+  static const _timeRangeMap = {
+    'short_term': TimeRange.shortTerm,
+    'medium_term': TimeRange.mediumTerm,
+    'long_term': TimeRange.longTerm,
+  };
 
-  /// Método genérico para obtener el top de cualquier tipo (tracks/artists).
-  /// Elimina la duplicación de lógica HTTP entre getTopTracks y getTopArtists.
-  Future<List<T>> _getTop<T>({
-    required String endpoint,
-    required int limit,
-    required String timeRange,
-    required T Function(Map<String, dynamic>) fromJson,
-  }) async {
+  Future<List<app.Track>> getTopTracks(int limit, String timeRange) async {
     try {
-      debugPrint("----------Obteniendo top $endpoint...---------");
-      final url = Uri.parse('$_baseUrl/$endpoint?time_range=$timeRange&limit=$limit');
+      debugPrint("----------Obteniendo top tracks...---------");
+      final api = SpotifyService.instance.api;
+      final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
+      final pages = api.me.topTracks(timeRange: tr);
+      final page = await pages.first(limit);
 
-      final token = await Tokens.getSavedToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("❌ No hay token disponible");
-        return [];
-      }
-
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List<dynamic> items = data['items'] ?? [];
-        return items
-            .cast<Map<String, dynamic>>()
-            .map(fromJson)
-            .toList();
-      } else {
-        debugPrint("❌ Error API: ${response.statusCode} - ${response.body}");
-        return [];
-      }
+      return page.items?.map((t) {
+            final images = t.album?.images;
+            final imageUrl =
+                (images != null && images.isNotEmpty) ? images.first.url ?? '' : '';
+            final artistName = (t.artists != null && t.artists!.isNotEmpty)
+                ? t.artists!.first.name ?? 'Artista desconocido'
+                : 'Artista desconocido';
+            return app.Track(
+              title: t.name ?? 'Sin título',
+              artist: artistName,
+              imageUrl: imageUrl,
+            );
+          }).toList() ??
+          [];
     } catch (e) {
-      debugPrint("❌ Error de conexión: $e");
+      debugPrint("❌ Error al obtener top tracks: $e");
       return [];
     }
   }
 
-  Future<List<Track>> getTopTracks(int limit, String timeRange) {
-    return _getTop(
-      endpoint: 'tracks',
-      limit: limit,
-      timeRange: timeRange,
-      fromJson: Track.fromJson,
-    );
+  Future<List<app.Artist>> getTopArtists(int limit, String timeRange) async {
+    try {
+      debugPrint("----------Obteniendo top artists...---------");
+      final api = SpotifyService.instance.api;
+      final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
+      final pages = api.me.topArtists(timeRange: tr);
+      final page = await pages.first(limit);
+
+      return page.items?.map((a) {
+            final images = a.images;
+            final imageUrl =
+                (images != null && images.isNotEmpty) ? images.first.url ?? '' : '';
+            return app.Artist(
+              name: a.name ?? 'Artista desconocido',
+              imageUrl: imageUrl,
+              genres: a.genres?.toList() ?? [],
+            );
+          }).toList() ??
+          [];
+    } catch (e) {
+      debugPrint("❌ Error al obtener top artists: $e");
+      return [];
+    }
   }
 
-  Future<List<Artist>> getTopArtists(int limit, String timeRange) {
-    return _getTop(
-      endpoint: 'artists',
-      limit: limit,
-      timeRange: timeRange,
-      fromJson: Artist.fromJson,
-    );
-  }
-
-  /// Obtiene los géneros más frecuentes a partir de los top artists.
-  /// Pide hasta 50 artistas para tener buena representación de géneros.
   Future<List<Genre>> getTopGenres(int limit, String timeRange) async {
     final artists = await getTopArtists(50, timeRange);
 
-    // Contar ocurrencias de cada género
     final genreCount = <String, int>{};
     for (final artist in artists) {
       for (final genre in artist.genres) {
@@ -85,7 +83,6 @@ class SpotifyGetStats {
 
     if (genreCount.isEmpty) return [];
 
-    // Ordenar por frecuencia descendente
     final sorted = genreCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
