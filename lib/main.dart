@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:musi_link/core/firebase_options.dart';
 import 'package:musi_link/core/theme/app_theme.dart';
+import 'package:musi_link/core/theme/theme_mode_controller.dart';
 import 'package:musi_link/screens/auth_screen.dart';
 import 'package:musi_link/screens/spotify_connect_screen.dart';
 
@@ -25,27 +26,30 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      themeMode: ThemeMode.system,
-      darkTheme: AppTheme.darkTheme,
-      theme: AppTheme.lightTheme,
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeModeController.instance,
+      builder: (context, themeMode, _) => MaterialApp(
+        themeMode: themeMode,
+        darkTheme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme,
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-          // Si hay usuario de Firebase
-          if (snapshot.hasData && snapshot.data != null) {
-            return const SpotifyConnectScreen();
-          }
+            // Si hay usuario de Firebase
+            if (snapshot.hasData && snapshot.data != null) {
+              return const SpotifyConnectScreen();
+            }
 
-          // Si no hay sesión de Firebase
-          return const AuthScreen();
-        },
+            // Si no hay sesión de Firebase
+            return const AuthScreen();
+          },
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/components/user_avatar_menu.dart';
 import 'package:musi_link/screens/home_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
 
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
     const StatsScreen(),
     const Center(child: Text("Library")),
   ];
+  
   @override
   void dispose() {
     _pageController.dispose();
@@ -26,7 +28,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Image.asset('assets/images/logo.png', width: 150)),
+      appBar: AppBar(
+        title: Image.asset('assets/images/logo.png', width: 150),
+        actions: [const UserAvatarMenu()],
+      ),
 
       body: PageView(
         controller: _pageController,

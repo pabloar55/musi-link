@@ -65,7 +65,8 @@ class SpotifyService {
       _api = SpotifyApi.fromAuthCodeGrant(grant, resultUrl);
 
       // Guardar credenciales para restaurar después
-      await _saveCredentials();
+      await _saveCredentials(preserveCodeVerifier: codeVerifier);
+      
 
       // Sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
@@ -101,7 +102,7 @@ class SpotifyService {
       _api = await SpotifyApi.asyncFromCredentials(credentials);
 
       // Guardar las credenciales actualizadas
-      await _saveCredentials();
+      await _saveCredentials(preserveCodeVerifier: saved['codeVerifier']);
 
       // Re-sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
@@ -114,7 +115,7 @@ class SpotifyService {
     }
   }
 
-  Future<void> _saveCredentials() async {
+  Future<void> _saveCredentials({String? preserveCodeVerifier}) async {
     if (_api == null) return;
     try {
       final creds = await _api!.getCredentials();
@@ -122,7 +123,7 @@ class SpotifyService {
         accessToken: creds.accessToken ?? '',
         refreshToken: creds.refreshToken ?? '',
         expiration: creds.expiration?.toIso8601String() ?? '',
-        codeVerifier: creds.codeVerifier ?? '',
+        codeVerifier: creds.codeVerifier ?? preserveCodeVerifier ?? '',
       );
     } catch (e) {
       debugPrint('❌ Error al guardar credenciales: $e');
