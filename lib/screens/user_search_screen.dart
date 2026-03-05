@@ -1,0 +1,169 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:musi_link/core/chat_service.dart';
+import 'package:musi_link/core/models/app_user.dart';
+import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/screens/chat_screen.dart';
+
+/// Pantalla para buscar usuarios e iniciar una conversación.
+class UserSearchScreen extends StatefulWidget {
+  const UserSearchScreen({super.key});
+
+  @override
+  State<UserSearchScreen> createState() => _UserSearchScreenState();
+}
+
+class _UserSearchScreenState extends State<UserSearchScreen> {
+  final _searchController = TextEditingController();
+  List<AppUser> _results = [];
+  bool _isLoading = false;
+  bool _hasSearched = false;
+
+  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _search() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+    });
+
+    final users = await UserService.instance
+        .searchUsers(query, excludeUid: _currentUid);
+
+    if (mounted) {
+      setState(() {
+        _results = users;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _startChat(AppUser otherUser) async {
+    // Obtener o crear el chat y navegar a él
+    final chat = await ChatService.instance.getOrCreateChat(otherUser.uid);
+    if (!mounted) return;
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          chatId: chat.id,
+          otherUserName: otherUser.displayName,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Buscar usuarios'),
+      ),
+      body: Column(
+        children: [
+          // Barra de búsqueda
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Nombre de usuario...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _results = [];
+                      _hasSearched = false;
+                    });
+                  },
+                ),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onSubmitted: (_) => _search(),
+            ),
+          ),
+
+          // Resultados
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _results.isEmpty
+                    ? Center(
+                        child: Text(
+                          _hasSearched
+                              ? 'No se encontraron usuarios'
+                              : 'Escribe un nombre para buscar',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withAlpha(120),
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _results.length,
+                        itemBuilder: (context, index) {
+                          final user = _results[index];
+                          final photoUrl = user.photoUrl;
+
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: photoUrl.isNotEmpty
+                                  ? NetworkImage(photoUrl)
+                                  : null,
+                              child: photoUrl.isEmpty
+                                  ? Text(
+                                      user.displayName.isNotEmpty
+                                          ? user.displayName[0].toUpperCase()
+                                          : '?',
+                                      style: TextStyle(
+                                        color: colorScheme.onPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            title: Text(user.displayName),
+                            subtitle: user.spotifyId != null
+                                ? Text(
+                                    'Spotify conectado',
+                                    style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                : null,
+                            trailing: IconButton(
+                              icon: Icon(Icons.chat_bubble_outline,
+                                  color: colorScheme.primary),
+                              onPressed: () => _startChat(user),
+                            ),
+                            onTap: () => _startChat(user),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}

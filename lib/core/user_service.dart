@@ -103,4 +103,27 @@ class UserService {
       debugPrint("❌ Error al actualizar perfil: $e");
     }
   }
+
+  /// Busca usuarios por nombre
+  /// Excluye al usuario con [excludeUid] de los resultados. (el que hace la búsqueda)
+  Future<List<AppUser>> searchUsers(String query,
+      {String? excludeUid}) async {
+    try {
+      if (query.trim().isEmpty) return [];
+      final snapshot = await _usersRef
+          .where('displayName',
+              isGreaterThanOrEqualTo: query)
+          .where('displayName',
+              isLessThanOrEqualTo: '$query\uf8ff')
+          .limit(20)
+          .get();
+      return snapshot.docs
+          .map(AppUser.fromFirestore)
+          .where((u) => u.uid != excludeUid)
+          .toList();
+    } catch (e) {
+      debugPrint("❌ Error al buscar usuarios: $e");
+      return [];
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/components/user_avatar_menu.dart';
 import 'package:musi_link/screens/home_screen.dart';
+import 'package:musi_link/screens/social_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> screens = [
     const HomeScreen(),
     const StatsScreen(),
+    const SocialScreen(),
     const Center(child: Text("Library")),
   ];
   
@@ -48,6 +50,7 @@ class _MainScreenState extends State<MainScreen> {
         destinations: [
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
+          NavigationDestination(icon: Icon(Icons.chat_bubble), label: 'Social'),
           NavigationDestination(
             icon: Icon(Icons.library_music),
             label: 'Library',
