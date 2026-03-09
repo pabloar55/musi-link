@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:musi_link/core/music_profile_service.dart';
 import 'package:musi_link/core/tokens.dart';
 import 'package:musi_link/core/user_service.dart';
 import 'package:spotify/spotify.dart';
@@ -71,6 +72,12 @@ class SpotifyService {
       // Sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
 
+      // Sincronizar datos musicales en Firestore
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
+      }
+
       debugPrint('✅ Spotify conectado vía PKCE');
       return true;
     } catch (e) {
@@ -106,6 +113,12 @@ class SpotifyService {
 
       // Re-sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
+
+      // Sincronizar datos musicales en Firestore
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
+      }
 
       debugPrint('✅ Sesión de Spotify restaurada');
       return true;

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:musi_link/core/models/artist.dart';
+import 'package:musi_link/core/models/genre.dart';
 
 class AppUser {
   final String uid;
@@ -8,6 +10,11 @@ class AppUser {
   final String? spotifyId;
   final DateTime createdAt;
   final DateTime lastLogin;
+  final List<Artist> topArtists;
+  final List<Genre> topGenres;
+  final List<String> topArtistNames;
+  final List<String> topGenreNames;
+  final DateTime? musicDataUpdatedAt;
 
   const AppUser({
     required this.uid,
@@ -17,6 +24,11 @@ class AppUser {
     this.spotifyId,
     required this.createdAt,
     required this.lastLogin,
+    this.topArtists = const [],
+    this.topGenres = const [],
+    this.topArtistNames = const [],
+    this.topGenreNames = const [],
+    this.musicDataUpdatedAt,
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -27,8 +39,28 @@ class AppUser {
       displayName: (data['displayName'] ?? '').toString(),
       photoUrl: (data['photoUrl'] ?? '').toString(),
       spotifyId: data['spotifyId']?.toString(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt:
+          (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastLogin:
+          (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      topArtists: (data['topArtists'] as List<dynamic>?)
+              ?.map((e) => Artist.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      topGenres: (data['topGenres'] as List<dynamic>?)
+              ?.map((e) => Genre.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      topArtistNames: (data['topArtistNames'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      topGenreNames: (data['topGenreNames'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      musicDataUpdatedAt:
+          (data['musicDataUpdatedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -48,6 +80,11 @@ class AppUser {
     String? photoUrl,
     String? spotifyId,
     DateTime? lastLogin,
+    List<Artist>? topArtists,
+    List<Genre>? topGenres,
+    List<String>? topArtistNames,
+    List<String>? topGenreNames,
+    DateTime? musicDataUpdatedAt,
   }) {
     return AppUser(
       uid: uid,
@@ -57,6 +94,11 @@ class AppUser {
       spotifyId: spotifyId ?? this.spotifyId,
       createdAt: createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
+      topArtists: topArtists ?? this.topArtists,
+      topGenres: topGenres ?? this.topGenres,
+      topArtistNames: topArtistNames ?? this.topArtistNames,
+      topGenreNames: topGenreNames ?? this.topGenreNames,
+      musicDataUpdatedAt: musicDataUpdatedAt ?? this.musicDataUpdatedAt,
     );
   }
 }

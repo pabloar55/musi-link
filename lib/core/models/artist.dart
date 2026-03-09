@@ -21,4 +21,15 @@ class Artist {
       genres: genresList?.map((g) => g.toString()).toList() ?? [],
     );
   }
+
+  factory Artist.fromMap(Map<String, dynamic> map) => Artist(
+        name: (map['name'] ?? '').toString(),
+        imageUrl: (map['imageUrl'] ?? '').toString(),
+        genres: [],
+      );
+
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'imageUrl': imageUrl,
+      };
 }

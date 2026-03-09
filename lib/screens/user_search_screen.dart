@@ -1,9 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/user_service.dart';
-import 'package:musi_link/screens/chat_screen.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 
 /// Pantalla para buscar usuarios e iniciar una conversación.
 class UserSearchScreen extends StatefulWidget {
@@ -48,16 +47,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Future<void> _startChat(AppUser otherUser) async {
-    // Obtener o crear el chat y navegar a él
-    final chat = await ChatService.instance.getOrCreateChat(otherUser.uid);
     if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          chatId: chat.id,
-          otherUserName: otherUser.displayName,
-        ),
+        builder: (_) => UserProfileScreen(user: otherUser),
       ),
     );
   }
@@ -152,10 +145,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                     ),
                                   )
                                 : null,
-                            trailing: IconButton(
-                              icon: Icon(Icons.chat_bubble_outline,
-                                  color: colorScheme.primary),
-                              onPressed: () => _startChat(user),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: colorScheme.onSurfaceVariant,
                             ),
                             onTap: () => _startChat(user),
                           );

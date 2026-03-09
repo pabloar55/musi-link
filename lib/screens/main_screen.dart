@@ -48,7 +48,7 @@ class _MainScreenState extends State<MainScreen> {
 
       bottomNavigationBar: NavigationBar(
         destinations: [
-          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.explore), label: 'Descubrir'),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
           NavigationDestination(icon: Icon(Icons.chat_bubble), label: 'Social'),
           NavigationDestination(

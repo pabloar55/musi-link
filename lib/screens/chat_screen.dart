@@ -2,16 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/models/message.dart';
+import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 
 /// Pantalla de conversación individual.
 class ChatScreen extends StatefulWidget {
   final String chatId;
   final String otherUserName;
+  final String otherUserId;
 
   const ChatScreen({
     super.key,
     required this.chatId,
     required this.otherUserName,
+    required this.otherUserId,
   });
 
   @override
@@ -68,7 +72,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otherUserName),
+        title: GestureDetector(
+          onTap: () async {
+            final navigator = Navigator.of(context);
+            final user =
+                await UserService.instance.getUser(widget.otherUserId);
+            if (user != null && mounted) {
+              navigator.push(
+                MaterialPageRoute(
+                  builder: (_) => UserProfileScreen(user: user),
+                ),
+              );
+            }
+          },
+          child: Text(widget.otherUserName),
+        ),
       ),
       body: Column(
         children: [

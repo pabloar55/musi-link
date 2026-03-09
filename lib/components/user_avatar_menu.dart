@@ -32,6 +32,8 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
       case _UserMenuAction.logout:
         await SpotifyService.instance.disconnect();
         await AuthService.instance.signOut();
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route.isFirst);
         break;
     }
   }

@@ -144,6 +144,7 @@ class SocialScreen extends StatelessWidget {
                           builder: (_) => ChatScreen(
                             chatId: chat.id,
                             otherUserName: name,
+                            otherUserId: otherUid,
                           ),
                         ),
                       );
