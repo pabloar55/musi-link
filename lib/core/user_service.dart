@@ -94,7 +94,10 @@ class UserService {
   }) async {
     try {
       final updates = <String, dynamic>{};
-      if (displayName != null) updates['displayName'] = displayName;
+      if (displayName != null) {
+        updates['displayName'] = displayName;
+        updates['displayNameLower'] = displayName.toLowerCase();
+      }
       if (photoUrl != null) updates['photoUrl'] = photoUrl;
       if (updates.isNotEmpty) {
         await _usersRef.doc(uid).update(updates);
@@ -110,11 +113,12 @@ class UserService {
       {String? excludeUid}) async {
     try {
       if (query.trim().isEmpty) return [];
+      final lowerQuery = query.trim().toLowerCase();
       final snapshot = await _usersRef
-          .where('displayName',
-              isGreaterThanOrEqualTo: query)
-          .where('displayName',
-              isLessThanOrEqualTo: '$query\uf8ff')
+          .where('displayNameLower',
+              isGreaterThanOrEqualTo: lowerQuery)
+          .where('displayNameLower',
+              isLessThanOrEqualTo: '$lowerQuery\uf8ff')
           .limit(20)
           .get();
       return snapshot.docs

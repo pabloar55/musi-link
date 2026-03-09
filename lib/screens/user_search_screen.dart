@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/core/models/app_user.dart';
@@ -14,6 +16,7 @@ class UserSearchScreen extends StatefulWidget {
 
 class _UserSearchScreenState extends State<UserSearchScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
   List<AppUser> _results = [];
   bool _isLoading = false;
   bool _hasSearched = false;
@@ -22,8 +25,23 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() {
+        _results = [];
+        _hasSearched = false;
+        _isLoading = false;
+      });
+      return;
+    }
+    setState(() => _isLoading = true);
+    _debounce = Timer(const Duration(milliseconds: 400), _search);
   }
 
   Future<void> _search() async {
@@ -77,6 +95,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
+                    _debounce?.cancel();
                     _searchController.clear();
                     setState(() {
                       _results = [];
@@ -93,7 +112,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
-              onSubmitted: (_) => _search(),
+              onChanged: _onSearchChanged,
             ),
           ),
 

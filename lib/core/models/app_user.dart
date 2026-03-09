@@ -68,6 +68,7 @@ class AppUser {
     return {
       'email': email,
       'displayName': displayName,
+      'displayNameLower': displayName.toLowerCase(),
       'photoUrl': photoUrl,
       'spotifyId': spotifyId,
       'createdAt': Timestamp.fromDate(createdAt),
