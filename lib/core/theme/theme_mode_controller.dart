@@ -5,7 +5,15 @@ class ThemeModeController extends ValueNotifier<ThemeMode> {
 
   static final ThemeModeController instance = ThemeModeController._();
 
+  bool get isDark {
+    if (value == ThemeMode.system) {
+      return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark;
+    }
+    return value == ThemeMode.dark;
+  }
+
   void toggleDarkLight() {
-    value = value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    value = isDark ? ThemeMode.light : ThemeMode.dark;
   }
 }

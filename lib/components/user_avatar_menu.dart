@@ -53,7 +53,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeModeController.instance,
       builder: (context, themeMode, _) {
-        final isDarkMode = themeMode == ThemeMode.dark;
+        final isDarkMode = ThemeModeController.instance.isDark;
 
         return FutureBuilder<AppUser?>(
           future: _getCurrentAppUser(),
