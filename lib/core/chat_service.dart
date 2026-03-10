@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/core/models/chat.dart';
 import 'package:musi_link/core/models/message.dart';
+import 'package:musi_link/core/models/track.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService {
@@ -155,5 +156,67 @@ class ChatService {
         .where('senderId', isNotEqualTo: _currentUid)
         .snapshots()
         .map((snapshot) => snapshot.docs.length);
+  }
+
+  /// Envía una canción como mensaje en un chat.
+  Future<void> sendTrackMessage(String chatId, Track track) async {
+    try {
+      final now = DateTime.now();
+      final message = Message(
+        id: '',
+        senderId: _currentUid,
+        text: '${track.title} - ${track.artist}',
+        timestamp: now,
+        type: MessageType.track,
+        trackData: track,
+      );
+
+      final batch = FirebaseFirestore.instance.batch();
+
+      final msgRef = _chatsRef.doc(chatId).collection('messages').doc();
+      batch.set(msgRef, message.toFirestore());
+
+      batch.update(_chatsRef.doc(chatId), {
+        'lastMessage': '🎵 ${track.title}',
+        'lastMessageTime': Timestamp.fromDate(now),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      debugPrint("❌ Error al enviar canción: $e");
+      rethrow;
+    }
+  }
+
+  /// Añade o quita una reacción del usuario actual en un mensaje.
+  Future<void> toggleReaction(
+      String chatId, String messageId, String emoji) async {
+    try {
+      final msgRef =
+          _chatsRef.doc(chatId).collection('messages').doc(messageId);
+      final doc = await msgRef.get();
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      final reactions =
+          Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
+      final users = List<String>.from(reactions[emoji] as List? ?? []);
+
+      if (users.contains(_currentUid)) {
+        users.remove(_currentUid);
+      } else {
+        users.add(_currentUid);
+      }
+
+      if (users.isEmpty) {
+        reactions.remove(emoji);
+      } else {
+        reactions[emoji] = users;
+      }
+
+      await msgRef.update({'reactions': reactions});
+    } catch (e) {
+      debugPrint("❌ Error al reaccionar: $e");
+    }
   }
 }

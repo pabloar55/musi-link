@@ -1,4 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:musi_link/core/models/track.dart';
+
+/// Tipo de mensaje: texto normal o canción compartida.
+enum MessageType { text, track }
 
 /// Modelo que representa un mensaje dentro de un chat.
 class Message {
@@ -7,6 +11,9 @@ class Message {
   final String text;
   final DateTime timestamp;
   final bool read;
+  final MessageType type;
+  final Track? trackData;
+  final Map<String, List<String>> reactions; // emoji -> lista de uids
 
   const Message({
     required this.id,
@@ -14,10 +21,29 @@ class Message {
     required this.text,
     required this.timestamp,
     this.read = false,
+    this.type = MessageType.text,
+    this.trackData,
+    this.reactions = const {},
   });
+
+  bool get isTrack => type == MessageType.track;
 
   factory Message.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    final typeStr = (data['type'] ?? 'text').toString();
+    final type = typeStr == 'track' ? MessageType.track : MessageType.text;
+
+    Track? trackData;
+    if (data['trackData'] is Map<String, dynamic>) {
+      trackData = Track.fromMap(data['trackData'] as Map<String, dynamic>);
+    }
+
+    final reactionsRaw = data['reactions'] as Map<String, dynamic>? ?? {};
+    final reactions = reactionsRaw.map(
+      (key, value) => MapEntry(key, List<String>.from(value as List)),
+    );
+
     return Message(
       id: doc.id,
       senderId: (data['senderId'] ?? '').toString(),
@@ -25,16 +51,30 @@ class Message {
       timestamp:
           (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       read: (data['read'] as bool?) ?? false,
+      type: type,
+      trackData: trackData,
+      reactions: reactions,
     );
   }
 
   Map<String, dynamic> toFirestore() {
-    return {
+    final map = <String, dynamic>{
       'senderId': senderId,
       'text': text,
       'timestamp': Timestamp.fromDate(timestamp),
       'read': read,
+      'type': type == MessageType.track ? 'track' : 'text',
     };
+
+    if (trackData != null) {
+      map['trackData'] = trackData!.toMap();
+    }
+
+    if (reactions.isNotEmpty) {
+      map['reactions'] = reactions;
+    }
+
+    return map;
   }
 
   Message copyWith({bool? read}) {
@@ -44,6 +84,9 @@ class Message {
       text: text,
       timestamp: timestamp,
       read: read ?? this.read,
+      type: type,
+      trackData: trackData,
+      reactions: reactions,
     );
   }
 }

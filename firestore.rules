@@ -43,10 +43,10 @@ service cloud.firestore {
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
           && request.resource.data.senderId == request.auth.uid;
 
-        // Solo se permite actualizar el campo 'read' (marcar como leído)
+        // Solo se permite actualizar 'read' o 'reactions'
         allow update: if request.auth != null
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'reactions']);
 
         // Solo los participantes pueden eliminar mensajes
         allow delete: if request.auth != null

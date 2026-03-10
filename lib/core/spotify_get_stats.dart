@@ -3,7 +3,7 @@ import 'package:musi_link/core/models/artist.dart' as app;
 import 'package:musi_link/core/models/genre.dart';
 import 'package:musi_link/core/models/track.dart' as app;
 import 'package:musi_link/core/spotify_service.dart';
-import 'package:spotify/spotify.dart' show TimeRange;
+import 'package:spotify/spotify.dart' show SearchType, TimeRange, Track;
 
 /// Obtiene estadísticas del usuario vía el paquete `spotify`.
 ///
@@ -37,6 +37,9 @@ class SpotifyGetStats {
               title: t.name ?? 'Sin título',
               artist: artistName,
               imageUrl: imageUrl,
+              spotifyUrl: (t.id != null && t.id!.isNotEmpty)
+                  ? 'https://open.spotify.com/track/${t.id}'
+                  : '',
             );
           }).toList() ??
           [];
@@ -95,5 +98,44 @@ class SpotifyGetStats {
         percentage: (entry.value / totalMentions) * 100,
       );
     }).toList();
+  }
+
+  /// Busca canciones en Spotify por nombre.
+  Future<List<app.Track>> searchTracks(String query, {int limit = 20}) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final api = SpotifyService.instance.api;
+      final results = api.search.get(query, types: [SearchType.track]);
+      final page = await results.first(limit);
+
+      final tracks = <app.Track>[];
+      for (final pages in page) {
+        if (pages.items == null) continue;
+        for (final item in pages.items!) {
+          if (item is Track) {
+            final images = item.album?.images;
+            final imageUrl = (images != null && images.isNotEmpty)
+                ? images.first.url ?? ''
+                : '';
+            final artistName =
+                (item.artists != null && item.artists!.isNotEmpty)
+                    ? item.artists!.first.name ?? 'Artista desconocido'
+                    : 'Artista desconocido';
+            tracks.add(app.Track(
+              title: item.name ?? 'Sin título',
+              artist: artistName,
+              imageUrl: imageUrl,
+              spotifyUrl: (item.id != null && item.id!.isNotEmpty)
+                  ? 'https://open.spotify.com/track/${item.id}'
+                  : '',
+            ));
+          }
+        }
+      }
+      return tracks;
+    } catch (e) {
+      debugPrint("Error al buscar tracks: $e");
+      return [];
+    }
   }
 }
