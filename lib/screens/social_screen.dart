@@ -8,8 +8,20 @@ import 'package:musi_link/screens/chat_screen.dart';
 import 'package:musi_link/screens/user_search_screen.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
-class SocialScreen extends StatelessWidget {
+class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key});
+
+  @override
+  State<SocialScreen> createState() => _SocialScreenState();
+}
+
+class _SocialScreenState extends State<SocialScreen>
+    with AutomaticKeepAliveClientMixin {
+  // Memoiza la carga de perfiles para no reiniciar el FutureBuilder en cada build.
+  final Map<String, Future<AppUser?>> _userFutures = {};
+
+  @override
+  bool get wantKeepAlive => true;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
@@ -18,6 +30,14 @@ class SocialScreen extends StatelessWidget {
     return chat.participants.firstWhere(
       (uid) => uid != _currentUid,
       orElse: () => '',
+    );
+  }
+
+  Future<AppUser?> _getUserFuture(String uid) {
+    if (uid.isEmpty) return Future.value(null);
+    return _userFutures.putIfAbsent(
+      uid,
+      () => UserService.instance.getUser(uid),
     );
   }
 
@@ -37,6 +57,7 @@ class SocialScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -64,8 +85,11 @@ class SocialScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.chat_bubble_outline,
-                      size: 64, color: colorScheme.onSurface.withAlpha(100)),
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 64,
+                    color: colorScheme.onSurface.withAlpha(100),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No tienes conversaciones aún',
@@ -90,17 +114,25 @@ class SocialScreen extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: chats.length,
-            separatorBuilder: (_, _) =>
-                Divider(height: 1, indent: 72, color: colorScheme.onSurface.withAlpha(30)),
+            separatorBuilder: (_, _) => Divider(
+              height: 1,
+              indent: 72,
+              color: colorScheme.onSurface.withAlpha(30),
+            ),
             itemBuilder: (context, index) {
               final chat = chats[index];
               final otherUid = _otherUid(chat);
 
               return FutureBuilder<AppUser?>(
-                future: UserService.instance.getUser(otherUid),
+                future: _getUserFuture(otherUid),
                 builder: (context, userSnap) {
                   final otherUser = userSnap.data;
-                  final name = otherUser?.displayName ?? 'Usuario';
+                  final isLoading =
+                      userSnap.connectionState == ConnectionState.waiting &&
+                      !userSnap.hasData;
+                  final name =
+                      otherUser?.displayName ??
+                      (isLoading ? 'Cargando...' : 'Usuario');
                   final photoUrl = otherUser?.photoUrl ?? '';
 
                   return ListTile(
