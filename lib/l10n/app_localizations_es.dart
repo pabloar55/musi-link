@@ -99,13 +99,16 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al iniciar sesión con Google.';
 
   @override
-  String get homeErrorLoading => 'Error al cargar descubrimiento';
+  String get discoverTitle => 'Descubrir personas';
 
   @override
-  String get homeNoUsers => 'No hay usuarios con datos musicales';
+  String get discoverErrorLoading => 'Error al cargar descubrimiento';
 
   @override
-  String get homeNoUsersHint =>
+  String get discoverNoUsers => 'No hay usuarios con datos musicales';
+
+  @override
+  String get discoverNoUsersHint =>
       'Cuando más usuarios conecten su Spotify, aparecerán aquí';
 
   @override

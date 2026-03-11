@@ -30,9 +30,10 @@
   "authErrorGoogleSignIn": "Impossible de se connecter avec Google.",
   "authErrorGoogleSignInGeneric": "Erreur lors de la connexion avec Google.",
 
-  "homeErrorLoading": "Erreur lors du chargement de la découverte",
-  "homeNoUsers": "Aucun utilisateur avec des données musicales",
-  "homeNoUsersHint": "Au fur et à mesure que d'autres utilisateurs connectent leur Spotify, ils apparaîtront ici",
+  "discoverTitle": "Découvrir des personnes",
+  "discoverErrorLoading": "Erreur lors du chargement de la découverte",
+  "discoverNoUsers": "Aucun utilisateur avec des données musicales",
+  "discoverNoUsersHint": "Au fur et à mesure que d'autres utilisateurs connectent leur Spotify, ils apparaîtront ici",
 
   "navDiscover": "Découvrir",
   "navStats": "Statistiques",

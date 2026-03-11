@@ -5,15 +5,15 @@ import 'package:musi_link/core/models/discovery_result.dart';
 import 'package:musi_link/core/music_profile_service.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class DiscoverScreen extends StatefulWidget {
+  const DiscoverScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with AutomaticKeepAliveClientMixin<HomeScreen> {
+class _DiscoverScreenState extends State<DiscoverScreen>
+    with AutomaticKeepAliveClientMixin<DiscoverScreen> {
   late Future<List<DiscoveryResult>> _discoveryFuture;
 
   @override
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              l10n.homeErrorLoading,
+              l10n.discoverErrorLoading,
               style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           );
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    l10n.homeNoUsers,
+                    l10n.discoverNoUsers,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    l10n.homeNoUsersHint,
+                    l10n.discoverNoUsersHint,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -99,9 +99,22 @@ class _HomeScreenState extends State<HomeScreen>
           onRefresh: _refresh,
           child: ListView.builder(
             padding: const EdgeInsets.only(top: 8, bottom: 16),
-            itemCount: results.length,
+            itemCount: results.length + 1,
             itemBuilder: (context, index) {
-              final result = results[index];
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Text(
+                    l10n.discoverTitle,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                );
+              }
+              final result = results[index - 1];
               return UserDiscoveryCard(
                 result: result,
                 onTap: () {

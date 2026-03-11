@@ -97,13 +97,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorGoogleSignInGeneric => 'Error signing in with Google.';
 
   @override
-  String get homeErrorLoading => 'Error loading discovery';
+  String get discoverTitle => 'Discover people';
 
   @override
-  String get homeNoUsers => 'No users with music data';
+  String get discoverErrorLoading => 'Error loading discovery';
 
   @override
-  String get homeNoUsersHint =>
+  String get discoverNoUsers => 'No users with music data';
+
+  @override
+  String get discoverNoUsersHint =>
       'As more users connect their Spotify, they will appear here';
 
   @override

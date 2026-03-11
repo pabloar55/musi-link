@@ -35,9 +35,10 @@
   "authErrorGoogleSignIn": "Could not sign in with Google.",
   "authErrorGoogleSignInGeneric": "Error signing in with Google.",
 
-  "homeErrorLoading": "Error loading discovery",
-  "homeNoUsers": "No users with music data",
-  "homeNoUsersHint": "As more users connect their Spotify, they will appear here",
+  "discoverTitle": "Discover people",
+  "discoverErrorLoading": "Error loading discovery",
+  "discoverNoUsers": "No users with music data",
+  "discoverNoUsersHint": "As more users connect their Spotify, they will appear here",
 
   "navDiscover": "Discover",
   "navStats": "Stats",

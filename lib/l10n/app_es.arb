@@ -30,9 +30,10 @@
   "authErrorGoogleSignIn": "No se pudo iniciar sesión con Google.",
   "authErrorGoogleSignInGeneric": "Error al iniciar sesión con Google.",
 
-  "homeErrorLoading": "Error al cargar descubrimiento",
-  "homeNoUsers": "No hay usuarios con datos musicales",
-  "homeNoUsersHint": "Cuando más usuarios conecten su Spotify, aparecerán aquí",
+  "discoverTitle": "Descubrir personas",
+  "discoverErrorLoading": "Error al cargar descubrimiento",
+  "discoverNoUsers": "No hay usuarios con datos musicales",
+  "discoverNoUsersHint": "Cuando más usuarios conecten su Spotify, aparecerán aquí",
 
   "navDiscover": "Descubrir",
   "navStats": "Estadísticas",

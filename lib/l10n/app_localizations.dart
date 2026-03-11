@@ -268,23 +268,29 @@ abstract class AppLocalizations {
   /// **'Error signing in with Google.'**
   String get authErrorGoogleSignInGeneric;
 
-  /// No description provided for @homeErrorLoading.
+  /// No description provided for @discoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover people'**
+  String get discoverTitle;
+
+  /// No description provided for @discoverErrorLoading.
   ///
   /// In en, this message translates to:
   /// **'Error loading discovery'**
-  String get homeErrorLoading;
+  String get discoverErrorLoading;
 
-  /// No description provided for @homeNoUsers.
+  /// No description provided for @discoverNoUsers.
   ///
   /// In en, this message translates to:
   /// **'No users with music data'**
-  String get homeNoUsers;
+  String get discoverNoUsers;
 
-  /// No description provided for @homeNoUsersHint.
+  /// No description provided for @discoverNoUsersHint.
   ///
   /// In en, this message translates to:
   /// **'As more users connect their Spotify, they will appear here'**
-  String get homeNoUsersHint;
+  String get discoverNoUsersHint;
 
   /// No description provided for @navDiscover.
   ///
