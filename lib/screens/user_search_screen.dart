@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/user_service.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 
-/// Pantalla para buscar usuarios e iniciar una conversación.
+/// Pantalla para buscar usuarios y enviar solicitudes de amistad.
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
 
@@ -21,6 +22,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<AppUser> _results = [];
   bool _isLoading = false;
   bool _hasSearched = false;
+
+  // Cache de relaciones para los resultados actuales
+  final Map<String, RelationshipResult> _relationships = {};
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
@@ -38,6 +42,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         _results = [];
         _hasSearched = false;
         _isLoading = false;
+        _relationships.clear();
       });
       return;
     }
@@ -57,21 +62,63 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     final users = await UserService.instance
         .searchUsers(query, excludeUid: _currentUid);
 
+    // Cargar relaciones para todos los resultados
+    final relationships = <String, RelationshipResult>{};
+    for (final user in users) {
+      relationships[user.uid] =
+          await FriendService.instance.getRelationship(user.uid);
+    }
+
     if (mounted) {
       setState(() {
         _results = users;
+        _relationships
+          ..clear()
+          ..addAll(relationships);
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _startChat(AppUser otherUser) async {
+  Future<void> _sendRequest(String uid) async {
+    await FriendService.instance.sendRequest(uid);
     if (!mounted) return;
+    // Refrescar solo este usuario
+    final rel = await FriendService.instance.getRelationship(uid);
+    if (mounted) {
+      setState(() => _relationships[uid] = rel);
+    }
+  }
+
+  Future<void> _cancelRequest(String uid, String requestId) async {
+    await FriendService.instance.cancelRequest(requestId);
+    if (!mounted) return;
+    final rel = await FriendService.instance.getRelationship(uid);
+    if (mounted) {
+      setState(() => _relationships[uid] = rel);
+    }
+  }
+
+  void _openProfile(AppUser user) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => UserProfileScreen(user: otherUser),
+        builder: (_) => UserProfileScreen(user: user),
       ),
-    );
+    ).then((_) {
+      // Refrescar relaciones al volver del perfil
+      if (mounted && _results.isNotEmpty) {
+        _refreshRelationships();
+      }
+    });
+  }
+
+  Future<void> _refreshRelationships() async {
+    for (final user in _results) {
+      final rel = await FriendService.instance.getRelationship(user.uid);
+      if (mounted) {
+        setState(() => _relationships[user.uid] = rel);
+      }
+    }
   }
 
   @override
@@ -102,6 +149,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     setState(() {
                       _results = [];
                       _hasSearched = false;
+                      _relationships.clear();
                     });
                   },
                 ),
@@ -138,6 +186,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         itemBuilder: (context, index) {
                           final user = _results[index];
                           final photoUrl = user.photoUrl;
+                          final rel = _relationships[user.uid];
 
                           return ListTile(
                             leading: CircleAvatar(
@@ -166,11 +215,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                                     ),
                                   )
                                 : null,
-                            trailing: Icon(
-                              Icons.chevron_right,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            onTap: () => _startChat(user),
+                            trailing: _buildTrailingAction(
+                                user, rel, colorScheme, l10n),
+                            onTap: () => _openProfile(user),
                           );
                         },
                       ),
@@ -178,5 +225,42 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildTrailingAction(
+    AppUser user,
+    RelationshipResult? rel,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
+    if (rel == null) {
+      return Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant);
+    }
+
+    switch (rel.status) {
+      case RelationshipStatus.friends:
+        return Icon(Icons.people, color: colorScheme.primary);
+
+      case RelationshipStatus.requestSent:
+        return IconButton(
+          icon: Icon(Icons.hourglass_top, color: colorScheme.onSurfaceVariant),
+          tooltip: l10n.friendsRequestSent,
+          onPressed: () {
+            if (rel.requestId != null) {
+              _cancelRequest(user.uid, rel.requestId!);
+            }
+          },
+        );
+
+      case RelationshipStatus.requestReceived:
+        return Icon(Icons.mail, color: colorScheme.primary);
+
+      case RelationshipStatus.none:
+        return IconButton(
+          icon: Icon(Icons.person_add, color: colorScheme.primary),
+          tooltip: l10n.friendsSendRequest,
+          onPressed: () => _sendRequest(user.uid),
+        );
+    }
   }
 }

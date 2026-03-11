@@ -112,13 +112,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navDiscover => 'Découvrir';
 
   @override
-  String get navStats => 'Stats';
+  String get navStats => 'Statistiques';
 
   @override
-  String get navSocial => 'Social';
+  String get navMessages => 'Messages';
 
   @override
-  String get navLibrary => 'Bibliothèque';
+  String get navFriends => 'Amis';
 
   @override
   String get searchTitle => 'Rechercher des utilisateurs';
@@ -273,4 +273,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String discoveryCompatible(String score) {
     return '$score% compatible';
   }
+
+  @override
+  String get friendsReceivedRequests => 'Demandes reçues';
+
+  @override
+  String get friendsSentRequests => 'Demandes envoyées';
+
+  @override
+  String get friendsMyFriends => 'Mes amis';
+
+  @override
+  String get friendsAccept => 'Accepter';
+
+  @override
+  String get friendsReject => 'Refuser';
+
+  @override
+  String get friendsCancel => 'Annuler';
+
+  @override
+  String get friendsSendRequest => 'Envoyer une demande';
+
+  @override
+  String get friendsRequestSent => 'Demande envoyée';
+
+  @override
+  String get friendsNoRequests => 'Aucune demande en attente';
+
+  @override
+  String get friendsNoFriends => 'Pas encore d\'amis';
+
+  @override
+  String get friendsNoFriendsHint =>
+      'Recherchez des utilisateurs pour ajouter des amis';
+
+  @override
+  String get friendsRemove => 'Supprimer l\'ami';
+
+  @override
+  String get friendsAlreadyFriends => 'Déjà amis';
+
+  @override
+  String get profileAddFriend => 'Ajouter un ami';
 }

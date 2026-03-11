@@ -4,6 +4,7 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/components/artist_tile.dart';
 import 'package:musi_link/components/genre_tile.dart';
 import 'package:musi_link/core/chat_service.dart';
+import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/discovery_result.dart';
 import 'package:musi_link/core/music_profile_service.dart';
@@ -20,6 +21,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   late Future<DiscoveryResult> _compatibilityFuture;
+  late Future<RelationshipResult> _relationshipFuture;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
   bool get _isOwnProfile => widget.user.uid == _currentUid;
@@ -30,7 +32,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (!_isOwnProfile) {
       _compatibilityFuture =
           MusicProfileService.instance.getCompatibilityWith(widget.user);
+      _relationshipFuture =
+          FriendService.instance.getRelationship(widget.user.uid);
     }
+  }
+
+  void _refreshRelationship() {
+    setState(() {
+      _relationshipFuture =
+          FriendService.instance.getRelationship(widget.user.uid);
+    });
   }
 
   Future<void> _startChat() async {
@@ -46,6 +57,30 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _sendRequest() async {
+    await FriendService.instance.sendRequest(widget.user.uid);
+    if (!mounted) return;
+    _refreshRelationship();
+  }
+
+  Future<void> _acceptRequest(String requestId) async {
+    await FriendService.instance.acceptRequest(requestId, widget.user.uid);
+    if (!mounted) return;
+    _refreshRelationship();
+  }
+
+  Future<void> _rejectRequest(String requestId) async {
+    await FriendService.instance.rejectRequest(requestId);
+    if (!mounted) return;
+    _refreshRelationship();
+  }
+
+  Future<void> _cancelRequest(String requestId) async {
+    await FriendService.instance.cancelRequest(requestId);
+    if (!mounted) return;
+    _refreshRelationship();
   }
 
   @override
@@ -164,13 +199,75 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 },
               ),
 
-            // Boton de chat (solo si no es tu perfil)
+            // Botones de amistad / chat (solo si no es tu perfil)
             if (!_isOwnProfile) ...[
               const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: _startChat,
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: Text(l10n.profileStartChat),
+              FutureBuilder<RelationshipResult>(
+                future: _relationshipFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      height: 40,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  final relationship = snapshot.data ??
+                      const RelationshipResult(RelationshipStatus.none);
+
+                  switch (relationship.status) {
+                    case RelationshipStatus.friends:
+                      return FilledButton.icon(
+                        onPressed: _startChat,
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: Text(l10n.profileStartChat),
+                      );
+
+                    case RelationshipStatus.requestSent:
+                      return OutlinedButton.icon(
+                        onPressed: () {
+                          if (relationship.requestId != null) {
+                            _cancelRequest(relationship.requestId!);
+                          }
+                        },
+                        icon: const Icon(Icons.hourglass_top),
+                        label: Text(l10n.friendsRequestSent),
+                      );
+
+                    case RelationshipStatus.requestReceived:
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () {
+                              if (relationship.requestId != null) {
+                                _acceptRequest(relationship.requestId!);
+                              }
+                            },
+                            icon: const Icon(Icons.check),
+                            label: Text(l10n.friendsAccept),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              if (relationship.requestId != null) {
+                                _rejectRequest(relationship.requestId!);
+                              }
+                            },
+                            icon: const Icon(Icons.close),
+                            label: Text(l10n.friendsReject),
+                          ),
+                        ],
+                      );
+
+                    case RelationshipStatus.none:
+                      return FilledButton.icon(
+                        onPressed: _sendRequest,
+                        icon: const Icon(Icons.person_add),
+                        label: Text(l10n.profileAddFriend),
+                      );
+                  }
+                },
               ),
             ],
 

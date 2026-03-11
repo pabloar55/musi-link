@@ -15,6 +15,7 @@ class AppUser {
   final List<String> topArtistNames;
   final List<String> topGenreNames;
   final DateTime? musicDataUpdatedAt;
+  final List<String> friends;
 
   const AppUser({
     required this.uid,
@@ -29,6 +30,7 @@ class AppUser {
     this.topArtistNames = const [],
     this.topGenreNames = const [],
     this.musicDataUpdatedAt,
+    this.friends = const [],
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -61,6 +63,10 @@ class AppUser {
           [],
       musicDataUpdatedAt:
           (data['musicDataUpdatedAt'] as Timestamp?)?.toDate(),
+      friends: (data['friends'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
@@ -86,6 +92,7 @@ class AppUser {
     List<String>? topArtistNames,
     List<String>? topGenreNames,
     DateTime? musicDataUpdatedAt,
+    List<String>? friends,
   }) {
     return AppUser(
       uid: uid,
@@ -100,6 +107,7 @@ class AppUser {
       topArtistNames: topArtistNames ?? this.topArtistNames,
       topGenreNames: topGenreNames ?? this.topGenreNames,
       musicDataUpdatedAt: musicDataUpdatedAt ?? this.musicDataUpdatedAt,
+      friends: friends ?? this.friends,
     );
   }
 }

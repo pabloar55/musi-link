@@ -6,7 +6,6 @@ import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/chat.dart';
 import 'package:musi_link/core/user_service.dart';
 import 'package:musi_link/screens/chat_screen.dart';
-import 'package:musi_link/screens/user_search_screen.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
 class SocialScreen extends StatefulWidget {
@@ -189,16 +188,6 @@ class _SocialScreenState extends State<SocialScreen>
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const UserSearchScreen()),
-          );
-        },
-        child: const Icon(Icons.person_search),
       ),
     );
   }

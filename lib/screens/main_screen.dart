@@ -4,6 +4,7 @@ import 'package:musi_link/components/user_avatar_menu.dart';
 import 'package:musi_link/screens/home_screen.dart';
 import 'package:musi_link/screens/social_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
+import 'package:musi_link/screens/friends_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,9 +20,9 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const StatsScreen(),
     const SocialScreen(),
-    Builder(builder: (context) => Center(child: Text(AppLocalizations.of(context)!.navLibrary))),
+    const FriendsScreen(),
   ];
-  
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -52,11 +53,8 @@ class _MainScreenState extends State<MainScreen> {
         destinations: [
           NavigationDestination(icon: Icon(Icons.explore), label: l10n.navDiscover),
           NavigationDestination(icon: Icon(Icons.bar_chart), label: l10n.navStats),
-          NavigationDestination(icon: Icon(Icons.chat_bubble), label: l10n.navSocial),
-          NavigationDestination(
-            icon: Icon(Icons.library_music),
-            label: l10n.navLibrary,
-          ),
+          NavigationDestination(icon: Icon(Icons.chat_bubble), label: l10n.navMessages),
+          NavigationDestination(icon: Icon(Icons.people), label: l10n.navFriends),
         ],
         selectedIndex: currentPageIndex,
 

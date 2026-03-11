@@ -298,17 +298,17 @@ abstract class AppLocalizations {
   /// **'Stats'**
   String get navStats;
 
-  /// No description provided for @navSocial.
+  /// No description provided for @navMessages.
   ///
   /// In en, this message translates to:
-  /// **'Social'**
-  String get navSocial;
+  /// **'Messages'**
+  String get navMessages;
 
-  /// No description provided for @navLibrary.
+  /// No description provided for @navFriends.
   ///
   /// In en, this message translates to:
-  /// **'Library'**
-  String get navLibrary;
+  /// **'Friends'**
+  String get navFriends;
 
   /// No description provided for @searchTitle.
   ///
@@ -585,6 +585,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{score}% compatible'**
   String discoveryCompatible(String score);
+
+  /// No description provided for @friendsReceivedRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Received requests'**
+  String get friendsReceivedRequests;
+
+  /// No description provided for @friendsSentRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent requests'**
+  String get friendsSentRequests;
+
+  /// No description provided for @friendsMyFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'My friends'**
+  String get friendsMyFriends;
+
+  /// No description provided for @friendsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get friendsAccept;
+
+  /// No description provided for @friendsReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get friendsReject;
+
+  /// No description provided for @friendsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get friendsCancel;
+
+  /// No description provided for @friendsSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get friendsSendRequest;
+
+  /// No description provided for @friendsRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get friendsRequestSent;
+
+  /// No description provided for @friendsNoRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get friendsNoRequests;
+
+  /// No description provided for @friendsNoFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get friendsNoFriends;
+
+  /// No description provided for @friendsNoFriendsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for users to add friends'**
+  String get friendsNoFriendsHint;
+
+  /// No description provided for @friendsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove friend'**
+  String get friendsRemove;
+
+  /// No description provided for @friendsAlreadyFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Already friends'**
+  String get friendsAlreadyFriends;
+
+  /// No description provided for @profileAddFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get profileAddFriend;
 }
 
 class _AppLocalizationsDelegate

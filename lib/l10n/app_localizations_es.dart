@@ -112,13 +112,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navDiscover => 'Descubrir';
 
   @override
-  String get navStats => 'Stats';
+  String get navStats => 'Estadísticas';
 
   @override
-  String get navSocial => 'Social';
+  String get navMessages => 'Mensajes';
 
   @override
-  String get navLibrary => 'Biblioteca';
+  String get navFriends => 'Amigos';
 
   @override
   String get searchTitle => 'Buscar usuarios';
@@ -270,4 +270,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String discoveryCompatible(String score) {
     return '$score% compatible';
   }
+
+  @override
+  String get friendsReceivedRequests => 'Solicitudes recibidas';
+
+  @override
+  String get friendsSentRequests => 'Solicitudes enviadas';
+
+  @override
+  String get friendsMyFriends => 'Mis amigos';
+
+  @override
+  String get friendsAccept => 'Aceptar';
+
+  @override
+  String get friendsReject => 'Rechazar';
+
+  @override
+  String get friendsCancel => 'Cancelar';
+
+  @override
+  String get friendsSendRequest => 'Enviar solicitud';
+
+  @override
+  String get friendsRequestSent => 'Solicitud enviada';
+
+  @override
+  String get friendsNoRequests => 'No hay solicitudes pendientes';
+
+  @override
+  String get friendsNoFriends => 'Aún no tienes amigos';
+
+  @override
+  String get friendsNoFriendsHint => 'Busca usuarios para añadir amigos';
+
+  @override
+  String get friendsRemove => 'Eliminar amigo';
+
+  @override
+  String get friendsAlreadyFriends => 'Ya son amigos';
+
+  @override
+  String get profileAddFriend => 'Añadir amigo';
 }

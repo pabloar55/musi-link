@@ -41,8 +41,8 @@
 
   "navDiscover": "Discover",
   "navStats": "Stats",
-  "navSocial": "Social",
-  "navLibrary": "Library",
+  "navMessages": "Messages",
+  "navFriends": "Friends",
 
   "searchTitle": "Search users",
   "searchHint": "Username...",
@@ -126,5 +126,21 @@
     "placeholders": {
       "score": { "type": "String" }
     }
-  }
+  },
+
+  "friendsReceivedRequests": "Received requests",
+  "friendsSentRequests": "Sent requests",
+  "friendsMyFriends": "My friends",
+  "friendsAccept": "Accept",
+  "friendsReject": "Reject",
+  "friendsCancel": "Cancel",
+  "friendsSendRequest": "Send request",
+  "friendsRequestSent": "Request sent",
+  "friendsNoRequests": "No pending requests",
+  "friendsNoFriends": "No friends yet",
+  "friendsNoFriendsHint": "Search for users to add friends",
+  "friendsRemove": "Remove friend",
+  "friendsRemoveBody": "This person will be removed from your friends list.",
+  "friendsAlreadyFriends": "Already friends",
+  "profileAddFriend": "Add friend"
 }

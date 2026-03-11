@@ -7,9 +7,33 @@ service cloud.firestore {
     match /users/{userId} {
       // Cualquier usuario autenticado puede leer perfiles (necesario para búsqueda y avatares)
       allow read: if request.auth != null;
-      // Solo el propio usuario puede crear/editar su perfil
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+      // El propio usuario puede crear su perfil
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // El propio usuario puede actualizar cualquier campo;
+      // otro usuario solo puede modificar el campo 'friends' (al aceptar solicitud de amistad)
+      allow update: if request.auth != null
+        && (request.auth.uid == userId
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']));
       allow delete: if false;
+    }
+
+    // ─── Solicitudes de amistad ───────────────────────────
+    match /friend_requests/{requestId} {
+      // Solo el remitente o destinatario puede leer
+      allow read: if request.auth != null
+        && (request.auth.uid == resource.data.senderId
+            || request.auth.uid == resource.data.receiverId);
+      // Solo el remitente puede crear (y debe ser él mismo)
+      allow create: if request.auth != null
+        && request.resource.data.senderId == request.auth.uid;
+      // El destinatario puede aceptar/rechazar; el remitente puede actualizar para cancelar
+      allow update: if request.auth != null
+        && (request.auth.uid == resource.data.senderId
+            || request.auth.uid == resource.data.receiverId);
+      // Ambos pueden eliminar
+      allow delete: if request.auth != null
+        && (request.auth.uid == resource.data.senderId
+            || request.auth.uid == resource.data.receiverId);
     }
 
     // ─── Chats ──────────────────────────────────────────

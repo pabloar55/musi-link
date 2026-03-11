@@ -113,10 +113,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navStats => 'Stats';
 
   @override
-  String get navSocial => 'Social';
+  String get navMessages => 'Messages';
 
   @override
-  String get navLibrary => 'Library';
+  String get navFriends => 'Friends';
 
   @override
   String get searchTitle => 'Search users';
@@ -268,4 +268,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String discoveryCompatible(String score) {
     return '$score% compatible';
   }
+
+  @override
+  String get friendsReceivedRequests => 'Received requests';
+
+  @override
+  String get friendsSentRequests => 'Sent requests';
+
+  @override
+  String get friendsMyFriends => 'My friends';
+
+  @override
+  String get friendsAccept => 'Accept';
+
+  @override
+  String get friendsReject => 'Reject';
+
+  @override
+  String get friendsCancel => 'Cancel';
+
+  @override
+  String get friendsSendRequest => 'Send request';
+
+  @override
+  String get friendsRequestSent => 'Request sent';
+
+  @override
+  String get friendsNoRequests => 'No pending requests';
+
+  @override
+  String get friendsNoFriends => 'No friends yet';
+
+  @override
+  String get friendsNoFriendsHint => 'Search for users to add friends';
+
+  @override
+  String get friendsRemove => 'Remove friend';
+
+  @override
+  String get friendsAlreadyFriends => 'Already friends';
+
+  @override
+  String get profileAddFriend => 'Add friend';
 }

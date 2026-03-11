@@ -35,9 +35,9 @@
   "homeNoUsersHint": "Cuando más usuarios conecten su Spotify, aparecerán aquí",
 
   "navDiscover": "Descubrir",
-  "navStats": "Stats",
-  "navSocial": "Social",
-  "navLibrary": "Biblioteca",
+  "navStats": "Estadísticas",
+  "navMessages": "Mensajes",
+  "navFriends": "Amigos",
 
   "searchTitle": "Buscar usuarios",
   "searchHint": "Nombre de usuario...",
@@ -91,5 +91,21 @@
 
   "discoverySharedArtists": "Artistas en común: {artists}",
   "discoverySharedGenres": "Géneros en común: {genres}",
-  "discoveryCompatible": "{score}% compatible"
+  "discoveryCompatible": "{score}% compatible",
+
+  "friendsReceivedRequests": "Solicitudes recibidas",
+  "friendsSentRequests": "Solicitudes enviadas",
+  "friendsMyFriends": "Mis amigos",
+  "friendsAccept": "Aceptar",
+  "friendsReject": "Rechazar",
+  "friendsCancel": "Cancelar",
+  "friendsSendRequest": "Enviar solicitud",
+  "friendsRequestSent": "Solicitud enviada",
+  "friendsNoRequests": "No hay solicitudes pendientes",
+  "friendsNoFriends": "Aún no tienes amigos",
+  "friendsNoFriendsHint": "Busca usuarios para añadir amigos",
+  "friendsRemove": "Eliminar amigo",
+  "friendsRemoveBody": "Esta persona será eliminada de tu lista de amigos.",
+  "friendsAlreadyFriends": "Ya son amigos",
+  "profileAddFriend": "Añadir amigo"
 }
