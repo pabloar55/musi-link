@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/components/artist_tile.dart';
 import 'package:musi_link/components/genre_tile.dart';
 import 'package:musi_link/core/chat_service.dart';
@@ -50,11 +51,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final user = widget.user;
     final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil musical')),
+      appBar: AppBar(title: Text(l10n.profileTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
@@ -109,7 +111,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'compatible',
+                            l10n.profileCompatible,
                             style: TextStyle(
                               fontSize: 16,
                               color: colorScheme.onSurfaceVariant,
@@ -118,7 +120,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           if (result.sharedArtistNames.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Text(
-                              'Artistas en comun',
+                              l10n.profileSharedArtists,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -138,7 +140,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           if (result.sharedGenreNames.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Text(
-                              'Generos en comun',
+                              l10n.profileSharedGenres,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -168,7 +170,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               FilledButton.icon(
                 onPressed: _startChat,
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Iniciar chat'),
+                label: Text(l10n.profileStartChat),
               ),
             ],
 
@@ -178,7 +180,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Este usuario aun no tiene datos musicales',
+                  l10n.profileNoData,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
@@ -194,7 +196,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Top Artistas',
+                    l10n.profileTopArtists,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -215,7 +217,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Top Generos',
+                    l10n.profileTopGenres,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

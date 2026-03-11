@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/core/spotify_service.dart';
 import 'package:musi_link/screens/main_screen.dart';
@@ -46,7 +47,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     } else {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al conectar con Spotify")),
+        SnackBar(content: Text(AppLocalizations.of(context)!.spotifyConnectError)),
       );
     }
   }
@@ -61,6 +62,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     if (_isLoading) {
       return const Scaffold(
@@ -82,14 +84,14 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Conecta tu Spotify",
+                l10n.spotifyConnectTitle,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               const SizedBox(height: 12),
               Text(
-                "Para ver tus estadísticas musicales necesitamos acceso a tu cuenta de Spotify.",
+                l10n.spotifyConnectDescription,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
@@ -100,7 +102,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
                 child: FilledButton.icon(
                   onPressed: _connectSpotify,
                   icon: const Icon(FontAwesomeIcons.spotify),
-                  label: const Text("Conectar Spotify"),
+                  label: Text(l10n.spotifyConnectButton),
                 ),
               ),
               const Spacer(flex: 3),

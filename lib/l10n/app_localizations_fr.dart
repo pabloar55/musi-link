@@ -1,0 +1,276 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for French (`fr`).
+class AppLocalizationsFr extends AppLocalizations {
+  AppLocalizationsFr([String locale = 'fr']) : super(locale);
+
+  @override
+  String get authName => 'Nom';
+
+  @override
+  String get authEmail => 'E-mail';
+
+  @override
+  String get authPassword => 'Mot de passe';
+
+  @override
+  String get authEnterName => 'Entrez votre nom';
+
+  @override
+  String get authEnterEmail => 'Entrez votre e-mail';
+
+  @override
+  String get authInvalidEmail => 'E-mail invalide';
+
+  @override
+  String get authEnterPassword => 'Entrez votre mot de passe';
+
+  @override
+  String get authMinChars => '6 caractères minimum';
+
+  @override
+  String get authErrorEmailInUse => 'Cet e-mail est déjà enregistré.';
+
+  @override
+  String get authErrorInvalidEmail => 'E-mail invalide.';
+
+  @override
+  String get authErrorWeakPassword =>
+      'Le mot de passe doit contenir au moins 6 caractères.';
+
+  @override
+  String get authErrorUserNotFound => 'Aucun compte trouvé avec cet e-mail.';
+
+  @override
+  String get authErrorWrongPassword => 'Mot de passe incorrect.';
+
+  @override
+  String get authErrorInvalidCredential => 'Identifiants invalides.';
+
+  @override
+  String get authErrorTooManyRequests =>
+      'Trop de tentatives. Veuillez patienter.';
+
+  @override
+  String authErrorGeneric(String code) {
+    return 'Erreur d\'authentification ($code).';
+  }
+
+  @override
+  String get authSignIn => 'Se connecter';
+
+  @override
+  String get authCreateAccount => 'Créer un compte';
+
+  @override
+  String get authOr => 'ou';
+
+  @override
+  String get authContinueGoogle => 'Continuer avec Google';
+
+  @override
+  String get authNoAccount => 'Vous n\'avez pas de compte ?';
+
+  @override
+  String get authHaveAccount => 'Vous avez déjà un compte ?';
+
+  @override
+  String get authRegister => 'S\'inscrire';
+
+  @override
+  String get authLogin => 'Se connecter';
+
+  @override
+  String get authErrorCouldNotAuth =>
+      'Impossible de s\'authentifier. Veuillez réessayer.';
+
+  @override
+  String get authErrorUnexpected => 'Erreur inattendue. Veuillez réessayer.';
+
+  @override
+  String get authErrorGoogleSignIn => 'Impossible de se connecter avec Google.';
+
+  @override
+  String get authErrorGoogleSignInGeneric =>
+      'Erreur lors de la connexion avec Google.';
+
+  @override
+  String get homeErrorLoading => 'Erreur lors du chargement de la découverte';
+
+  @override
+  String get homeNoUsers => 'Aucun utilisateur avec des données musicales';
+
+  @override
+  String get homeNoUsersHint =>
+      'Au fur et à mesure que d\'autres utilisateurs connectent leur Spotify, ils apparaîtront ici';
+
+  @override
+  String get navDiscover => 'Découvrir';
+
+  @override
+  String get navStats => 'Stats';
+
+  @override
+  String get navSocial => 'Social';
+
+  @override
+  String get navLibrary => 'Bibliothèque';
+
+  @override
+  String get searchTitle => 'Rechercher des utilisateurs';
+
+  @override
+  String get searchHint => 'Nom d\'utilisateur...';
+
+  @override
+  String get searchNoResults => 'Aucun utilisateur trouvé';
+
+  @override
+  String get searchTypeToSearch => 'Tapez un nom pour rechercher';
+
+  @override
+  String get searchSpotifyConnected => 'Spotify connecté';
+
+  @override
+  String get profileTitle => 'Profil musical';
+
+  @override
+  String get profileStartChat => 'Démarrer une conversation';
+
+  @override
+  String get profileNoData =>
+      'Cet utilisateur n\'a pas encore de données musicales';
+
+  @override
+  String get profileTopArtists => 'Top Artistes';
+
+  @override
+  String get profileTopGenres => 'Top Genres';
+
+  @override
+  String get profileCompatible => 'compatible';
+
+  @override
+  String get profileSharedArtists => 'Artistes en commun';
+
+  @override
+  String get profileSharedGenres => 'Genres en commun';
+
+  @override
+  String get chatWriteMessage => 'Écrire un message...';
+
+  @override
+  String get chatSearchSpotify => 'Rechercher une chanson sur Spotify...';
+
+  @override
+  String get chatShareSong => 'Partager une chanson';
+
+  @override
+  String get chatSendFirst => 'Envoyez le premier message';
+
+  @override
+  String get chatTypeToSearch => 'Tapez pour rechercher des chansons';
+
+  @override
+  String get chatNoResults => 'Aucun résultat';
+
+  @override
+  String get statsTracks => 'Titres';
+
+  @override
+  String get statsArtists => 'Artistes';
+
+  @override
+  String get statsGenres => 'Genres';
+
+  @override
+  String get statsShortTerm => '4 semaines';
+
+  @override
+  String get statsMediumTerm => '6 mois';
+
+  @override
+  String get statsLongTerm => '1 an';
+
+  @override
+  String statsError(String error) {
+    return 'Erreur : $error';
+  }
+
+  @override
+  String get statsNoData => 'Aucune donnée disponible';
+
+  @override
+  String get socialNow => 'Maintenant';
+
+  @override
+  String socialMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String socialDays(int days) {
+    return '${days}j';
+  }
+
+  @override
+  String get socialNoChats => 'Pas encore de conversations';
+
+  @override
+  String get socialNoChatsHint =>
+      'Recherchez des utilisateurs pour commencer à discuter';
+
+  @override
+  String get socialErrorLoading =>
+      'Erreur lors du chargement des conversations';
+
+  @override
+  String get socialLoading => 'Chargement...';
+
+  @override
+  String get socialUser => 'Utilisateur';
+
+  @override
+  String get spotifyConnectTitle => 'Connectez votre Spotify';
+
+  @override
+  String get spotifyConnectDescription =>
+      'Pour voir vos statistiques musicales, nous avons besoin d\'accéder à votre compte Spotify.';
+
+  @override
+  String get spotifyConnectButton => 'Connecter Spotify';
+
+  @override
+  String get spotifyConnectError => 'Erreur lors de la connexion à Spotify';
+
+  @override
+  String get menuAccountOptions => 'Options du compte';
+
+  @override
+  String get menuLightMode => 'Mode clair';
+
+  @override
+  String get menuDarkMode => 'Mode sombre';
+
+  @override
+  String get menuSignOut => 'Se déconnecter';
+
+  @override
+  String discoverySharedArtists(String artists) {
+    return 'Artistes en commun : $artists';
+  }
+
+  @override
+  String discoverySharedGenres(String genres) {
+    return 'Genres en commun : $genres';
+  }
+
+  @override
+  String discoveryCompatible(String score) {
+    return '$score% compatible';
+  }
+}

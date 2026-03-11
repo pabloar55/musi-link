@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/chat.dart';
@@ -42,16 +43,16 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   /// Formatea la hora del último mensaje.
-  String _formatTime(DateTime dateTime) {
+  String _formatTime(DateTime dateTime, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'Ahora';
-    if (diff.inHours < 1) return '${diff.inMinutes} min';
+    if (diff.inMinutes < 1) return l10n.socialNow;
+    if (diff.inHours < 1) return l10n.socialMinutes(diff.inMinutes);
     if (diff.inDays < 1) {
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
-    if (diff.inDays < 7) return '${diff.inDays}d';
+    if (diff.inDays < 7) return l10n.socialDays(diff.inDays);
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 
@@ -59,6 +60,7 @@ class _SocialScreenState extends State<SocialScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: StreamBuilder<List<Chat>>(
@@ -72,7 +74,7 @@ class _SocialScreenState extends State<SocialScreen>
             debugPrint('❌ Error en stream de chats: ${snapshot.error}');
             return Center(
               child: Text(
-                'Error al cargar conversaciones',
+                l10n.socialErrorLoading,
                 style: TextStyle(color: colorScheme.onSurface.withAlpha(150)),
               ),
             );
@@ -92,7 +94,7 @@ class _SocialScreenState extends State<SocialScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No tienes conversaciones aún',
+                    l10n.socialNoChats,
                     style: TextStyle(
                       color: colorScheme.onSurface.withAlpha(150),
                       fontSize: 16,
@@ -100,7 +102,7 @@ class _SocialScreenState extends State<SocialScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Busca usuarios para empezar a chatear',
+                    l10n.socialNoChatsHint,
                     style: TextStyle(
                       color: colorScheme.onSurface.withAlpha(100),
                       fontSize: 14,
@@ -132,7 +134,7 @@ class _SocialScreenState extends State<SocialScreen>
                       !userSnap.hasData;
                   final name =
                       otherUser?.displayName ??
-                      (isLoading ? 'Cargando...' : 'Usuario');
+                      (isLoading ? l10n.socialLoading : l10n.socialUser);
                   final photoUrl = otherUser?.photoUrl ?? '';
 
                   return ListTile(
@@ -164,7 +166,7 @@ class _SocialScreenState extends State<SocialScreen>
                       ),
                     ),
                     trailing: Text(
-                      _formatTime(chat.lastMessageTime),
+                      _formatTime(chat.lastMessageTime, l10n),
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onSurface.withAlpha(120),

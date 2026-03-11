@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/components/artist_tile.dart';
 import 'package:musi_link/components/filter_button.dart';
 import 'package:musi_link/components/genre_tile.dart';
@@ -36,10 +37,10 @@ class _StatsScreenState extends State<StatsScreen>
     TimeRange.longTerm: 'long_term',
   };
 
-  static const _timeRangeLabels = {
-    TimeRange.shortTerm: '4 weeks',
-    TimeRange.mediumTerm: '6 months',
-    TimeRange.longTerm: '1 year',
+  Map<TimeRange, String> _timeRangeLabels(AppLocalizations l10n) => {
+    TimeRange.shortTerm: l10n.statsShortTerm,
+    TimeRange.mediumTerm: l10n.statsMediumTerm,
+    TimeRange.longTerm: l10n.statsLongTerm,
   };
 
   String _cacheKey() => '${_selectedContent.name}_${_selectedTimeRange.name}';
@@ -115,21 +116,22 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildContentTypeFilter() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       spacing: 8,
       children: [
         FilterButton(
-          label: 'Tracks',
+          label: l10n.statsTracks,
           isSelected: _selectedContent == ContentType.tracks,
           onPressed: () => _onContentChanged(ContentType.tracks),
         ),
         FilterButton(
-          label: 'Artists',
+          label: l10n.statsArtists,
           isSelected: _selectedContent == ContentType.artists,
           onPressed: () => _onContentChanged(ContentType.artists),
         ),
         FilterButton(
-          label: 'Genres',
+          label: l10n.statsGenres,
           isSelected: _selectedContent == ContentType.genres,
           onPressed: () => _onContentChanged(ContentType.genres),
         ),
@@ -138,11 +140,13 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildTimeRangeFilter() {
+    final l10n = AppLocalizations.of(context)!;
+    final labels = _timeRangeLabels(l10n);
     return Row(
       spacing: 8,
       children: TimeRange.values.map((range) {
         return FilterButton(
-          label: _timeRangeLabels[range]!,
+          label: labels[range]!,
           isSelected: _selectedTimeRange == range,
           onPressed: () => _onTimeRangeChanged(range),
           fontSize: 11,
@@ -160,12 +164,12 @@ class _StatsScreenState extends State<StatsScreen>
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text(AppLocalizations.of(context)!.statsError(snapshot.error.toString())));
         }
 
         final data = snapshot.data ?? [];
         if (data.isEmpty) {
-          return const Center(child: Text('No hay datos disponibles'));
+          return Center(child: Text(AppLocalizations.of(context)!.statsNoData));
         }
 
         return ListView.builder(

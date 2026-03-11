@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/components/user_discovery_card.dart';
 import 'package:musi_link/core/models/discovery_result.dart';
 import 'package:musi_link/core/music_profile_service.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return FutureBuilder<List<DiscoveryResult>>(
       future: _discoveryFuture,
@@ -49,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Error al cargar descubrimiento',
+              l10n.homeErrorLoading,
               style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
           );
@@ -71,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No hay usuarios con datos musicales',
+                    l10n.homeNoUsers,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -80,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Cuando mas usuarios conecten su Spotify, aparecerán aqui',
+                    l10n.homeNoUsersHint,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/models/message.dart';
 import 'package:musi_link/core/models/track.dart';
@@ -89,6 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -124,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (messages.isEmpty) {
                   return Center(
                     child: Text(
-                      'Envía el primer mensaje',
+                      l10n.chatSendFirst,
                       style: TextStyle(
                         color: colorScheme.onSurface.withAlpha(120),
                       ),
@@ -173,6 +175,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar(ColorScheme colorScheme) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
@@ -191,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
             IconButton(
               onPressed: _showTrackSearch,
               icon: const Icon(Icons.music_note),
-              tooltip: 'Compartir canción',
+              tooltip: l10n.chatShareSong,
             ),
             Expanded(
               child: TextField(
@@ -200,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 maxLines: 4,
                 minLines: 1,
                 decoration: InputDecoration(
-                  hintText: 'Escribe un mensaje...',
+                  hintText: l10n.chatWriteMessage,
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
@@ -614,7 +617,7 @@ class _TrackSearchSheetState extends State<_TrackSearchSheet> {
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Buscar canción en Spotify...',
+                  hintText: AppLocalizations.of(context)!.chatSearchSpotify,
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
@@ -636,8 +639,8 @@ class _TrackSearchSheetState extends State<_TrackSearchSheet> {
                       ? Center(
                           child: Text(
                             _searchController.text.isEmpty
-                                ? 'Escribe para buscar canciones'
-                                : 'Sin resultados',
+                                ? AppLocalizations.of(context)!.chatTypeToSearch
+                                : AppLocalizations.of(context)!.chatNoResults,
                             style: TextStyle(
                               color: colorScheme.onSurface.withAlpha(120),
                             ),

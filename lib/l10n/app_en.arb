@@ -1,0 +1,130 @@
+{
+  "@@locale": "en",
+
+  "authName": "Name",
+  "authEmail": "Email",
+  "authPassword": "Password",
+  "authEnterName": "Enter your name",
+  "authEnterEmail": "Enter your email",
+  "authInvalidEmail": "Invalid email",
+  "authEnterPassword": "Enter your password",
+  "authMinChars": "Minimum 6 characters",
+  "authErrorEmailInUse": "This email is already registered.",
+  "authErrorInvalidEmail": "Invalid email.",
+  "authErrorWeakPassword": "Password must be at least 6 characters.",
+  "authErrorUserNotFound": "No account found with this email.",
+  "authErrorWrongPassword": "Incorrect password.",
+  "authErrorInvalidCredential": "Invalid credentials.",
+  "authErrorTooManyRequests": "Too many attempts. Please wait a moment.",
+  "authErrorGeneric": "Authentication error ({code}).",
+  "@authErrorGeneric": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "authSignIn": "Sign in",
+  "authCreateAccount": "Create account",
+  "authOr": "or",
+  "authContinueGoogle": "Continue with Google",
+  "authNoAccount": "Don't have an account?",
+  "authHaveAccount": "Already have an account?",
+  "authRegister": "Sign up",
+  "authLogin": "Log in",
+  "authErrorCouldNotAuth": "Could not authenticate. Please try again.",
+  "authErrorUnexpected": "Unexpected error. Please try again.",
+  "authErrorGoogleSignIn": "Could not sign in with Google.",
+  "authErrorGoogleSignInGeneric": "Error signing in with Google.",
+
+  "homeErrorLoading": "Error loading discovery",
+  "homeNoUsers": "No users with music data",
+  "homeNoUsersHint": "As more users connect their Spotify, they will appear here",
+
+  "navDiscover": "Discover",
+  "navStats": "Stats",
+  "navSocial": "Social",
+  "navLibrary": "Library",
+
+  "searchTitle": "Search users",
+  "searchHint": "Username...",
+  "searchNoResults": "No users found",
+  "searchTypeToSearch": "Type a name to search",
+  "searchSpotifyConnected": "Spotify connected",
+
+  "profileTitle": "Music profile",
+  "profileStartChat": "Start chat",
+  "profileNoData": "This user doesn't have music data yet",
+  "profileTopArtists": "Top Artists",
+  "profileTopGenres": "Top Genres",
+  "profileCompatible": "compatible",
+  "profileSharedArtists": "Artists in common",
+  "profileSharedGenres": "Genres in common",
+
+  "chatWriteMessage": "Write a message...",
+  "chatSearchSpotify": "Search song on Spotify...",
+  "chatShareSong": "Share song",
+  "chatSendFirst": "Send the first message",
+  "chatTypeToSearch": "Type to search songs",
+  "chatNoResults": "No results",
+
+  "statsTracks": "Tracks",
+  "statsArtists": "Artists",
+  "statsGenres": "Genres",
+  "statsShortTerm": "4 weeks",
+  "statsMediumTerm": "6 months",
+  "statsLongTerm": "1 year",
+  "statsError": "Error: {error}",
+  "@statsError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "statsNoData": "No data available",
+
+  "socialNow": "Now",
+  "socialMinutes": "{minutes} min",
+  "@socialMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "socialDays": "{days}d",
+  "@socialDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "socialNoChats": "No conversations yet",
+  "socialNoChatsHint": "Search for users to start chatting",
+  "socialErrorLoading": "Error loading conversations",
+  "socialLoading": "Loading...",
+  "socialUser": "User",
+
+  "spotifyConnectTitle": "Connect your Spotify",
+  "spotifyConnectDescription": "To see your music stats we need access to your Spotify account.",
+  "spotifyConnectButton": "Connect Spotify",
+  "spotifyConnectError": "Error connecting to Spotify",
+
+  "menuAccountOptions": "Account options",
+  "menuLightMode": "Light mode",
+  "menuDarkMode": "Dark mode",
+  "menuSignOut": "Sign out",
+
+  "discoverySharedArtists": "Artists in common: {artists}",
+  "@discoverySharedArtists": {
+    "placeholders": {
+      "artists": { "type": "String" }
+    }
+  },
+  "discoverySharedGenres": "Genres in common: {genres}",
+  "@discoverySharedGenres": {
+    "placeholders": {
+      "genres": { "type": "String" }
+    }
+  },
+  "discoveryCompatible": "{score}% compatible",
+  "@discoveryCompatible": {
+    "placeholders": {
+      "score": { "type": "String" }
+    }
+  }
+}

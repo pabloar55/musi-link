@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/firebase_options.dart';
 import 'package:musi_link/core/theme/app_theme.dart';
 import 'package:musi_link/core/theme/theme_mode_controller.dart';
@@ -32,6 +33,8 @@ class MainApp extends StatelessWidget {
         themeMode: themeMode,
         darkTheme: AppTheme.darkTheme,
         theme: AppTheme.lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {

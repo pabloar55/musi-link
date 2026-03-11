@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/auth_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/spotify_service.dart';
@@ -65,7 +66,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
                 : (firebaseUser?.photoURL ?? '');
 
             return PopupMenuButton<_UserMenuAction>(
-              tooltip: 'Opciones de cuenta',
+              tooltip: AppLocalizations.of(context)!.menuAccountOptions,
               onSelected: _handleUserMenuAction,
               itemBuilder: (context) => [
                 PopupMenuItem(
@@ -75,16 +76,16 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
                       isDarkMode ? Icons.sunny : FontAwesomeIcons.solidMoon,
                     ),
                     title: Text(
-                      isDarkMode ? 'Modo claro' : 'Modo oscuro',
+                      isDarkMode ? AppLocalizations.of(context)!.menuLightMode : AppLocalizations.of(context)!.menuDarkMode,
                     ),
                   ),
                 ),
                 const PopupMenuDivider(),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _UserMenuAction.logout,
                   child: ListTile(
-                    leading: Icon(Icons.logout),
-                    title: Text('Cerrar sesión'),
+                    leading: const Icon(Icons.logout),
+                    title: Text(AppLocalizations.of(context)!.menuSignOut),
                   ),
                 ),
               ],

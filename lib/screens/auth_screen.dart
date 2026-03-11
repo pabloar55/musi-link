@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/core/auth_service.dart';
 
@@ -51,12 +52,12 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       if (user == null && mounted) {
-        _showError("No se pudo autenticar. Inténtalo de nuevo.");
+        _showError(AppLocalizations.of(context)!.authErrorCouldNotAuth);
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
-      if (mounted) _showError("Error inesperado. Inténtalo de nuevo.");
+      if (mounted) _showError(AppLocalizations.of(context)!.authErrorUnexpected);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -67,12 +68,12 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       final user = await _auth.signInWithGoogle();
       if (user == null && mounted) {
-        _showError("No se pudo iniciar sesión con Google.");
+        _showError(AppLocalizations.of(context)!.authErrorGoogleSignIn);
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
-      if (mounted) _showError("Error al iniciar sesión con Google.");
+      if (mounted) _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -85,29 +86,31 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   String _mapFirebaseError(String code) {
+    final l10n = AppLocalizations.of(context)!;
     switch (code) {
       case 'email-already-in-use':
-        return 'Este email ya está registrado.';
+        return l10n.authErrorEmailInUse;
       case 'invalid-email':
-        return 'Email no válido.';
+        return l10n.authErrorInvalidEmail;
       case 'weak-password':
-        return 'La contraseña debe tener al menos 6 caracteres.';
+        return l10n.authErrorWeakPassword;
       case 'user-not-found':
-        return 'No existe una cuenta con este email.';
+        return l10n.authErrorUserNotFound;
       case 'wrong-password':
-        return 'Contraseña incorrecta.';
+        return l10n.authErrorWrongPassword;
       case 'invalid-credential':
-        return 'Credenciales incorrectas.';
+        return l10n.authErrorInvalidCredential;
       case 'too-many-requests':
-        return 'Demasiados intentos. Espera un momento.';
+        return l10n.authErrorTooManyRequests;
       default:
-        return 'Error de autenticación ($code).';
+        return l10n.authErrorGeneric(code);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -134,15 +137,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         TextFormField(
                           controller: _nameController,
                           textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            labelText: "Nombre",
-                            prefixIcon: Icon(Icons.person_outline),
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: l10n.authName,
+                            prefixIcon: const Icon(Icons.person_outline),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (!_isLogin &&
                                 (value == null || value.trim().isEmpty)) {
-                              return 'Introduce tu nombre';
+                              return l10n.authEnterName;
                             }
                             return null;
                           },
@@ -154,17 +157,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         autocorrect: false,
-                        decoration: const InputDecoration(
-                          labelText: "Email",
-                          prefixIcon: Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.authEmail,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          border: const OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Introduce tu email';
+                            return l10n.authEnterEmail;
                           }
                           if (!value.contains('@')) {
-                            return 'Email no válido';
+                            return l10n.authInvalidEmail;
                           }
                           return null;
                         },
@@ -176,7 +179,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: "Contraseña",
+                          labelText: l10n.authPassword,
                           prefixIcon: const Icon(Icons.lock_outline),
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
@@ -193,10 +196,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Introduce tu contraseña';
+                            return l10n.authEnterPassword;
                           }
                           if (!_isLogin && value.length < 6) {
-                            return 'Mínimo 6 caracteres';
+                            return l10n.authMinChars;
                           }
                           return null;
                         },
@@ -219,8 +222,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 )
                               : Text(_isLogin
-                                  ? "Iniciar sesión"
-                                  : "Crear cuenta"),
+                                  ? l10n.authSignIn
+                                  : l10n.authCreateAccount),
                         ),
                       ),
                     ],
@@ -235,7 +238,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        "o",
+                        l10n.authOr,
                         style: TextStyle(color: colorScheme.onSurfaceVariant),
                       ),
                     ),
@@ -251,7 +254,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signInWithGoogle,
                     icon: const Icon(FontAwesomeIcons.google, size: 20),
-                    label: const Text("Continuar con Google"),
+                    label: Text(l10n.authContinueGoogle),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -262,8 +265,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
                     Text(
                       _isLogin
-                          ? "¿No tienes cuenta?"
-                          : "¿Ya tienes cuenta?",
+                          ? l10n.authNoAccount
+                          : l10n.authHaveAccount,
                     ),
                     TextButton(
                       onPressed: _isLoading
@@ -273,7 +276,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               _formKey.currentState?.reset();
                             },
                       child: Text(
-                        _isLogin ? "Regístrate" : "Inicia sesión",
+                        _isLogin ? l10n.authRegister : l10n.authLogin,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.primary,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/user_service.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
@@ -76,10 +77,11 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buscar usuarios'),
+        title: Text(l10n.searchTitle),
       ),
       body: Column(
         children: [
@@ -90,7 +92,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               controller: _searchController,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Nombre de usuario...',
+                hintText: l10n.searchHint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
@@ -124,8 +126,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     ? Center(
                         child: Text(
                           _hasSearched
-                              ? 'No se encontraron usuarios'
-                              : 'Escribe un nombre para buscar',
+                              ? l10n.searchNoResults
+                              : l10n.searchTypeToSearch,
                           style: TextStyle(
                             color: colorScheme.onSurface.withAlpha(120),
                           ),
@@ -157,7 +159,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                             title: Text(user.displayName),
                             subtitle: user.spotifyId != null
                                 ? Text(
-                                    'Spotify conectado',
+                                    l10n.searchSpotifyConnected,
                                     style: TextStyle(
                                       color: colorScheme.primary,
                                       fontSize: 12,

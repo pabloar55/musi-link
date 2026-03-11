@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/models/discovery_result.dart';
 
 class UserDiscoveryCard extends StatelessWidget {
@@ -14,6 +15,7 @@ class UserDiscoveryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final user = result.user;
 
     return Card(
@@ -50,7 +52,7 @@ class UserDiscoveryCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${result.score.round()}% compatible',
+                          l10n.discoveryCompatible(result.score.round().toString()),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -75,7 +77,7 @@ class UserDiscoveryCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Artistas en común: ${result.sharedArtistNames.join(', ')}',
+                        l10n.discoverySharedArtists(result.sharedArtistNames.join(', ')),
                         style: TextStyle(
                           fontSize: 13,
                           color: colorScheme.onSurfaceVariant,
@@ -96,7 +98,7 @@ class UserDiscoveryCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Géneros en común: ${result.sharedGenreNames.join(', ')}',
+                        l10n.discoverySharedGenres(result.sharedGenreNames.join(', ')),
                         style: TextStyle(
                           fontSize: 13,
                           color: colorScheme.onSurfaceVariant,
