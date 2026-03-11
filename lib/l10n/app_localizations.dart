@@ -658,6 +658,12 @@ abstract class AppLocalizations {
   /// **'Remove friend'**
   String get friendsRemove;
 
+  /// No description provided for @friendsRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This person will be removed from your friends list.'**
+  String get friendsRemoveBody;
+
   /// No description provided for @friendsAlreadyFriends.
   ///
   /// In en, this message translates to:

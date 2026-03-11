@@ -312,6 +312,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get friendsRemove => 'Supprimer l\'ami';
 
   @override
+  String get friendsRemoveBody =>
+      'Cette personne sera supprimée de votre liste d\'amis.';
+
+  @override
   String get friendsAlreadyFriends => 'Déjà amis';
 
   @override

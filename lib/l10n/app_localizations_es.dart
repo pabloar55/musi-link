@@ -308,6 +308,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get friendsRemove => 'Eliminar amigo';
 
   @override
+  String get friendsRemoveBody =>
+      'Esta persona será eliminada de tu lista de amigos.';
+
+  @override
   String get friendsAlreadyFriends => 'Ya son amigos';
 
   @override

@@ -8,6 +8,7 @@ import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/discovery_result.dart';
 import 'package:musi_link/core/music_profile_service.dart';
+import 'package:musi_link/components/remove_friend_dialog.dart';
 import 'package:musi_link/screens/chat_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -81,6 +82,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     await FriendService.instance.cancelRequest(requestId);
     if (!mounted) return;
     _refreshRelationship();
+  }
+
+  Future<void> _removeFriend() async {
+    final confirmed = await showRemoveFriendDialog(context);
+    if (confirmed == true) {
+      await FriendService.instance.removeFriend(widget.user.uid);
+      if (!mounted) return;
+      _refreshRelationship();
+    }
   }
 
   @override
@@ -217,10 +227,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                   switch (relationship.status) {
                     case RelationshipStatus.friends:
-                      return FilledButton.icon(
-                        onPressed: _startChat,
-                        icon: const Icon(Icons.chat_bubble_outline),
-                        label: Text(l10n.profileStartChat),
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: _startChat,
+                            icon: const Icon(Icons.chat_bubble_outline),
+                            label: Text(l10n.profileStartChat),
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton.icon(
+                            onPressed: _removeFriend,
+                            icon: Icon(Icons.person_remove,
+                                color: colorScheme.error),
+                            label: Text(
+                              l10n.friendsRemove,
+                              style: TextStyle(color: colorScheme.error),
+                            ),
+                          ),
+                        ],
                       );
 
                     case RelationshipStatus.requestSent:
