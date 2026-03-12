@@ -4,7 +4,8 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/chat.dart';
-import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/core/user_future_cache.dart';
+import 'package:musi_link/components/user_circle_avatar.dart';
 import 'package:musi_link/screens/chat_screen.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
@@ -16,10 +17,7 @@ class SocialScreen extends StatefulWidget {
 }
 
 class _SocialScreenState extends State<SocialScreen>
-    with AutomaticKeepAliveClientMixin {
-  // Memoiza la carga de perfiles para no reiniciar el FutureBuilder en cada build.
-  final Map<String, Future<AppUser?>> _userFutures = {};
-
+    with AutomaticKeepAliveClientMixin, UserFutureCache {
   @override
   bool get wantKeepAlive => true;
 
@@ -30,14 +28,6 @@ class _SocialScreenState extends State<SocialScreen>
     return chat.participants.firstWhere(
       (uid) => uid != _currentUid,
       orElse: () => '',
-    );
-  }
-
-  Future<AppUser?> _getUserFuture(String uid) {
-    if (uid.isEmpty) return Future.value(null);
-    return _userFutures.putIfAbsent(
-      uid,
-      () => UserService.instance.getUser(uid),
     );
   }
 
@@ -125,7 +115,7 @@ class _SocialScreenState extends State<SocialScreen>
               final otherUid = _otherUid(chat);
 
               return FutureBuilder<AppUser?>(
-                future: _getUserFuture(otherUid),
+                future: getUserFuture(otherUid),
                 builder: (context, userSnap) {
                   final otherUser = userSnap.data;
                   final isLoading =
@@ -137,20 +127,10 @@ class _SocialScreenState extends State<SocialScreen>
                   final photoUrl = otherUser?.photoUrl ?? '';
 
                   return ListTile(
-                    leading: CircleAvatar(
+                    leading: UserCircleAvatar(
+                      photoUrl: photoUrl,
+                      name: name,
                       radius: 24,
-                      backgroundImage: photoUrl.isNotEmpty
-                          ? NetworkImage(photoUrl)
-                          : null,
-                      child: photoUrl.isEmpty
-                          ? Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                color: colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          : null,
                     ),
                     title: Text(
                       name,

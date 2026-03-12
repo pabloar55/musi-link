@@ -6,6 +6,7 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/components/user_circle_avatar.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 
 /// Pantalla para buscar usuarios y enviar solicitudes de amistad.
@@ -189,21 +190,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                           final rel = _relationships[user.uid];
 
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: photoUrl.isNotEmpty
-                                  ? NetworkImage(photoUrl)
-                                  : null,
-                              child: photoUrl.isEmpty
-                                  ? Text(
-                                      user.displayName.isNotEmpty
-                                          ? user.displayName[0].toUpperCase()
-                                          : '?',
-                                      style: TextStyle(
-                                        color: colorScheme.onPrimary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : null,
+                            leading: UserCircleAvatar(
+                              photoUrl: photoUrl,
+                              name: user.displayName,
                             ),
                             title: Text(user.displayName),
                             subtitle: user.spotifyId != null

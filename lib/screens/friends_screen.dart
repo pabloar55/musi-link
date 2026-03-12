@@ -3,9 +3,10 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/friend_request.dart';
-import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/core/user_future_cache.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:musi_link/components/remove_friend_dialog.dart';
+import 'package:musi_link/components/user_circle_avatar.dart';
 import 'package:musi_link/screens/user_search_screen.dart';
 
 /// Pantalla de amigos: solicitudes pendientes + lista de amigos.
@@ -17,24 +18,14 @@ class FriendsScreen extends StatefulWidget {
 }
 
 class _FriendsScreenState extends State<FriendsScreen>
-    with AutomaticKeepAliveClientMixin {
-  final Map<String, Future<AppUser?>> _userFutures = {};
-
+    with AutomaticKeepAliveClientMixin, UserFutureCache {
   @override
   bool get wantKeepAlive => true;
-
-  Future<AppUser?> _getUserFuture(String uid) {
-    if (uid.isEmpty) return Future.value(null);
-    return _userFutures.putIfAbsent(
-      uid,
-      () => UserService.instance.getUser(uid),
-    );
-  }
 
   Future<void> _showRemoveFriendDialog(String uid, String? name) async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
-      _userFutures.remove(uid);
+      invalidateUserFuture(uid);
       await FriendService.instance.removeFriend(uid);
     }
   }
@@ -68,7 +59,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                 children: requests.map((request) {
                   return _RequestTile(
                     uid: request.senderId,
-                    getUserFuture: _getUserFuture,
+                    getUserFuture: getUserFuture,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -114,7 +105,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                 children: requests.map((request) {
                   return _RequestTile(
                     uid: request.receiverId,
-                    getUserFuture: _getUserFuture,
+                    getUserFuture: getUserFuture,
                     trailing: TextButton(
                       onPressed: () =>
                           FriendService.instance.cancelRequest(request.id),
@@ -161,7 +152,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                 children: friendUids.map((uid) {
                   return _FriendTile(
                     uid: uid,
-                    getUserFuture: _getUserFuture,
+                    getUserFuture: getUserFuture,
                     onTap: (user) {
                       if (user != null) {
                         Navigator.of(context).push(
@@ -248,7 +239,6 @@ class _RequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return FutureBuilder<AppUser?>(
       future: getUserFuture(uid),
       builder: (context, snapshot) {
@@ -262,19 +252,9 @@ class _RequestTile extends StatelessWidget {
         final photoUrl = user?.photoUrl ?? '';
 
         return ListTile(
-          leading: CircleAvatar(
-            radius: 22,
-            backgroundImage:
-                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-            child: photoUrl.isEmpty
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
+          leading: UserCircleAvatar(
+            photoUrl: photoUrl,
+            name: name,
           ),
           title:
               Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -300,7 +280,6 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return FutureBuilder<AppUser?>(
       future: getUserFuture(uid),
       builder: (context, snapshot) {
@@ -314,19 +293,9 @@ class _FriendTile extends StatelessWidget {
         final photoUrl = user?.photoUrl ?? '';
 
         return ListTile(
-          leading: CircleAvatar(
-            radius: 22,
-            backgroundImage:
-                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-            child: photoUrl.isEmpty
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
+          leading: UserCircleAvatar(
+            photoUrl: photoUrl,
+            name: name,
           ),
           title:
               Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),

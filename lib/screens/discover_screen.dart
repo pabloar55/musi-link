@@ -10,6 +10,7 @@ import 'package:musi_link/core/models/track.dart';
 import 'package:musi_link/core/music_profile_service.dart';
 import 'package:musi_link/core/spotify_get_stats.dart';
 import 'package:musi_link/core/user_service.dart';
+import 'package:musi_link/components/user_circle_avatar.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -505,19 +506,10 @@ class _FriendDailySongCard extends StatelessWidget {
               // Avatar del amigo
               GestureDetector(
                 onTap: onTapProfile,
-                child: CircleAvatar(
+                child: UserCircleAvatar(
+                  photoUrl: friend.photoUrl,
+                  name: friend.displayName,
                   radius: 20,
-                  backgroundImage: friend.photoUrl.isNotEmpty
-                      ? NetworkImage(friend.photoUrl)
-                      : null,
-                  child: friend.photoUrl.isEmpty
-                      ? Text(
-                          friend.displayName.isNotEmpty
-                              ? friend.displayName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : null,
                 ),
               ),
               const SizedBox(width: 12),
