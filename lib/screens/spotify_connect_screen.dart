@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/services/spotify_service.dart';
-import 'package:musi_link/screens/home/main_screen.dart';
+import 'package:musi_link/screens/main_screen.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
 /// con Firebase. Si el usuario ya tiene token de Spotify válido,

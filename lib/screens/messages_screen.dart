@@ -6,17 +6,17 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
-import 'package:musi_link/screens/chat/chat_screen.dart';
+import 'package:musi_link/screens/chat_screen.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
-class SocialScreen extends StatefulWidget {
-  const SocialScreen({super.key});
+class MessagesScreen extends StatefulWidget {
+  const MessagesScreen({super.key});
 
   @override
-  State<SocialScreen> createState() => _SocialScreenState();
+  State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _SocialScreenState extends State<SocialScreen>
+class _MessagesScreenState extends State<MessagesScreen>
     with AutomaticKeepAliveClientMixin, UserFutureCache {
   @override
   bool get wantKeepAlive => true;

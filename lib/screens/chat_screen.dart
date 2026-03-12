@@ -4,10 +4,10 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/services/user_service.dart';
-import 'package:musi_link/screens/chat/message_bubble.dart';
-import 'package:musi_link/screens/chat/track_bubble.dart';
-import 'package:musi_link/screens/chat/track_search_sheet.dart';
-import 'package:musi_link/screens/profile/user_profile_screen.dart';
+import 'package:musi_link/widgets/chat/message_bubble.dart';
+import 'package:musi_link/widgets/chat/track_bubble.dart';
+import 'package:musi_link/widgets/chat/track_search_sheet.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 
 /// Pantalla de conversación individual.
 class ChatScreen extends StatefulWidget {

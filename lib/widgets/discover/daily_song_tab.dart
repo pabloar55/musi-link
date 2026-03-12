@@ -4,10 +4,10 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/services/user_service.dart';
-import 'package:musi_link/screens/discover/daily_song_card.dart';
-import 'package:musi_link/screens/discover/daily_song_search_sheet.dart';
-import 'package:musi_link/screens/discover/friend_daily_song_card.dart';
-import 'package:musi_link/screens/profile/user_profile_screen.dart';
+import 'package:musi_link/widgets/discover/daily_song_card.dart';
+import 'package:musi_link/widgets/discover/daily_song_search_sheet.dart';
+import 'package:musi_link/widgets/discover/friend_daily_song_card.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DailySongTab extends StatefulWidget {

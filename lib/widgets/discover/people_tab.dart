@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/widgets/user_discovery_card.dart';
 import 'package:musi_link/models/discovery_result.dart';
-import 'package:musi_link/screens/profile/user_profile_screen.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 
 class PeopleTab extends StatelessWidget {
   final Future<List<DiscoveryResult>> discoveryFuture;

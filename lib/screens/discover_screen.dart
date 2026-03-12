@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/music_profile_service.dart';
-import 'package:musi_link/screens/discover/people_tab.dart';
-import 'package:musi_link/screens/discover/daily_song_tab.dart';
+import 'package:musi_link/widgets/discover/people_tab.dart';
+import 'package:musi_link/widgets/discover/daily_song_tab.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});

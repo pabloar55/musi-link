@@ -10,7 +10,7 @@ import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
-import 'package:musi_link/screens/chat/chat_screen.dart';
+import 'package:musi_link/screens/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserProfileScreen extends StatefulWidget {

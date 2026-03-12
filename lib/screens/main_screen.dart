@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/widgets/user_avatar_menu.dart';
-import 'package:musi_link/screens/discover/discover_screen.dart';
-import 'package:musi_link/screens/social/social_screen.dart';
-import 'package:musi_link/screens/stats/stats_screen.dart';
-import 'package:musi_link/screens/friends/friends_screen.dart';
+import 'package:musi_link/screens/discover_screen.dart';
+import 'package:musi_link/screens/messages_screen.dart';
+import 'package:musi_link/screens/stats_screen.dart';
+import 'package:musi_link/screens/friends_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> screens = [
     const DiscoverScreen(),
     const StatsScreen(),
-    const SocialScreen(),
+    const MessagesScreen(),
     const FriendsScreen(),
   ];
 

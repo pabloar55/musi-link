@@ -3,13 +3,13 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
-import 'package:musi_link/screens/friends/section_header.dart';
-import 'package:musi_link/screens/friends/empty_message.dart';
-import 'package:musi_link/screens/friends/request_tile.dart';
-import 'package:musi_link/screens/friends/friend_tile.dart';
-import 'package:musi_link/screens/profile/user_profile_screen.dart';
+import 'package:musi_link/widgets/friends/section_header.dart';
+import 'package:musi_link/widgets/friends/empty_message.dart';
+import 'package:musi_link/widgets/friends/request_tile.dart';
+import 'package:musi_link/widgets/friends/friend_tile.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
-import 'package:musi_link/screens/search/user_search_screen.dart';
+import 'package:musi_link/screens/user_search_screen.dart';
 
 /// Pantalla de amigos: solicitudes pendientes + lista de amigos.
 class FriendsScreen extends StatefulWidget {

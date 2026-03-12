@@ -7,7 +7,7 @@ import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
-import 'package:musi_link/screens/profile/user_profile_screen.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
 
 /// Pantalla para buscar usuarios y enviar solicitudes de amistad.
 class UserSearchScreen extends StatefulWidget {
