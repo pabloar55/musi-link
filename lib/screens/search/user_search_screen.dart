@@ -1,0 +1,255 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/services/friend_service.dart';
+import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/services/user_service.dart';
+import 'package:musi_link/widgets/user_circle_avatar.dart';
+import 'package:musi_link/screens/profile/user_profile_screen.dart';
+
+/// Pantalla para buscar usuarios y enviar solicitudes de amistad.
+class UserSearchScreen extends StatefulWidget {
+  const UserSearchScreen({super.key});
+
+  @override
+  State<UserSearchScreen> createState() => _UserSearchScreenState();
+}
+
+class _UserSearchScreenState extends State<UserSearchScreen> {
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  List<AppUser> _results = [];
+  bool _isLoading = false;
+  bool _hasSearched = false;
+
+  // Cache de relaciones para los resultados actuales
+  final Map<String, RelationshipResult> _relationships = {};
+
+  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() {
+        _results = [];
+        _hasSearched = false;
+        _isLoading = false;
+        _relationships.clear();
+      });
+      return;
+    }
+    setState(() => _isLoading = true);
+    _debounce = Timer(const Duration(milliseconds: 400), _search);
+  }
+
+  Future<void> _search() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+    });
+
+    final users = await UserService.instance
+        .searchUsers(query, excludeUid: _currentUid);
+
+    // Cargar relaciones para todos los resultados
+    final relationships = <String, RelationshipResult>{};
+    for (final user in users) {
+      relationships[user.uid] =
+          await FriendService.instance.getRelationship(user.uid);
+    }
+
+    if (mounted) {
+      setState(() {
+        _results = users;
+        _relationships
+          ..clear()
+          ..addAll(relationships);
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _sendRequest(String uid) async {
+    await FriendService.instance.sendRequest(uid);
+    if (!mounted) return;
+    // Refrescar solo este usuario
+    final rel = await FriendService.instance.getRelationship(uid);
+    if (mounted) {
+      setState(() => _relationships[uid] = rel);
+    }
+  }
+
+  Future<void> _cancelRequest(String uid, String requestId) async {
+    await FriendService.instance.cancelRequest(requestId);
+    if (!mounted) return;
+    final rel = await FriendService.instance.getRelationship(uid);
+    if (mounted) {
+      setState(() => _relationships[uid] = rel);
+    }
+  }
+
+  void _openProfile(AppUser user) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => UserProfileScreen(user: user),
+      ),
+    ).then((_) {
+      // Refrescar relaciones al volver del perfil
+      if (mounted && _results.isNotEmpty) {
+        _refreshRelationships();
+      }
+    });
+  }
+
+  Future<void> _refreshRelationships() async {
+    for (final user in _results) {
+      final rel = await FriendService.instance.getRelationship(user.uid);
+      if (mounted) {
+        setState(() => _relationships[user.uid] = rel);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.searchTitle),
+      ),
+      body: Column(
+        children: [
+          // Barra de búsqueda
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l10n.searchHint,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _debounce?.cancel();
+                    _searchController.clear();
+                    setState(() {
+                      _results = [];
+                      _hasSearched = false;
+                      _relationships.clear();
+                    });
+                  },
+                ),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onChanged: _onSearchChanged,
+            ),
+          ),
+
+          // Resultados
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _results.isEmpty
+                    ? Center(
+                        child: Text(
+                          _hasSearched
+                              ? l10n.searchNoResults
+                              : l10n.searchTypeToSearch,
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withAlpha(120),
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _results.length,
+                        itemBuilder: (context, index) {
+                          final user = _results[index];
+                          final photoUrl = user.photoUrl;
+                          final rel = _relationships[user.uid];
+
+                          return ListTile(
+                            leading: UserCircleAvatar(
+                              photoUrl: photoUrl,
+                              name: user.displayName,
+                            ),
+                            title: Text(user.displayName),
+                            subtitle: user.spotifyId != null
+                                ? Text(
+                                    l10n.searchSpotifyConnected,
+                                    style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontSize: 12,
+                                    ),
+                                  )
+                                : null,
+                            trailing: _buildTrailingAction(
+                                user, rel, colorScheme, l10n),
+                            onTap: () => _openProfile(user),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrailingAction(
+    AppUser user,
+    RelationshipResult? rel,
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
+    if (rel == null) {
+      return Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant);
+    }
+
+    switch (rel.status) {
+      case RelationshipStatus.friends:
+        return Icon(Icons.people, color: colorScheme.primary);
+
+      case RelationshipStatus.requestSent:
+        return IconButton(
+          icon: Icon(Icons.hourglass_top, color: colorScheme.onSurfaceVariant),
+          tooltip: l10n.friendsRequestSent,
+          onPressed: () {
+            if (rel.requestId != null) {
+              _cancelRequest(user.uid, rel.requestId!);
+            }
+          },
+        );
+
+      case RelationshipStatus.requestReceived:
+        return Icon(Icons.mail, color: colorScheme.primary);
+
+      case RelationshipStatus.none:
+        return IconButton(
+          icon: Icon(Icons.person_add, color: colorScheme.primary),
+          tooltip: l10n.friendsSendRequest,
+          onPressed: () => _sendRequest(user.uid),
+        );
+    }
+  }
+}

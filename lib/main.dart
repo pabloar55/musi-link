@@ -5,11 +5,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/core/firebase_options.dart';
-import 'package:musi_link/core/theme/app_theme.dart';
-import 'package:musi_link/core/theme/theme_mode_controller.dart';
-import 'package:musi_link/screens/auth_screen.dart';
-import 'package:musi_link/screens/spotify_connect_screen.dart';
+import 'package:musi_link/firebase_options.dart';
+import 'package:musi_link/theme/app_theme.dart';
+import 'package:musi_link/theme/theme_mode_controller.dart';
+import 'package:musi_link/screens/auth/auth_screen.dart';
+import 'package:musi_link/screens/spotify/spotify_connect_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
