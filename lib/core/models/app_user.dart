@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:musi_link/core/models/artist.dart';
 import 'package:musi_link/core/models/genre.dart';
+import 'package:musi_link/core/models/track.dart';
 
 class AppUser {
   final String uid;
@@ -16,6 +17,8 @@ class AppUser {
   final List<String> topGenreNames;
   final DateTime? musicDataUpdatedAt;
   final List<String> friends;
+  final Track? dailySong;
+  final DateTime? dailySongUpdatedAt;
 
   const AppUser({
     required this.uid,
@@ -31,6 +34,8 @@ class AppUser {
     this.topGenreNames = const [],
     this.musicDataUpdatedAt,
     this.friends = const [],
+    this.dailySong,
+    this.dailySongUpdatedAt,
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -67,6 +72,11 @@ class AppUser {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      dailySong: data['dailySong'] != null
+          ? Track.fromMap(data['dailySong'] as Map<String, dynamic>)
+          : null,
+      dailySongUpdatedAt:
+          (data['dailySongUpdatedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -93,6 +103,8 @@ class AppUser {
     List<String>? topGenreNames,
     DateTime? musicDataUpdatedAt,
     List<String>? friends,
+    Track? dailySong,
+    DateTime? dailySongUpdatedAt,
   }) {
     return AppUser(
       uid: uid,
@@ -108,6 +120,8 @@ class AppUser {
       topGenreNames: topGenreNames ?? this.topGenreNames,
       musicDataUpdatedAt: musicDataUpdatedAt ?? this.musicDataUpdatedAt,
       friends: friends ?? this.friends,
+      dailySong: dailySong ?? this.dailySong,
+      dailySongUpdatedAt: dailySongUpdatedAt ?? this.dailySongUpdatedAt,
     );
   }
 }

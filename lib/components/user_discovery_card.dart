@@ -110,6 +110,39 @@ class UserDiscoveryCard extends StatelessWidget {
                   ],
                 ),
               ],
+              if (user.dailySong != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (user.dailySong!.imageUrl.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          user.dailySong!.imageUrl,
+                          width: 24,
+                          height: 24,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    else
+                      Icon(Icons.album,
+                          size: 24, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${l10n.dailySongTitle}: ${user.dailySong!.title} — ${user.dailySong!.artist}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.primary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

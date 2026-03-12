@@ -30,7 +30,7 @@ class AppTheme {
           elevation: 0,
         ),
         navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color(0xFF181818),
+          backgroundColor: Color(0xFF121212),
           indicatorColor: Color(0xFF1DB954),
         ),
       );
@@ -56,7 +56,7 @@ class AppTheme {
           elevation: 0,
         ),
         navigationBarTheme: const NavigationBarThemeData(
-          backgroundColor: Color(0xFFF8F9FA),
+          backgroundColor: Colors.white,
           indicatorColor: Color(0xFF1AA34A),
         ),
       );

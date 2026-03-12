@@ -143,5 +143,22 @@
   "friendsRemove": "Remove friend",
   "friendsRemoveBody": "This person will be removed from your friends list.",
   "friendsAlreadyFriends": "Already friends",
-  "profileAddFriend": "Add friend"
+  "profileAddFriend": "Add friend",
+
+  "dailySongTitle": "Song of the day",
+  "dailySongChoose": "Choose song of the day",
+  "dailySongBy": "by {artist}",
+  "@dailySongBy": {
+    "placeholders": {
+      "artist": { "type": "String" }
+    }
+  },
+
+  "discoverTabPeople": "Discover people",
+  "discoverTabDailySong": "Daily song",
+  "dailySongNone": "You haven't chosen a song of the day yet",
+  "dailySongNoneHint": "Share with others what you're listening to today",
+  "dailySongFriendsTitle": "Your friends' songs",
+  "dailySongFriendsNone": "Your friends haven't chosen a song of the day yet",
+  "dailySongNoFriends": "Add friends to see their daily songs"
 }

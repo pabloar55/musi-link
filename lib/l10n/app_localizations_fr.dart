@@ -324,4 +324,40 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profileAddFriend => 'Ajouter un ami';
+
+  @override
+  String get dailySongTitle => 'Chanson du jour';
+
+  @override
+  String get dailySongChoose => 'Choisir la chanson du jour';
+
+  @override
+  String dailySongBy(String artist) {
+    return 'par $artist';
+  }
+
+  @override
+  String get discoverTabPeople => 'Découvrir';
+
+  @override
+  String get discoverTabDailySong => 'Chanson du jour';
+
+  @override
+  String get dailySongNone =>
+      'Vous n\'avez pas encore choisi de chanson du jour';
+
+  @override
+  String get dailySongNoneHint =>
+      'Partagez avec les autres ce que vous écoutez aujourd\'hui';
+
+  @override
+  String get dailySongFriendsTitle => 'Chansons de vos amis';
+
+  @override
+  String get dailySongFriendsNone =>
+      'Vos amis n\'ont pas encore choisi de chanson du jour';
+
+  @override
+  String get dailySongNoFriends =>
+      'Ajoutez des amis pour voir leurs chansons du jour';
 }

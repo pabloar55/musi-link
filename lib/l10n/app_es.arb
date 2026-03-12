@@ -108,5 +108,22 @@
   "friendsRemove": "Eliminar amigo",
   "friendsRemoveBody": "Esta persona será eliminada de tu lista de amigos.",
   "friendsAlreadyFriends": "Ya son amigos",
-  "profileAddFriend": "Añadir amigo"
+  "profileAddFriend": "Añadir amigo",
+
+  "dailySongTitle": "Canción del día",
+  "dailySongChoose": "Elegir canción del día",
+  "dailySongBy": "de {artist}",
+  "@dailySongBy": {
+    "placeholders": {
+      "artist": { "type": "String" }
+    }
+  },
+
+  "discoverTabPeople": "Descubrir personas",
+  "discoverTabDailySong": "Canción diaria",
+  "dailySongNone": "Aún no has elegido una canción del día",
+  "dailySongNoneHint": "Comparte con los demás lo que escuchas hoy",
+  "dailySongFriendsTitle": "Canciones de tus amigos",
+  "dailySongFriendsNone": "Tus amigos aún no han elegido una canción del día",
+  "dailySongNoFriends": "Añade amigos para ver sus canciones del día"
 }

@@ -681,6 +681,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add friend'**
   String get profileAddFriend;
+
+  /// No description provided for @dailySongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Song of the day'**
+  String get dailySongTitle;
+
+  /// No description provided for @dailySongChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose song of the day'**
+  String get dailySongChoose;
+
+  /// No description provided for @dailySongBy.
+  ///
+  /// In en, this message translates to:
+  /// **'by {artist}'**
+  String dailySongBy(String artist);
+
+  /// No description provided for @discoverTabPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover people'**
+  String get discoverTabPeople;
+
+  /// No description provided for @discoverTabDailySong.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily song'**
+  String get discoverTabDailySong;
+
+  /// No description provided for @dailySongNone.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t chosen a song of the day yet'**
+  String get dailySongNone;
+
+  /// No description provided for @dailySongNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with others what you\'re listening to today'**
+  String get dailySongNoneHint;
+
+  /// No description provided for @dailySongFriendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends\' songs'**
+  String get dailySongFriendsTitle;
+
+  /// No description provided for @dailySongFriendsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends haven\'t chosen a song of the day yet'**
+  String get dailySongFriendsNone;
+
+  /// No description provided for @dailySongNoFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friends to see their daily songs'**
+  String get dailySongNoFriends;
 }
 
 class _AppLocalizationsDelegate

@@ -7,9 +7,11 @@ import 'package:musi_link/core/chat_service.dart';
 import 'package:musi_link/core/friend_service.dart';
 import 'package:musi_link/core/models/app_user.dart';
 import 'package:musi_link/core/models/discovery_result.dart';
+import 'package:musi_link/core/models/track.dart';
 import 'package:musi_link/core/music_profile_service.dart';
 import 'package:musi_link/components/remove_friend_dialog.dart';
 import 'package:musi_link/screens/chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final AppUser user;
@@ -23,6 +25,7 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   late Future<DiscoveryResult> _compatibilityFuture;
   late Future<RelationshipResult> _relationshipFuture;
+  Track? _dailySong;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
   bool get _isOwnProfile => widget.user.uid == _currentUid;
@@ -30,6 +33,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _dailySong = widget.user.dailySong;
     if (!_isOwnProfile) {
       _compatibilityFuture =
           MusicProfileService.instance.getCompatibilityWith(widget.user);
@@ -93,6 +97,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
   }
 
+  Future<void> _openSpotifyUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -123,6 +134,87 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
+
+            // Canción del día (solo mostrar, sin edición)
+            if (_dailySong != null)
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: _dailySong!.spotifyUrl.isNotEmpty
+                      ? () => _openSpotifyUrl(_dailySong!.spotifyUrl)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        if (_dailySong!.imageUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _dailySong!.imageUrl,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        else
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.music_note, size: 28),
+                          ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.dailySongTitle,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _dailySong!.title,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                _dailySong!.artist,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.play_circle_fill,
+                          color: colorScheme.primary,
+                          size: 32,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 4),
 
             // Card de compatibilidad (solo si no es tu perfil)
             if (!_isOwnProfile)

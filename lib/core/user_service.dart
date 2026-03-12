@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/core/models/app_user.dart';
+import 'package:musi_link/core/models/track.dart';
 
 /// Servicio para gestionar perfiles de usuario en Firestore.
 class UserService {
@@ -127,6 +128,38 @@ class UserService {
           .toList();
     } catch (e) {
       debugPrint("❌ Error al buscar usuarios: $e");
+      return [];
+    }
+  }
+
+  /// Establece la canción del día del usuario.
+  Future<void> setDailySong(String uid, Track track) async {
+    try {
+      await _usersRef.doc(uid).update({
+        'dailySong': track.toMap(),
+        'dailySongUpdatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      debugPrint("❌ Error al establecer canción del día: $e");
+    }
+  }
+
+  /// Obtiene los usuarios correspondientes a una lista de UIDs.
+  Future<List<AppUser>> getUsersByIds(List<String> uids) async {
+    if (uids.isEmpty) return [];
+    try {
+      final List<AppUser> users = [];
+      // Firestore whereIn soporta máximo 10 elementos por consulta
+      for (var i = 0; i < uids.length; i += 10) {
+        final chunk = uids.sublist(i, i + 10 > uids.length ? uids.length : i + 10);
+        final snapshot = await _usersRef
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+        users.addAll(snapshot.docs.map(AppUser.fromFirestore));
+      }
+      return users;
+    } catch (e) {
+      debugPrint("❌ Error al obtener usuarios por IDs: $e");
       return [];
     }
   }
