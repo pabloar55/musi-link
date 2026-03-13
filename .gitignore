@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.flutter-plugins
+ios/Pods/
+ios/.symlinks/
 .env
 # Symbolication related
 app.*.symbols
