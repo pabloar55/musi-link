@@ -135,6 +135,63 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Now Playing
+            if (user.nowPlaying != null &&
+                user.nowPlayingUpdatedAt != null &&
+                DateTime.now().difference(user.nowPlayingUpdatedAt!).inMinutes < 10)
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: user.nowPlaying!.spotifyUrl.isNotEmpty
+                      ? () => _openSpotifyUrl(user.nowPlaying!.spotifyUrl)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.headphones, color: colorScheme.primary, size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Escuchando ahora",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                user.nowPlaying!.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                user.nowPlaying!.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 12, color: colorScheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.play_circle_fill,
+                          color: colorScheme.primary,
+                          size: 32,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             // Canción del día (solo mostrar, sin edición)
             if (_dailySong != null)
               Card(

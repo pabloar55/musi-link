@@ -5,6 +5,7 @@ import 'package:musi_link/screens/discover_screen.dart';
 import 'package:musi_link/screens/messages_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
 import 'package:musi_link/screens/friends_screen.dart';
+import 'package:musi_link/services/spotify_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,7 +14,7 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int currentPageIndex = 0;
   final PageController _pageController = PageController();
   final List<Widget> screens = [
@@ -24,9 +25,30 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    if (SpotifyService.instance.isInitialized) {
+      SpotifyService.instance.startPollingNowPlaying();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (SpotifyService.instance.isInitialized) {
+        SpotifyService.instance.startPollingNowPlaying();
+      }
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      SpotifyService.instance.stopPollingNowPlaying();
+    }
   }
 
   @override

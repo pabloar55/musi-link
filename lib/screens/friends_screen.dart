@@ -157,6 +157,8 @@ class _FriendsScreenState extends State<FriendsScreen>
                     getUserFuture: getUserFuture,
                     onTap: (user) {
                       if (user != null) {
+                        // Invalida el caché para obtener los datos más recientes (ej. Now Playing)
+                        invalidateUserFuture(user.uid);
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => UserProfileScreen(user: user),

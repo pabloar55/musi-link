@@ -144,6 +144,19 @@ class UserService {
     }
   }
 
+  /// Actualiza la canción que el usuario está escuchando ahora.
+  Future<void> updateNowPlaying(String uid, Track? track) async {
+    try {
+      final updates = <String, dynamic>{
+        'nowPlaying': track?.toMap(),
+        'nowPlayingUpdatedAt': track != null ? Timestamp.fromDate(DateTime.now()) : null,
+      };
+      await _usersRef.doc(uid).update(updates);
+    } catch (e) {
+      debugPrint("❌ Error al actualizar nowPlaying: $e");
+    }
+  }
+
   /// Obtiene los usuarios correspondientes a una lista de UIDs.
   Future<List<AppUser>> getUsersByIds(List<String> uids) async {
     if (uids.isEmpty) return [];

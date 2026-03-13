@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -5,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/utils/tokens.dart';
 import 'package:musi_link/services/user_service.dart';
+import 'package:musi_link/models/track.dart'
+    as app; // Alias para evitar colisiones
 import 'package:spotify/spotify.dart';
 
 /// Servicio centralizado de Spotify.
@@ -25,6 +28,7 @@ class SpotifyService {
     'user-modify-playback-state',
     'playlist-read-private',
     'user-top-read',
+    'user-read-currently-playing',
   ];
 
   /// Instancia de SpotifyApi. Empieza como null y se inicializa al conectar o restaurar sesión.
@@ -38,18 +42,93 @@ class SpotifyService {
 
   bool get isInitialized => _api != null;
 
+  Timer? _nowPlayingTimer;
+  app.Track? _lastNowPlayingTrack;
+
+  /// Inicia el polling de la canción actual.
+  void startPollingNowPlaying() {
+    stopPollingNowPlaying(); // Asegurarse de no tener multiples timers
+
+    // Ejecutar inmediatamente la primera vez
+    _fetchAndUpdateNowPlaying();
+
+    // Polling cada 30 segundos
+    _nowPlayingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _fetchAndUpdateNowPlaying();
+    });
+  }
+
+  /// Detiene el polling de la canción actual.
+  void stopPollingNowPlaying() {
+    _nowPlayingTimer?.cancel();
+    _nowPlayingTimer = null;
+  }
+
+  Future<void> _fetchAndUpdateNowPlaying() async {
+    if (!isInitialized) return;
+
+    final track = await getCurrentlyPlayingTrack();
+
+    // Evitar actualizaciones innecesarias si es la misma canción
+    if (track != null &&
+        _lastNowPlayingTrack != null &&
+        track.spotifyUrl == _lastNowPlayingTrack!.spotifyUrl) {
+      return;
+    }
+
+    _lastNowPlayingTrack = track;
+
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      await UserService.instance.updateNowPlaying(firebaseUser.uid, track);
+    }
+  }
+
+  /// Método para obtener la pista que se está reproduciendo actualmente
+  Future<app.Track?> getCurrentlyPlayingTrack() async {
+    if (_api == null) return null;
+    try {
+      final playbackState = await _api!.player.currentlyPlaying();
+      final item = playbackState.item;
+      if (item is Track) {
+        final images = item.album?.images;
+        final imageUrl = (images != null && images.isNotEmpty)
+            ? images.first.url ?? ''
+            : '';
+        final artistName = (item.artists != null && item.artists!.isNotEmpty)
+            ? item.artists!.first.name ?? 'Artista desconocido'
+            : 'Artista desconocido';
+
+        return app.Track(
+          title: item.name ?? 'Sin título',
+          artist: artistName,
+          imageUrl: imageUrl,
+          spotifyUrl: (item.id != null && item.id!.isNotEmpty)
+              ? 'https://open.spotify.com/track/${item.id}'
+              : '',
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint("❌ Error al obtener currently playing: $e");
+      return null;
+    }
+  }
+
   /// Abre el flujo OAuth PKCE en el navegador.
   /// Solo se necesita la primera vez o si el refresh_token se invalida.
   Future<bool> authorizeAndConnect() async {
     try {
-      final codeVerifier = SpotifyApi.generateCodeVerifier(); // Genera un codigo aleatorio para PKCE
+      final codeVerifier =
+          SpotifyApi.generateCodeVerifier(); // Genera un codigo aleatorio para PKCE
 
-      final credentials = SpotifyApiCredentials.pkce( // Se cifra para enviarlo a Spotify
+      final credentials = SpotifyApiCredentials.pkce(
+        // Se cifra para enviarlo a Spotify
         _clientId,
         codeVerifier: codeVerifier,
       );
 
-      final grant = SpotifyApi.authorizationCodeGrant(credentials); 
+      final grant = SpotifyApi.authorizationCodeGrant(credentials);
       final redirectUri = Uri.parse(_redirectUri);
       final authUri = grant.getAuthorizationUrl(redirectUri, scopes: _scopes);
 
@@ -57,9 +136,7 @@ class SpotifyService {
       final resultUrl = await FlutterWebAuth2.authenticate(
         url: authUri.toString(),
         callbackUrlScheme: redirectUri.scheme,
-        options: const FlutterWebAuth2Options(
-          preferEphemeral: true,
-        ),
+        options: const FlutterWebAuth2Options(preferEphemeral: true),
       );
 
       // Crear instancia de SpotifyApi intercambiando el code por tokens
@@ -67,7 +144,6 @@ class SpotifyService {
 
       // Guardar credenciales para restaurar después
       await _saveCredentials(preserveCodeVerifier: codeVerifier);
-      
 
       // Sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
@@ -77,6 +153,9 @@ class SpotifyService {
       if (firebaseUser != null) {
         await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
       }
+
+      // Iniciar el polling de Now Playing
+      startPollingNowPlaying();
 
       debugPrint('✅ Spotify conectado vía PKCE');
       return true;
@@ -120,6 +199,9 @@ class SpotifyService {
         await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
       }
 
+      // Iniciar el polling de Now Playing
+      startPollingNowPlaying();
+
       debugPrint('✅ Sesión de Spotify restaurada');
       return true;
     } catch (e) {
@@ -153,8 +235,9 @@ class SpotifyService {
       final spotifyUser = await _api!.me.get();
       final spotifyId = spotifyUser.id ?? '';
       final images = spotifyUser.images;
-      final spotifyPhotoUrl =
-          (images != null && images.isNotEmpty) ? images.first.url ?? '' : '';
+      final spotifyPhotoUrl = (images != null && images.isNotEmpty)
+          ? images.first.url ?? ''
+          : '';
 
       if (spotifyId.isEmpty && spotifyPhotoUrl.isEmpty) return;
 
@@ -169,6 +252,7 @@ class SpotifyService {
   }
 
   Future<void> disconnect() async {
+    stopPollingNowPlaying();
     _api = null;
     await Tokens.deleteAll();
   }

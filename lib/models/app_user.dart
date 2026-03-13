@@ -19,6 +19,8 @@ class AppUser {
   final List<String> friends;
   final Track? dailySong;
   final DateTime? dailySongUpdatedAt;
+  final Track? nowPlaying;
+  final DateTime? nowPlayingUpdatedAt;
 
   const AppUser({
     required this.uid,
@@ -36,6 +38,8 @@ class AppUser {
     this.friends = const [],
     this.dailySong,
     this.dailySongUpdatedAt,
+    this.nowPlaying,
+    this.nowPlayingUpdatedAt,
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
@@ -77,6 +81,11 @@ class AppUser {
           : null,
       dailySongUpdatedAt:
           (data['dailySongUpdatedAt'] as Timestamp?)?.toDate(),
+      nowPlaying: data['nowPlaying'] != null
+          ? Track.fromMap(data['nowPlaying'] as Map<String, dynamic>)
+          : null,
+      nowPlayingUpdatedAt:
+          (data['nowPlayingUpdatedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -105,6 +114,8 @@ class AppUser {
     List<String>? friends,
     Track? dailySong,
     DateTime? dailySongUpdatedAt,
+    Track? nowPlaying,
+    DateTime? nowPlayingUpdatedAt,
   }) {
     return AppUser(
       uid: uid,
@@ -122,6 +133,8 @@ class AppUser {
       friends: friends ?? this.friends,
       dailySong: dailySong ?? this.dailySong,
       dailySongUpdatedAt: dailySongUpdatedAt ?? this.dailySongUpdatedAt,
+      nowPlaying: nowPlaying ?? this.nowPlaying,
+      nowPlayingUpdatedAt: nowPlayingUpdatedAt ?? this.nowPlayingUpdatedAt,
     );
   }
 }
