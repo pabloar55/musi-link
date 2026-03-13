@@ -354,4 +354,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dailySongNoFriends => 'Add friends to see their song of the day';
+
+  @override
+  String get onboardingDiscoverTitle => 'Discover people';
+
+  @override
+  String get onboardingDiscoverDesc =>
+      'Find people with similar music taste and discover how compatible you are based on your top artists and genres.';
+
+  @override
+  String get onboardingStatsTitle => 'Your music stats';
+
+  @override
+  String get onboardingStatsDesc =>
+      'Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.';
+
+  @override
+  String get onboardingDailySongTitle => 'Song of the day';
+
+  @override
+  String get onboardingDailySongDesc =>
+      'Choose a song each day to share with your friends. See what they\'re listening to and discover new music together.';
+
+  @override
+  String get onboardingChatTitle => 'Chat about music';
+
+  @override
+  String get onboardingChatDesc =>
+      'Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.';
+
+  @override
+  String get onboardingFriendsTitle => 'Build your crew';
+
+  @override
+  String get onboardingFriendsDesc =>
+      'Add friends, see their music profiles, and stay connected through your shared passion for music.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingGetStarted => 'Get started';
+
+  @override
+  String get onboardingSkip => 'Skip';
 }

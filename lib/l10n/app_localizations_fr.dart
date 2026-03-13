@@ -363,4 +363,48 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get dailySongNoFriends =>
       'Ajoutez des amis pour voir leurs chansons du jour';
+
+  @override
+  String get onboardingDiscoverTitle => 'Découvrez des personnes';
+
+  @override
+  String get onboardingDiscoverDesc =>
+      'Trouvez des personnes aux goûts musicaux similaires et découvrez votre compatibilité selon vos artistes et genres préférés.';
+
+  @override
+  String get onboardingStatsTitle => 'Vos statistiques';
+
+  @override
+  String get onboardingStatsDesc =>
+      'Explorez vos titres, artistes et genres préférés sur Spotify. Voyez comment vos goûts évoluent au fil du temps.';
+
+  @override
+  String get onboardingDailySongTitle => 'Chanson du jour';
+
+  @override
+  String get onboardingDailySongDesc =>
+      'Choisissez une chanson chaque jour à partager avec vos amis. Découvrez ce qu\'ils écoutent et trouvez de la nouvelle musique ensemble.';
+
+  @override
+  String get onboardingChatTitle => 'Discutez de musique';
+
+  @override
+  String get onboardingChatDesc =>
+      'Lancez des conversations et partagez des chansons directement depuis Spotify. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
+
+  @override
+  String get onboardingFriendsTitle => 'Créez votre groupe';
+
+  @override
+  String get onboardingFriendsDesc =>
+      'Ajoutez des amis, consultez leurs profils musicaux et restez connectés grâce à votre passion commune pour la musique.';
+
+  @override
+  String get onboardingNext => 'Suivant';
+
+  @override
+  String get onboardingGetStarted => 'Commencer';
+
+  @override
+  String get onboardingSkip => 'Passer';
 }

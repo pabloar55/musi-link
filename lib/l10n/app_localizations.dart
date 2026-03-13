@@ -747,6 +747,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add friends to see their song of the day'**
   String get dailySongNoFriends;
+
+  /// No description provided for @onboardingDiscoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover people'**
+  String get onboardingDiscoverTitle;
+
+  /// No description provided for @onboardingDiscoverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find people with similar music taste and discover how compatible you are based on your top artists and genres.'**
+  String get onboardingDiscoverDesc;
+
+  /// No description provided for @onboardingStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your music stats'**
+  String get onboardingStatsTitle;
+
+  /// No description provided for @onboardingStatsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.'**
+  String get onboardingStatsDesc;
+
+  /// No description provided for @onboardingDailySongTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Song of the day'**
+  String get onboardingDailySongTitle;
+
+  /// No description provided for @onboardingDailySongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a song each day to share with your friends. See what they\'re listening to and discover new music together.'**
+  String get onboardingDailySongDesc;
+
+  /// No description provided for @onboardingChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat about music'**
+  String get onboardingChatTitle;
+
+  /// No description provided for @onboardingChatDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.'**
+  String get onboardingChatDesc;
+
+  /// No description provided for @onboardingFriendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build your crew'**
+  String get onboardingFriendsTitle;
+
+  /// No description provided for @onboardingFriendsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friends, see their music profiles, and stay connected through your shared passion for music.'**
+  String get onboardingFriendsDesc;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
 }
 
 class _AppLocalizationsDelegate

@@ -126,5 +126,19 @@
   "dailySongNoneHint": "Partagez avec les autres ce que vous écoutez aujourd'hui",
   "dailySongFriendsTitle": "Chansons de vos amis",
   "dailySongFriendsNone": "Vos amis n'ont pas encore choisi de chanson du jour",
-  "dailySongNoFriends": "Ajoutez des amis pour voir leurs chansons du jour"
+  "dailySongNoFriends": "Ajoutez des amis pour voir leurs chansons du jour",
+
+  "onboardingDiscoverTitle": "Découvrez des personnes",
+  "onboardingDiscoverDesc": "Trouvez des personnes aux goûts musicaux similaires et découvrez votre compatibilité selon vos artistes et genres préférés.",
+  "onboardingStatsTitle": "Vos statistiques",
+  "onboardingStatsDesc": "Explorez vos titres, artistes et genres préférés sur Spotify. Voyez comment vos goûts évoluent au fil du temps.",
+  "onboardingDailySongTitle": "Chanson du jour",
+  "onboardingDailySongDesc": "Choisissez une chanson chaque jour à partager avec vos amis. Découvrez ce qu'ils écoutent et trouvez de la nouvelle musique ensemble.",
+  "onboardingChatTitle": "Discutez de musique",
+  "onboardingChatDesc": "Lancez des conversations et partagez des chansons directement depuis Spotify. Parlez de la musique que vous aimez avec des gens qui la comprennent.",
+  "onboardingFriendsTitle": "Créez votre groupe",
+  "onboardingFriendsDesc": "Ajoutez des amis, consultez leurs profils musicaux et restez connectés grâce à votre passion commune pour la musique.",
+  "onboardingNext": "Suivant",
+  "onboardingGetStarted": "Commencer",
+  "onboardingSkip": "Passer"
 }

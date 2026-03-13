@@ -161,5 +161,19 @@
   "dailySongNoneHint": "Share with others what you're listening to today",
   "dailySongFriendsTitle": "Your friends' songs",
   "dailySongFriendsNone": "Your friends haven't chosen a song of the day yet",
-  "dailySongNoFriends": "Add friends to see their song of the day"
+  "dailySongNoFriends": "Add friends to see their song of the day",
+
+  "onboardingDiscoverTitle": "Discover people",
+  "onboardingDiscoverDesc": "Find people with similar music taste and discover how compatible you are based on your top artists and genres.",
+  "onboardingStatsTitle": "Your music stats",
+  "onboardingStatsDesc": "Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.",
+  "onboardingDailySongTitle": "Song of the day",
+  "onboardingDailySongDesc": "Choose a song each day to share with your friends. See what they're listening to and discover new music together.",
+  "onboardingChatTitle": "Chat about music",
+  "onboardingChatDesc": "Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.",
+  "onboardingFriendsTitle": "Build your crew",
+  "onboardingFriendsDesc": "Add friends, see their music profiles, and stay connected through your shared passion for music.",
+  "onboardingNext": "Next",
+  "onboardingGetStarted": "Get started",
+  "onboardingSkip": "Skip"
 }

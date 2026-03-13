@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/screens/main_screen.dart';
+import 'package:musi_link/screens/onboarding_screen.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
 /// con Firebase. Si el usuario ya tiene token de Spotify válido,
-/// se salta automáticamente a MainScreen.
+/// se salta automáticamente a MainScreen (o al onboarding si es la primera vez).
 class SpotifyConnectScreen extends StatefulWidget {
   const SpotifyConnectScreen({super.key});
 
@@ -18,6 +20,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   final SpotifyService _spotifyService = SpotifyService.instance;
   bool _isConnected = false;
   bool _isLoading = true;
+  bool? _onboardingCompleted;
 
   @override
   void initState() {
@@ -30,15 +33,27 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   Future<void> _checkExistingToken() async {
     // Intentar restaurar sesión silenciosamente (refresh automático si expiró)
     final restored = await _spotifyService.tryRestoreSession();
+
+    // Leer flag de onboarding
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingDone =
+        prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
+
     if (restored && mounted) {
       setState(() {
         _isConnected = true;
+        _onboardingCompleted = onboardingDone;
         _isLoading = false;
       });
       return;
     }
     // No hay credenciales o falló → mostrar botón "Conectar Spotify"
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() {
+        _onboardingCompleted = onboardingDone;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _connectSpotify() async {
@@ -65,6 +80,10 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (_isConnected) {
+      // Si el onboarding no se ha completado, mostrar onboarding primero
+      if (_onboardingCompleted == false) {
+        return const OnboardingScreen();
+      }
       return const MainScreen();
     }
 
