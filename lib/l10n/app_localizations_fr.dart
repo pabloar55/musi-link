@@ -99,6 +99,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Erreur lors de la connexion avec Google.';
 
   @override
+  String get authErrorAccountExistsWithDifferentCredential =>
+      'Cet e-mail est déjà enregistré avec un mot de passe. Veuillez vous connecter avec e-mail et mot de passe.';
+
+  @override
   String get discoverTitle => 'Découvrir des personnes';
 
   @override

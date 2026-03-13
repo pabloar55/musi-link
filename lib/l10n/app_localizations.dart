@@ -268,6 +268,12 @@ abstract class AppLocalizations {
   /// **'Error signing in with Google.'**
   String get authErrorGoogleSignInGeneric;
 
+  /// No description provided for @authErrorAccountExistsWithDifferentCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered with a password. Please sign in with email and password.'**
+  String get authErrorAccountExistsWithDifferentCredential;
+
   /// No description provided for @discoverTitle.
   ///
   /// In en, this message translates to:

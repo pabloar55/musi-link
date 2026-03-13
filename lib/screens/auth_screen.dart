@@ -14,7 +14,10 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _formKey = GlobalKey<FormState>(); //Creamos la clave para hacer referencia al formulario
+  final _formKey =
+      GlobalKey<
+        FormState
+      >(); //Creamos la clave para hacer referencia al formulario
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
@@ -73,16 +76,29 @@ class _AuthScreenState extends State<AuthScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
-      if (mounted) _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
+      if (mounted) {
+        if (e.toString().contains('canceled') &&
+            e.toString().contains('Account reauth failed')) {
+          _showError(
+            AppLocalizations.of(
+              context,
+            )!.authErrorAccountExistsWithDifferentCredential,
+          );
+        } else {
+          _showError(
+            AppLocalizations.of(context)!.authErrorGoogleSignInGeneric,
+          );
+        }
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _mapFirebaseError(String code) {
@@ -102,6 +118,8 @@ class _AuthScreenState extends State<AuthScreen> {
         return l10n.authErrorInvalidCredential;
       case 'too-many-requests':
         return l10n.authErrorTooManyRequests;
+      case 'account-exists-with-different-credential':
+        return l10n.authErrorAccountExistsWithDifferentCredential;
       default:
         return l10n.authErrorGeneric(code);
     }
@@ -120,16 +138,13 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(  
-                  'assets/images/logo.png',
-                  width: 250,
-                 
-                ),
+                Image.asset('assets/images/logo.png', width: 250),
                 const SizedBox(height: 32),
 
                 // Formulario
                 Form(
-                  key: _formKey,  // Asociamos el formulario a la clave para hacer referencia desde fuera de la clase
+                  key:
+                      _formKey, // Asociamos el formulario a la clave para hacer referencia desde fuera de la clase
                   child: Column(
                     children: [
                       // Nombre (solo en registro)
@@ -190,7 +205,8 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             onPressed: () {
                               setState(
-                                  () => _obscurePassword = !_obscurePassword);
+                                () => _obscurePassword = !_obscurePassword,
+                              );
                             },
                           ),
                         ),
@@ -221,9 +237,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : Text(_isLogin
-                                  ? l10n.authSignIn
-                                  : l10n.authCreateAccount),
+                              : Text(
+                                  _isLogin
+                                      ? l10n.authSignIn
+                                      : l10n.authCreateAccount,
+                                ),
                         ),
                       ),
                     ],
@@ -263,11 +281,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      _isLogin
-                          ? l10n.authNoAccount
-                          : l10n.authHaveAccount,
-                    ),
+                    Text(_isLogin ? l10n.authNoAccount : l10n.authHaveAccount),
                     TextButton(
                       onPressed: _isLoading
                           ? null

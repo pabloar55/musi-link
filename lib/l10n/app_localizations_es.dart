@@ -99,6 +99,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Error al iniciar sesión con Google.';
 
   @override
+  String get authErrorAccountExistsWithDifferentCredential =>
+      'Este email ya está registrado con contraseña. Inicia sesión con email y contraseña.';
+
+  @override
   String get discoverTitle => 'Descubrir personas';
 
   @override

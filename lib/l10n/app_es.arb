@@ -29,6 +29,7 @@
   "authErrorUnexpected": "Error inesperado. Inténtalo de nuevo.",
   "authErrorGoogleSignIn": "No se pudo iniciar sesión con Google.",
   "authErrorGoogleSignInGeneric": "Error al iniciar sesión con Google.",
+  "authErrorAccountExistsWithDifferentCredential": "Este email ya está registrado con contraseña. Inicia sesión con email y contraseña.",
 
   "discoverTitle": "Descubrir personas",
   "discoverErrorLoading": "Error al cargar descubrimiento",

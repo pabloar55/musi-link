@@ -29,6 +29,7 @@
   "authErrorUnexpected": "Erreur inattendue. Veuillez réessayer.",
   "authErrorGoogleSignIn": "Impossible de se connecter avec Google.",
   "authErrorGoogleSignInGeneric": "Erreur lors de la connexion avec Google.",
+  "authErrorAccountExistsWithDifferentCredential": "Cet e-mail est déjà enregistré avec un mot de passe. Veuillez vous connecter avec e-mail et mot de passe.",
 
   "discoverTitle": "Découvrir des personnes",
   "discoverErrorLoading": "Erreur lors du chargement de la découverte",

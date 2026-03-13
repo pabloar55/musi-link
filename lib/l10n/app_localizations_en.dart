@@ -97,6 +97,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrorGoogleSignInGeneric => 'Error signing in with Google.';
 
   @override
+  String get authErrorAccountExistsWithDifferentCredential =>
+      'This email is already registered with a password. Please sign in with email and password.';
+
+  @override
   String get discoverTitle => 'Discover people';
 
   @override
