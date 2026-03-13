@@ -24,6 +24,18 @@ class _FriendsScreenState extends State<FriendsScreen>
   @override
   bool get wantKeepAlive => true;
 
+  late final Stream<List<FriendRequest>> _receivedRequestsStream;
+  late final Stream<List<FriendRequest>> _sentRequestsStream;
+  late final Stream<List<String>> _friendsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _receivedRequestsStream = FriendService.instance.getReceivedRequests();
+    _sentRequestsStream = FriendService.instance.getSentRequests();
+    _friendsStream = FriendService.instance.getFriendsStream();
+  }
+
   Future<void> _showRemoveFriendDialog(String uid, String? name) async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
@@ -45,7 +57,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           // ─── Solicitudes recibidas ───────────────────
           SectionHeader(title: l10n.friendsReceivedRequests),
           StreamBuilder<List<FriendRequest>>(
-            stream: FriendService.instance.getReceivedRequests(),
+            stream: _receivedRequestsStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Padding(
@@ -91,7 +103,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           // ─── Solicitudes enviadas ────────────────────
           SectionHeader(title: l10n.friendsSentRequests),
           StreamBuilder<List<FriendRequest>>(
-            stream: FriendService.instance.getSentRequests(),
+            stream: _sentRequestsStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Padding(
@@ -124,7 +136,7 @@ class _FriendsScreenState extends State<FriendsScreen>
           // ─── Lista de amigos ─────────────────────────
           SectionHeader(title: l10n.friendsMyFriends),
           StreamBuilder<List<String>>(
-            stream: FriendService.instance.getFriendsStream(),
+            stream: _friendsStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Padding(

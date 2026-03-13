@@ -19,6 +19,14 @@ class UserAvatarMenu extends StatefulWidget {
 }
 
 class _UserAvatarMenuState extends State<UserAvatarMenu> {
+  Future<AppUser?>? _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = _getCurrentAppUser();
+  }
+
   Future<AppUser?> _getCurrentAppUser() async {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) return null;
@@ -72,7 +80,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
         final isDarkMode = ThemeModeController.instance.isDark;
 
         return FutureBuilder<AppUser?>(
-          future: _getCurrentAppUser(),
+          future: _userFuture,
           builder: (context, snapshot) {
             final firebaseUser = FirebaseAuth.instance.currentUser;
             final appUser = snapshot.data;

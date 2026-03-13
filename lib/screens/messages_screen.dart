@@ -21,6 +21,14 @@ class _MessagesScreenState extends State<MessagesScreen>
   @override
   bool get wantKeepAlive => true;
 
+  late final Stream<List<Chat>> _chatsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatsStream = ChatService.instance.getChats();
+  }
+
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
   /// Obtiene el UID del otro participante del chat.
@@ -53,7 +61,7 @@ class _MessagesScreenState extends State<MessagesScreen>
 
     return Scaffold(
       body: StreamBuilder<List<Chat>>(
-        stream: ChatService.instance.getChats(),
+        stream: _chatsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

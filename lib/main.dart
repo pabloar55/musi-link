@@ -33,27 +33,38 @@ class MainApp extends StatelessWidget {
         themeMode: themeMode,
         darkTheme: AppTheme.darkTheme,
         theme: AppTheme.lightTheme,
+        themeAnimationDuration: const Duration(milliseconds: 200),
+        themeAnimationCurve: Curves.easeInOut,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            // Si hay usuario de Firebase
-            if (snapshot.hasData && snapshot.data != null) {
-              return const SpotifyConnectScreen();
-            }
-
-            // Si no hay sesión de Firebase
-            return const AuthScreen();
-          },
-        ),
+        home: const AuthWrapper(),
       ),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Si hay usuario de Firebase
+        if (snapshot.hasData && snapshot.data != null) {
+          return const SpotifyConnectScreen();
+        }
+
+        // Si no hay sesión de Firebase
+        return const AuthScreen();
+      },
     );
   }
 }
