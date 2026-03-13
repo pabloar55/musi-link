@@ -550,6 +550,12 @@ abstract class AppLocalizations {
   /// **'Error connecting to Spotify'**
   String get spotifyConnectError;
 
+  /// No description provided for @menuProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get menuProfile;
+
   /// No description provided for @menuAccountOptions.
   ///
   /// In en, this message translates to:

@@ -85,6 +85,7 @@
   "spotifyConnectButton": "Conectar Spotify",
   "spotifyConnectError": "Error al conectar con Spotify",
 
+  "menuProfile": "Mi perfil",
   "menuAccountOptions": "Opciones de cuenta",
   "menuLightMode": "Modo claro",
   "menuDarkMode": "Modo oscuro",

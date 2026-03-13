@@ -246,6 +246,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spotifyConnectError => 'Error connecting to Spotify';
 
   @override
+  String get menuProfile => 'My profile';
+
+  @override
   String get menuAccountOptions => 'Account options';
 
   @override

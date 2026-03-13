@@ -7,7 +7,9 @@ import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/theme/theme_mode_controller.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-enum _UserMenuAction { darkLightMode, logout }
+import 'package:musi_link/screens/user_profile_screen.dart';
+
+enum _UserMenuAction { profile, darkLightMode, logout }
 
 class UserAvatarMenu extends StatefulWidget {
   const UserAvatarMenu({super.key});
@@ -25,6 +27,19 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
 
   Future<void> _handleUserMenuAction(_UserMenuAction action) async {
     switch (action) {
+      case _UserMenuAction.profile:
+        final firebaseUser = FirebaseAuth.instance.currentUser;
+        if (firebaseUser == null) return;
+        final appUser = await UserService.instance.getUser(firebaseUser.uid);
+        if (appUser != null && mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => UserProfileScreen(user: appUser),
+            ),
+          );
+        }
+        break;
+
       case _UserMenuAction.darkLightMode:
         if (!mounted) return;
         ThemeModeController.instance.toggleDarkLight();
@@ -69,6 +84,14 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
               tooltip: AppLocalizations.of(context)!.menuAccountOptions,
               onSelected: _handleUserMenuAction,
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: _UserMenuAction.profile,
+                  child: ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(AppLocalizations.of(context)!.menuProfile),
+                  ),
+                ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: _UserMenuAction.darkLightMode,
                   child: ListTile(
