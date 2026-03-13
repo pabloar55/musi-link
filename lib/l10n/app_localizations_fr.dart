@@ -212,6 +212,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get socialNow => 'Maintenant';
 
   @override
+  String get nowPlaying => 'En train d\'écouter';
+
+  @override
   String socialMinutes(int minutes) {
     return '$minutes min';
   }

@@ -82,6 +82,7 @@
   "statsNoData": "No data available",
 
   "socialNow": "Now",
+  "nowPlaying": "Now playing",
   "socialMinutes": "{minutes} min",
   "@socialMinutes": {
     "placeholders": {

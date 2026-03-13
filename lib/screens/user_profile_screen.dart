@@ -157,7 +157,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Escuchando ahora",
+                                l10n.nowPlaying,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,

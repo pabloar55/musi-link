@@ -72,6 +72,7 @@
   "statsNoData": "Aucune donnée disponible",
 
   "socialNow": "Maintenant",
+  "nowPlaying": "En train d'écouter",
   "socialMinutes": "{minutes} min",
   "socialDays": "{days}j",
   "socialNoChats": "Pas encore de conversations",
