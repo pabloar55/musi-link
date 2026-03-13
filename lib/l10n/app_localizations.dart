@@ -718,12 +718,6 @@ abstract class AppLocalizations {
   /// **'Discover people'**
   String get discoverTabPeople;
 
-  /// No description provided for @discoverTabDailySong.
-  ///
-  /// In en, this message translates to:
-  /// **'Daily song'**
-  String get discoverTabDailySong;
-
   /// No description provided for @dailySongNone.
   ///
   /// In en, this message translates to:
@@ -751,7 +745,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailySongNoFriends.
   ///
   /// In en, this message translates to:
-  /// **'Add friends to see their daily songs'**
+  /// **'Add friends to see their song of the day'**
   String get dailySongNoFriends;
 }
 

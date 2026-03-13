@@ -56,7 +56,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
           controller: _tabController,
           tabs: [
             Tab(text: l10n.discoverTabPeople),
-            Tab(text: l10n.discoverTabDailySong),
+            Tab(text: l10n.dailySongTitle),
           ],
         ),
         Expanded(

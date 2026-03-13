@@ -346,9 +346,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get discoverTabPeople => 'Découvrir';
 
   @override
-  String get discoverTabDailySong => 'Chanson du jour';
-
-  @override
   String get dailySongNone =>
       'Vous n\'avez pas encore choisi de chanson du jour';
 

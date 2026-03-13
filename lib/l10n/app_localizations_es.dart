@@ -341,9 +341,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get discoverTabPeople => 'Descubrir personas';
 
   @override
-  String get discoverTabDailySong => 'Canción diaria';
-
-  @override
   String get dailySongNone => 'Aún no has elegido una canción del día';
 
   @override

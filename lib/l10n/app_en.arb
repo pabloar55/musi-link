@@ -157,10 +157,9 @@
   },
 
   "discoverTabPeople": "Discover people",
-  "discoverTabDailySong": "Daily song",
   "dailySongNone": "You haven't chosen a song of the day yet",
   "dailySongNoneHint": "Share with others what you're listening to today",
   "dailySongFriendsTitle": "Your friends' songs",
   "dailySongFriendsNone": "Your friends haven't chosen a song of the day yet",
-  "dailySongNoFriends": "Add friends to see their daily songs"
+  "dailySongNoFriends": "Add friends to see their song of the day"
 }
