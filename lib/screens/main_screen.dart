@@ -56,6 +56,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Image.asset('assets/images/logo.png', width: 150),
         actions: [const UserAvatarMenu()],
       ),
