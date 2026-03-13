@@ -16,6 +16,7 @@ class SpotifyConnectScreen extends StatefulWidget {
 
 class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   final SpotifyService _spotifyService = SpotifyService.instance;
+  bool _isConnected = false;
   bool _isLoading = true;
 
   @override
@@ -30,7 +31,10 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     // Intentar restaurar sesión silenciosamente (refresh automático si expiró)
     final restored = await _spotifyService.tryRestoreSession();
     if (restored && mounted) {
-      _goToMain();
+      setState(() {
+        _isConnected = true;
+        _isLoading = false;
+      });
       return;
     }
     // No hay credenciales o falló → mostrar botón "Conectar Spotify"
@@ -43,7 +47,10 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     if (!mounted) return;
 
     if (result) {
-      _goToMain();
+      setState(() {
+        _isConnected = true;
+        _isLoading = false;
+      });
     } else {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,17 +59,14 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     }
   }
 
-  void _goToMain() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const MainScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+
+    if (_isConnected) {
+      return const MainScreen();
+    }
 
     if (_isLoading) {
       return const Scaffold(
