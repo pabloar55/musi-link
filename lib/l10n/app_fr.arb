@@ -92,6 +92,7 @@
   "menuLightMode": "Mode clair",
   "menuDarkMode": "Mode sombre",
   "menuSignOut": "Se déconnecter",
+  "signingOut": "Déconnexion en cours...",
 
   "discoverySharedArtists": "Artistes en commun : {artists}",
   "discoverySharedGenres": "Genres en commun : {genres}",

@@ -274,6 +274,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get menuSignOut => 'Se déconnecter';
 
   @override
+  String get signingOut => 'Déconnexion en cours...';
+
+  @override
   String discoverySharedArtists(String artists) {
     return 'Artistes en commun : $artists';
   }

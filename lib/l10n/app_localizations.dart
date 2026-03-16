@@ -592,6 +592,12 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get menuSignOut;
 
+  /// No description provided for @signingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out...'**
+  String get signingOut;
+
   /// No description provided for @discoverySharedArtists.
   ///
   /// In en, this message translates to:

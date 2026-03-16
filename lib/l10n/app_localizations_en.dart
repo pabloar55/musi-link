@@ -268,6 +268,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuSignOut => 'Sign out';
 
   @override
+  String get signingOut => 'Signing out...';
+
+  @override
   String discoverySharedArtists(String artists) {
     return 'Artists in common: $artists';
   }

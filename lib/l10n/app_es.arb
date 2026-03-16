@@ -92,6 +92,7 @@
   "menuLightMode": "Modo claro",
   "menuDarkMode": "Modo oscuro",
   "menuSignOut": "Cerrar sesión",
+  "signingOut": "Cerrando sesión...",
 
   "discoverySharedArtists": "Artistas en común: {artists}",
   "discoverySharedGenres": "Géneros en común: {genres}",

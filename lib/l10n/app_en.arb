@@ -112,6 +112,7 @@
   "menuLightMode": "Light mode",
   "menuDarkMode": "Dark mode",
   "menuSignOut": "Sign out",
+  "signingOut": "Signing out...",
 
   "discoverySharedArtists": "Artists in common: {artists}",
   "@discoverySharedArtists": {

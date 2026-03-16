@@ -8,6 +8,7 @@ import 'package:musi_link/theme/theme_mode_controller.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
+import 'package:musi_link/widgets/signing_out_dialog.dart';
 
 enum _UserMenuAction { profile, darkLightMode, logout }
 
@@ -54,6 +55,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
         break;
 
       case _UserMenuAction.logout:
+        SigningOutDialog.show(context);
         await SpotifyService.instance.disconnect();
         await AuthService.instance.signOut();
         if (!mounted) return;
