@@ -36,10 +36,8 @@ class MusicProfileService {
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),
         'topGenres': genres.map((g) => g.toMap()).toList(),
-        'topArtistNames':
-            artists.map((a) => a.name.toLowerCase()).toList(),
-        'topGenreNames':
-            genres.map((g) => g.name.toLowerCase()).toList(),
+        'topArtistNames': artists.map((a) => a.name).toList(),
+        'topGenreNames': genres.map((g) => g.name).toList(),
         'musicDataUpdatedAt': Timestamp.now(),
       });
     } catch (e) {
