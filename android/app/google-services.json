@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "701824546350-11ctotph6d84l1h0s7u82fh3r650mc0p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.musi_link",
+            "certificate_hash": "da7684c52a4b37ca8146b92d0f1fb95774b90b89"
+          }
+        },
+        {
           "client_id": "701824546350-1tkqdr8bl7eosggab56c79u097ragkhn.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -77,18 +77,13 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
       if (mounted) {
-        if (e.toString().contains('canceled') &&
-            e.toString().contains('Account reauth failed')) {
-          _showError(
-            AppLocalizations.of(
-              context,
-            )!.authErrorAccountExistsWithDifferentCredential,
-          );
-        } else {
-          _showError(
-            AppLocalizations.of(context)!.authErrorGoogleSignInGeneric,
-          );
+        if (e.toString().contains('canceled')) {
+          // Si el usuario cancela el diálogo, no mostramos error
+          return;
         }
+        _showError(
+          AppLocalizations.of(context)!.authErrorGoogleSignInGeneric,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
