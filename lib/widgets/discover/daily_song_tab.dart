@@ -95,7 +95,7 @@ class _DailySongTabState extends State<DailySongTab>
         children: [
           // ─── Mi canción del día ───
           Text(
-            l10n.dailySongTitle,
+            l10n.dailySongYourTitle,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

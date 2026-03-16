@@ -706,10 +706,16 @@ abstract class AppLocalizations {
   /// **'Song of the day'**
   String get dailySongTitle;
 
+  /// No description provided for @dailySongYourTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your song of the day'**
+  String get dailySongYourTitle;
+
   /// No description provided for @dailySongChoose.
   ///
   /// In en, this message translates to:
-  /// **'Choose song of the day'**
+  /// **'Choose your song of the day'**
   String get dailySongChoose;
 
   /// No description provided for @dailySongBy.
@@ -727,7 +733,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailySongNone.
   ///
   /// In en, this message translates to:
-  /// **'You haven\'t chosen a song of the day yet'**
+  /// **'You haven\'t chosen your song of the day yet'**
   String get dailySongNone;
 
   /// No description provided for @dailySongNoneHint.

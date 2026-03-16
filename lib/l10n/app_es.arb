@@ -114,7 +114,8 @@
   "profileAddFriend": "Añadir amigo",
 
   "dailySongTitle": "Canción del día",
-  "dailySongChoose": "Elegir canción del día",
+  "dailySongYourTitle": "Tu canción del día",
+  "dailySongChoose": "Elegir tu canción del día",
   "dailySongBy": "de {artist}",
   "@dailySongBy": {
     "placeholders": {
@@ -123,7 +124,7 @@
   },
 
   "discoverTabPeople": "Descubrir personas",
-  "dailySongNone": "Aún no has elegido una canción del día",
+  "dailySongNone": "Aún no has elegido tu canción del día",
   "dailySongNoneHint": "Comparte con los demás lo que escuchas hoy",
   "dailySongFriendsTitle": "Canciones de tus amigos",
   "dailySongFriendsNone": "Tus amigos aún no han elegido una canción del día",

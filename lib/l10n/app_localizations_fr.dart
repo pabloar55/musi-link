@@ -339,7 +339,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dailySongTitle => 'Chanson du jour';
 
   @override
-  String get dailySongChoose => 'Choisir la chanson du jour';
+  String get dailySongYourTitle => 'Votre chanson du jour';
+
+  @override
+  String get dailySongChoose => 'Choisir votre chanson du jour';
 
   @override
   String dailySongBy(String artist) {
@@ -351,7 +354,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dailySongNone =>
-      'Vous n\'avez pas encore choisi de chanson du jour';
+      'Vous n\'avez pas encore choisi votre chanson du jour';
 
   @override
   String get dailySongNoneHint =>
