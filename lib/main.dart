@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/firebase_options.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -12,13 +13,15 @@ import 'package:musi_link/screens/auth_screen.dart';
 import 'package:musi_link/screens/spotify_connect_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   //FirebaseCrashlytics.instance.crash();
   FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   analytics.logEvent(name: 'app_open', parameters: null);
+  FlutterNativeSplash.remove();
   runApp(const MainApp());
 }
 

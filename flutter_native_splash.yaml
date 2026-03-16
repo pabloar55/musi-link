@@ -1,0 +1,21 @@
+flutter_native_splash:
+  # Logo centrado en el splash screen (200x200 para pre-Android 12)
+  image: assets/images/iconoApp_splash.png
+
+  # Fondo blanco para modo claro
+  color: "#FFFFFF"
+
+  # Configuración para modo oscuro
+  color_dark: "#121212"
+  image_dark: assets/images/iconoApp_splash.png
+
+  # Android 12+ (API 31+) - Splash Screen API nativa
+  android_12:
+    image: assets/images/iconoApp_padded.png
+    color: "#FFFFFF"
+    image_dark: assets/images/iconoApp_padded.png
+    color_dark: "#121212"
+
+  # Desactivar splash en web (no aplica)
+  web: false
+
