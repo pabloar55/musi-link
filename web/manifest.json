@@ -1,11 +1,11 @@
 {
-    "name": "musi_link",
-    "short_name": "musi_link",
+    "name": "musi link",
+    "short_name": "musi link",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "musi link - Connect through music.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
