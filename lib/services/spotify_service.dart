@@ -253,6 +253,18 @@ class SpotifyService {
 
   Future<void> disconnect() async {
     stopPollingNowPlaying();
+    _lastNowPlayingTrack = null;
+
+    // Limpiar nowPlaying en Firestore (best-effort, no debe bloquear el sign-out)
+    try {
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        await UserService.instance.updateNowPlaying(firebaseUser.uid, null);
+      }
+    } catch (e) {
+      debugPrint('⚠️ No se pudo limpiar nowPlaying: $e');
+    }
+
     _api = null;
     await Tokens.deleteAll();
   }

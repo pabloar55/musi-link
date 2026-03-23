@@ -1,27 +1,11 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/firebase_options.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/theme/theme_mode_controller.dart';
-import 'package:musi_link/screens/auth_screen.dart';
-import 'package:musi_link/screens/spotify_connect_screen.dart';
+import 'package:musi_link/screens/splash_screen.dart';
 
-void main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  //FirebaseCrashlytics.instance.crash();
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  analytics.logEvent(name: 'app_open', parameters: null);
-  FlutterNativeSplash.remove();
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MainApp());
 }
 
@@ -40,34 +24,9 @@ class MainApp extends StatelessWidget {
         themeAnimationCurve: Curves.easeInOut,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const AuthWrapper(),
+        home: const SplashScreen(),
       ),
     );
   }
 }
 
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // Si hay usuario de Firebase
-        if (snapshot.hasData && snapshot.data != null) {
-          return const SpotifyConnectScreen();
-        }
-
-        // Si no hay sesión de Firebase
-        return const AuthScreen();
-      },
-    );
-  }
-}
