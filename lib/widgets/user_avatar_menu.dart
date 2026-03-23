@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/models/app_user.dart';
@@ -7,8 +8,6 @@ import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/theme/theme_mode_controller.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:musi_link/screens/user_profile_screen.dart';
-import 'package:musi_link/screens/splash_screen.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
 
 enum _UserMenuAction { profile, darkLightMode, logout }
@@ -42,11 +41,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
         if (firebaseUser == null) return;
         final appUser = await UserService.instance.getUser(firebaseUser.uid);
         if (appUser != null && mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => UserProfileScreen(user: appUser),
-            ),
-          );
+          context.push('/profile', extra: appUser);
         }
         break;
 
@@ -56,7 +51,7 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
         break;
 
       case _UserMenuAction.logout:
-        final navigator = Navigator.of(context);
+        if (!mounted) return;
         SigningOutDialog.show(context);
         try {
           await SpotifyService.instance.disconnect();
@@ -64,10 +59,8 @@ class _UserAvatarMenuState extends State<UserAvatarMenu> {
         try {
           await AuthService.instance.signOut();
         } catch (_) {}
-        navigator.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AuthWrapper()),
-          (route) => false,
-        );
+        if (!mounted) return;
+        context.go('/auth');
         break;
     }
   }

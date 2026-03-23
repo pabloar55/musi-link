@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/theme/theme_mode_controller.dart';
-import 'package:musi_link/screens/splash_screen.dart';
+import 'package:musi_link/router/app_router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeModeController.instance,
-      builder: (context, themeMode, _) => MaterialApp(
+      builder: (context, themeMode, _) => MaterialApp.router(
         themeMode: themeMode,
         darkTheme: AppTheme.darkTheme,
         theme: AppTheme.lightTheme,
@@ -24,7 +24,7 @@ class MainApp extends StatelessWidget {
         themeAnimationCurve: Curves.easeInOut,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const SplashScreen(),
+        routerConfig: AppRouter.router,
       ),
     );
   }

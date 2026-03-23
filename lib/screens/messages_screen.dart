@@ -6,7 +6,7 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
-import 'package:musi_link/screens/chat_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
 class MessagesScreen extends StatefulWidget {
@@ -160,15 +160,11 @@ class _MessagesScreenState extends State<MessagesScreen>
                       ),
                     ),
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            chatId: chat.id,
-                            otherUserName: name,
-                            otherUserId: otherUid,
-                          ),
-                        ),
-                      );
+                      context.push('/chat', extra: <String, String>{
+                        'chatId': chat.id,
+                        'otherUserName': name,
+                        'otherUserId': otherUid,
+                      });
                     },
                   );
                 },

@@ -4,9 +4,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:musi_link/firebase_options.dart';
-import 'package:musi_link/screens/auth_screen.dart';
-import 'package:musi_link/screens/spotify_connect_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:musi_link/router/app_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -66,22 +64,10 @@ class _SplashScreenState extends State<SplashScreen>
     await minSplash;
 
     if (mounted) {
-      _navigateTo(const AuthWrapper());
+      // Marca la app como inicializada; el redirect de GoRouter
+      // se encargará de navegar a /auth o /spotify-connect.
+      AppRouter.notifier.setInitialized();
     }
-  }
-
-  void _navigateTo(Widget destination) {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return destination;
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
   }
 
   @override
@@ -154,31 +140,6 @@ class _SplashScreenState extends State<SplashScreen>
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Decides where to go based on Firebase auth state
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (snapshot.hasData && snapshot.data != null) {
-          return const SpotifyConnectScreen();
-        }
-
-        return const AuthScreen();
-      },
     );
   }
 }

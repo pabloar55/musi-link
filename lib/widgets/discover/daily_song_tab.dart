@@ -7,7 +7,7 @@ import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/discover/daily_song_card.dart';
 import 'package:musi_link/widgets/discover/daily_song_search_sheet.dart';
 import 'package:musi_link/widgets/discover/friend_daily_song_card.dart';
-import 'package:musi_link/screens/user_profile_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DailySongTab extends StatefulWidget {
@@ -212,13 +212,7 @@ class _DailySongTabState extends State<DailySongTab>
                   onTapSong: friend.dailySong!.spotifyUrl.isNotEmpty
                       ? () => _openSpotifyUrl(friend.dailySong!.spotifyUrl)
                       : null,
-                  onTapProfile: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => UserProfileScreen(user: friend),
-                      ),
-                    );
-                  },
+                  onTapProfile: () => context.push('/profile', extra: friend),
                 ),
               );
             }),

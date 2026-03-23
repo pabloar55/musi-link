@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/widgets/onboarding/onboarding_page.dart';
-import 'package:musi_link/screens/main_screen.dart';
 
 /// Pantalla de bienvenida con slider de 5 páginas explicativas.
 /// Se muestra solo la primera vez que el usuario inicia sesión.
@@ -35,9 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainScreen()),
-    );
+    context.go('/');
   }
 
   void _nextPage() {

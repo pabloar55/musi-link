@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/services/spotify_service.dart';
-import 'package:musi_link/screens/main_screen.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
@@ -18,9 +18,7 @@ class SpotifyConnectScreen extends StatefulWidget {
 
 class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   final SpotifyService _spotifyService = SpotifyService.instance;
-  bool _isConnected = false;
   bool _isLoading = true;
-  bool? _onboardingCompleted;
 
   @override
   void initState() {
@@ -40,19 +38,18 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
         prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
 
     if (restored && mounted) {
-      setState(() {
-        _isConnected = true;
-        _onboardingCompleted = onboardingDone;
-        _isLoading = false;
-      });
+      // Navegar directamente con go_router
+      if (onboardingDone) {
+        context.go('/');
+      } else {
+        context.go('/onboarding');
+      }
       return;
     }
+
     // No hay credenciales o falló → mostrar botón "Conectar Spotify"
     if (mounted) {
-      setState(() {
-        _onboardingCompleted = onboardingDone;
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -62,10 +59,16 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
     if (!mounted) return;
 
     if (result) {
-      setState(() {
-        _isConnected = true;
-        _isLoading = false;
-      });
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingDone =
+          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
+      if (!mounted) return;
+
+      if (onboardingDone) {
+        context.go('/');
+      } else {
+        context.go('/onboarding');
+      }
     } else {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,14 +81,6 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-
-    if (_isConnected) {
-      // Si el onboarding no se ha completado, mostrar onboarding primero
-      if (_onboardingCompleted == false) {
-        return const OnboardingScreen();
-      }
-      return const MainScreen();
-    }
 
     if (_isLoading) {
       return const Scaffold(

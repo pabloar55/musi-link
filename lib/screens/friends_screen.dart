@@ -7,9 +7,8 @@ import 'package:musi_link/widgets/friends/section_header.dart';
 import 'package:musi_link/widgets/friends/empty_message.dart';
 import 'package:musi_link/widgets/friends/request_tile.dart';
 import 'package:musi_link/widgets/friends/friend_tile.dart';
-import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
-import 'package:musi_link/screens/user_search_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pantalla de amigos: solicitudes pendientes + lista de amigos.
 class FriendsScreen extends StatefulWidget {
@@ -171,11 +170,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                       if (user != null) {
                         // Invalida el caché para obtener los datos más recientes (ej. Now Playing)
                         invalidateUserFuture(user.uid);
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => UserProfileScreen(user: user),
-                          ),
-                        );
+                        context.push('/profile', extra: user);
                       }
                     },
                     onLongPress: (user) =>
@@ -190,11 +185,7 @@ class _FriendsScreenState extends State<FriendsScreen>
       floatingActionButton: FloatingActionButton(
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const UserSearchScreen()),
-          );
-        },
+        onPressed: () => context.push('/search'),
         child: const Icon(Icons.person_search),
       ),
     );

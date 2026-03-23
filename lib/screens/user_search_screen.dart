@@ -7,7 +7,7 @@ import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
-import 'package:musi_link/screens/user_profile_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pantalla para buscar usuarios y enviar solicitudes de amistad.
 class UserSearchScreen extends StatefulWidget {
@@ -101,11 +101,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void _openProfile(AppUser user) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => UserProfileScreen(user: user),
-      ),
-    ).then((_) {
+    context.push<void>('/profile', extra: user).then((_) {
       // Refrescar relaciones al volver del perfil
       if (mounted && _results.isNotEmpty) {
         _refreshRelationships();

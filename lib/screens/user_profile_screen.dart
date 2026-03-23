@@ -10,7 +10,7 @@ import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
-import 'package:musi_link/screens/chat_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -53,15 +53,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final chat =
         await ChatService.instance.getOrCreateChat(widget.user.uid);
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          chatId: chat.id,
-          otherUserName: widget.user.displayName,
-          otherUserId: widget.user.uid,
-        ),
-      ),
-    );
+    context.push('/chat', extra: <String, String>{
+      'chatId': chat.id,
+      'otherUserName': widget.user.displayName,
+      'otherUserId': widget.user.uid,
+    });
   }
 
   Future<void> _sendRequest() async {

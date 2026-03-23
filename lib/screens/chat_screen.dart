@@ -7,7 +7,7 @@ import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
 import 'package:musi_link/widgets/chat/track_bubble.dart';
 import 'package:musi_link/widgets/chat/track_search_sheet.dart';
-import 'package:musi_link/screens/user_profile_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// Pantalla de conversación individual.
 class ChatScreen extends StatefulWidget {
@@ -94,15 +94,11 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () async {
-            final navigator = Navigator.of(context);
+            final nav = GoRouter.of(context);
             final user =
                 await UserService.instance.getUser(widget.otherUserId);
             if (user != null && mounted) {
-              navigator.push(
-                MaterialPageRoute(
-                  builder: (_) => UserProfileScreen(user: user),
-                ),
-              );
+              nav.push('/profile', extra: user);
             }
           },
           child: Text(widget.otherUserName),
