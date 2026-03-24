@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
-import 'package:musi_link/services/music_profile_service.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/widgets/discover/people_tab.dart';
 import 'package:musi_link/widgets/discover/daily_song_tab.dart';
 
-class DiscoverScreen extends StatefulWidget {
+class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
   @override
-  State<DiscoverScreen> createState() => _DiscoverScreenState();
+  ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
-class _DiscoverScreenState extends State<DiscoverScreen>
+class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     with AutomaticKeepAliveClientMixin<DiscoverScreen>, TickerProviderStateMixin {
   late Future<List<DiscoveryResult>> _discoveryFuture;
   late TabController _tabController;
@@ -34,7 +35,7 @@ class _DiscoverScreenState extends State<DiscoverScreen>
   }
 
   void _loadDiscovery() {
-    _discoveryFuture = MusicProfileService.instance.getDiscoveryUsers();
+    _discoveryFuture = ref.read(musicProfileServiceProvider).getDiscoveryUsers();
   }
 
   Future<void> _refresh() async {

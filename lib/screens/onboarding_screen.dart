@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -7,17 +8,17 @@ import 'package:musi_link/widgets/onboarding/onboarding_page.dart';
 /// Pantalla de bienvenida con slider de 5 páginas explicativas.
 /// Se muestra solo la primera vez que el usuario inicia sesión.
 /// Guarda un flag en SharedPreferences para no volver a mostrarse.
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   /// Clave de SharedPreferences para indicar si el onboarding ya se completó.
   static const String onboardingCompletedKey = 'onboarding_completed';
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   static const int _totalPages = 5;

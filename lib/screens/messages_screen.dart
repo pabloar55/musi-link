@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/services/chat_service.dart';
+import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
@@ -9,15 +11,18 @@ import 'package:musi_link/widgets/user_circle_avatar.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
-class MessagesScreen extends StatefulWidget {
+class MessagesScreen extends ConsumerStatefulWidget {
   const MessagesScreen({super.key});
 
   @override
-  State<MessagesScreen> createState() => _MessagesScreenState();
+  ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _MessagesScreenState extends State<MessagesScreen>
+class _MessagesScreenState extends ConsumerState<MessagesScreen>
     with AutomaticKeepAliveClientMixin, UserFutureCache {
+  @override
+  UserService get userService => ref.read(userServiceProvider);
+
   @override
   bool get wantKeepAlive => true;
 
@@ -26,7 +31,7 @@ class _MessagesScreenState extends State<MessagesScreen>
   @override
   void initState() {
     super.initState();
-    _chatsStream = ChatService.instance.getChats();
+    _chatsStream = ref.read(chatServiceProvider).getChats();
   }
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;

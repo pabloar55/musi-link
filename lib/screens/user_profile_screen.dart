@@ -1,28 +1,28 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/genre_tile.dart';
-import 'package:musi_link/services/chat_service.dart';
-import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/models/track.dart';
-import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class UserProfileScreen extends StatefulWidget {
+class UserProfileScreen extends ConsumerStatefulWidget {
   final AppUser user;
 
   const UserProfileScreen({super.key, required this.user});
 
   @override
-  State<UserProfileScreen> createState() => _UserProfileScreenState();
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   late Future<DiscoveryResult> _compatibilityFuture;
   late Future<RelationshipResult> _relationshipFuture;
   Track? _dailySong;
@@ -36,22 +36,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     _dailySong = widget.user.dailySong;
     if (!_isOwnProfile) {
       _compatibilityFuture =
-          MusicProfileService.instance.getCompatibilityWith(widget.user);
+          ref.read(musicProfileServiceProvider).getCompatibilityWith(widget.user);
       _relationshipFuture =
-          FriendService.instance.getRelationship(widget.user.uid);
+          ref.read(friendServiceProvider).getRelationship(widget.user.uid);
     }
   }
 
   void _refreshRelationship() {
     setState(() {
       _relationshipFuture =
-          FriendService.instance.getRelationship(widget.user.uid);
+          ref.read(friendServiceProvider).getRelationship(widget.user.uid);
     });
   }
 
   Future<void> _startChat() async {
     final chat =
-        await ChatService.instance.getOrCreateChat(widget.user.uid);
+        await ref.read(chatServiceProvider).getOrCreateChat(widget.user.uid);
     if (!mounted) return;
     context.push('/chat', extra: <String, String>{
       'chatId': chat.id,
@@ -61,25 +61,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   Future<void> _sendRequest() async {
-    await FriendService.instance.sendRequest(widget.user.uid);
+    await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
     if (!mounted) return;
     _refreshRelationship();
   }
 
   Future<void> _acceptRequest(String requestId) async {
-    await FriendService.instance.acceptRequest(requestId, widget.user.uid);
+    await ref.read(friendServiceProvider).acceptRequest(requestId, widget.user.uid);
     if (!mounted) return;
     _refreshRelationship();
   }
 
   Future<void> _rejectRequest(String requestId) async {
-    await FriendService.instance.rejectRequest(requestId);
+    await ref.read(friendServiceProvider).rejectRequest(requestId);
     if (!mounted) return;
     _refreshRelationship();
   }
 
   Future<void> _cancelRequest(String requestId) async {
-    await FriendService.instance.cancelRequest(requestId);
+    await ref.read(friendServiceProvider).cancelRequest(requestId);
     if (!mounted) return;
     _refreshRelationship();
   }
@@ -87,7 +87,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Future<void> _removeFriend() async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
-      await FriendService.instance.removeFriend(widget.user.uid);
+      await ref.read(friendServiceProvider).removeFriend(widget.user.uid);
       if (!mounted) return;
       _refreshRelationship();
     }

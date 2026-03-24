@@ -1,18 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/providers/providers.dart';
 
-class DailySongSearchSheet extends StatefulWidget {
+class DailySongSearchSheet extends ConsumerStatefulWidget {
   const DailySongSearchSheet({super.key});
 
   @override
-  State<DailySongSearchSheet> createState() => _DailySongSearchSheetState();
+  ConsumerState<DailySongSearchSheet> createState() => _DailySongSearchSheetState();
 }
 
-class _DailySongSearchSheetState extends State<DailySongSearchSheet> {
+class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
   final _searchController = TextEditingController();
   List<Track> _results = [];
   bool _loading = false;
@@ -39,7 +40,7 @@ class _DailySongSearchSheetState extends State<DailySongSearchSheet> {
     }
 
     setState(() => _loading = true);
-    final results = await SpotifyGetStats.instance.searchTracks(query);
+    final results = await ref.read(spotifyStatsProvider).searchTracks(query);
     if (mounted) {
       setState(() {
         _results = results;

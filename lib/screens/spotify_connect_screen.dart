@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:musi_link/services/spotify_service.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
 /// con Firebase. Si el usuario ya tiene token de Spotify válido,
 /// se salta automáticamente a MainScreen (o al onboarding si es la primera vez).
-class SpotifyConnectScreen extends StatefulWidget {
+class SpotifyConnectScreen extends ConsumerStatefulWidget {
   const SpotifyConnectScreen({super.key});
 
   @override
-  State<SpotifyConnectScreen> createState() => _SpotifyConnectScreenState();
+  ConsumerState<SpotifyConnectScreen> createState() => _SpotifyConnectScreenState();
 }
 
-class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
-  final SpotifyService _spotifyService = SpotifyService.instance;
+class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
   bool _isLoading = true;
 
   @override
@@ -30,7 +30,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
   /// El paquete `spotify` renueva el token automáticamente con el refresh_token.
   Future<void> _checkExistingToken() async {
     // Intentar restaurar sesión silenciosamente (refresh automático si expiró)
-    final restored = await _spotifyService.tryRestoreSession();
+    final restored = await ref.read(spotifyServiceProvider).tryRestoreSession();
 
     // Leer flag de onboarding
     final prefs = await SharedPreferences.getInstance();
@@ -55,7 +55,7 @@ class _SpotifyConnectScreenState extends State<SpotifyConnectScreen> {
 
   Future<void> _connectSpotify() async {
     setState(() => _isLoading = true);
-    final result = await _spotifyService.authorizeAndConnect();
+    final result = await ref.read(spotifyServiceProvider).authorizeAndConnect();
     if (!mounted) return;
 
     if (result) {

@@ -1,23 +1,24 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/track.dart';
-import 'package:musi_link/services/user_service.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/widgets/discover/daily_song_card.dart';
 import 'package:musi_link/widgets/discover/daily_song_search_sheet.dart';
 import 'package:musi_link/widgets/discover/friend_daily_song_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class DailySongTab extends StatefulWidget {
+class DailySongTab extends ConsumerStatefulWidget {
   const DailySongTab({super.key});
 
   @override
-  State<DailySongTab> createState() => _DailySongTabState();
+  ConsumerState<DailySongTab> createState() => _DailySongTabState();
 }
 
-class _DailySongTabState extends State<DailySongTab>
+class _DailySongTabState extends ConsumerState<DailySongTab>
     with AutomaticKeepAliveClientMixin<DailySongTab> {
   Track? _dailySong;
   bool _loading = true;
@@ -36,14 +37,14 @@ class _DailySongTabState extends State<DailySongTab>
   }
 
   Future<void> _loadData() async {
-    final user = await UserService.instance.getUser(_currentUid);
+    final user = await ref.read(userServiceProvider).getUser(_currentUid);
     if (!mounted) return;
 
     final friendIds = user?.friends ?? [];
     List<AppUser> friendsWithSongs = [];
 
     if (friendIds.isNotEmpty) {
-      final friends = await UserService.instance.getUsersByIds(friendIds);
+      final friends = await ref.read(userServiceProvider).getUsersByIds(friendIds);
       friendsWithSongs =
           friends.where((f) => f.dailySong != null).toList();
     }
@@ -63,7 +64,7 @@ class _DailySongTabState extends State<DailySongTab>
       builder: (_) => const DailySongSearchSheet(),
     );
     if (track == null || !mounted) return;
-    await UserService.instance.setDailySong(_currentUid, track);
+    await ref.read(userServiceProvider).setDailySong(_currentUid, track);
     if (!mounted) return;
     setState(() => _dailySong = track);
   }

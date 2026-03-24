@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/widgets/user_avatar_menu.dart';
 import 'package:musi_link/screens/discover_screen.dart';
 import 'package:musi_link/screens/messages_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
 import 'package:musi_link/screens/friends_screen.dart';
-import 'package:musi_link/services/spotify_service.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
+class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
   int currentPageIndex = 0;
   final PageController _pageController = PageController();
   final List<Widget> screens = [
@@ -28,8 +29,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (SpotifyService.instance.isInitialized) {
-      SpotifyService.instance.startPollingNowPlaying();
+    if (ref.read(spotifyServiceProvider).isInitialized) {
+      ref.read(spotifyServiceProvider).startPollingNowPlaying();
     }
   }
 
@@ -43,11 +44,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      if (SpotifyService.instance.isInitialized) {
-        SpotifyService.instance.startPollingNowPlaying();
+      if (ref.read(spotifyServiceProvider).isInitialized) {
+        ref.read(spotifyServiceProvider).startPollingNowPlaying();
       }
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      SpotifyService.instance.stopPollingNowPlaying();
+      ref.read(spotifyServiceProvider).stopPollingNowPlaying();
     }
   }
 

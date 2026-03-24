@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/utils/tokens.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/models/track.dart'
@@ -17,9 +16,14 @@ import 'package:spotify/spotify.dart';
 /// - Refresh silencioso (HTTP, sin UI) cuando el token expira.
 /// - Acceso a la API (top tracks, artists, etc.) vía [_api].
 class SpotifyService {
-  SpotifyService._();
-  static final SpotifyService instance = SpotifyService._();
+  SpotifyService({
+    required UserService userService,
+    required Future<void> Function(String uid) syncMusicProfile,
+  })  : _userService = userService,
+        _syncMusicProfile = syncMusicProfile;
 
+  final UserService _userService;
+  final Future<void> Function(String uid) _syncMusicProfile;
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? '';
   final String _redirectUri = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? '';
 
@@ -80,7 +84,7 @@ class SpotifyService {
 
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
-      await UserService.instance.updateNowPlaying(firebaseUser.uid, track);
+      await _userService.updateNowPlaying(firebaseUser.uid, track);
     }
   }
 
@@ -151,7 +155,7 @@ class SpotifyService {
       // Sincronizar datos musicales en Firestore
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
-        await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
+        await _syncMusicProfile(firebaseUser.uid);
       }
 
       // Iniciar el polling de Now Playing
@@ -196,7 +200,7 @@ class SpotifyService {
       // Sincronizar datos musicales en Firestore
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
-        await MusicProfileService.instance.syncMusicProfile(firebaseUser.uid);
+        await _syncMusicProfile(firebaseUser.uid);
       }
 
       // Iniciar el polling de Now Playing
@@ -241,7 +245,7 @@ class SpotifyService {
 
       if (spotifyId.isEmpty && spotifyPhotoUrl.isEmpty) return;
 
-      await UserService.instance.linkSpotifyProfile(
+      await _userService.linkSpotifyProfile(
         firebaseUser.uid,
         spotifyId: spotifyId,
         photoUrl: spotifyPhotoUrl,
@@ -259,7 +263,7 @@ class SpotifyService {
     try {
       final firebaseUser = FirebaseAuth.instance.currentUser;
       if (firebaseUser != null) {
-        await UserService.instance.updateNowPlaying(firebaseUser.uid, null);
+        await _userService.updateNowPlaying(firebaseUser.uid, null);
       }
     } catch (e) {
       debugPrint('⚠️ No se pudo limpiar nowPlaying: $e');

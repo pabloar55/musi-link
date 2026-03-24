@@ -15,8 +15,6 @@ class RelationshipResult {
 
 /// Servicio para gestionar solicitudes de amistad y amigos en Firestore.
 class FriendService {
-  FriendService._();
-  static final FriendService instance = FriendService._();
 
   final CollectionReference<Map<String, dynamic>> _requestsRef =
       FirebaseFirestore.instance.collection('friend_requests');

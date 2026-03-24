@@ -7,8 +7,6 @@ import 'package:musi_link/models/track.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService {
-  ChatService._();
-  static final ChatService instance = ChatService._();
 
   final CollectionReference<Map<String, dynamic>> _chatsRef =
       FirebaseFirestore.instance.collection('chats');

@@ -6,8 +6,9 @@ import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 
 class MusicProfileService {
-  MusicProfileService._();
-  static final MusicProfileService instance = MusicProfileService._();
+  MusicProfileService(this._spotifyGetStats);
+
+  final SpotifyGetStats _spotifyGetStats;
 
   final CollectionReference<Map<String, dynamic>> _usersRef =
       FirebaseFirestore.instance.collection('users');
@@ -29,9 +30,9 @@ class MusicProfileService {
       }
 
       final artists =
-          await SpotifyGetStats.instance.getTopArtists(20, 'medium_term');
+          await _spotifyGetStats.getTopArtists(20, 'medium_term');
       final genres =
-          await SpotifyGetStats.instance.getTopGenres(10, 'medium_term');
+          await _spotifyGetStats.getTopGenres(10, 'medium_term');
 
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),

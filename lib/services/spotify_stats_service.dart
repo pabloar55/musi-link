@@ -9,8 +9,9 @@ import 'package:spotify/spotify.dart' show SearchType, TimeRange, Track;
 ///
 /// Usa [SpotifyService.api] que ya maneja token refresh automáticamente.
 class SpotifyGetStats {
-  SpotifyGetStats._();
-  static final SpotifyGetStats instance = SpotifyGetStats._();
+  SpotifyGetStats(this._spotifyService);
+
+  final SpotifyService _spotifyService;
 
   static const _timeRangeMap = {
     'short_term': TimeRange.shortTerm,
@@ -21,7 +22,7 @@ class SpotifyGetStats {
   Future<List<app.Track>> getTopTracks(int limit, String timeRange) async {
     try {
       debugPrint("----------Obteniendo top tracks...---------");
-      final api = SpotifyService.instance.api;
+      final api = _spotifyService.api;
       final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
       final pages = api.me.topTracks(timeRange: tr);
       final page = await pages.first(limit);
@@ -52,7 +53,7 @@ class SpotifyGetStats {
   Future<List<app.Artist>> getTopArtists(int limit, String timeRange) async {
     try {
       debugPrint("----------Obteniendo top artists...---------");
-      final api = SpotifyService.instance.api;
+      final api = _spotifyService.api;
       final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
       final pages = api.me.topArtists(timeRange: tr);
       final page = await pages.first(limit);
@@ -104,7 +105,7 @@ class SpotifyGetStats {
   Future<List<app.Track>> searchTracks(String query, {int limit = 20}) async {
     if (query.trim().isEmpty) return [];
     try {
-      final api = SpotifyService.instance.api;
+      final api = _spotifyService.api;
       final results = api.search.get(query, types: [SearchType.track]);
       final page = await results.first(limit);
 

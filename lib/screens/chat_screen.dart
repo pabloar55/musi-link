@@ -1,16 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/services/chat_service.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/models/message.dart';
-import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
 import 'package:musi_link/widgets/chat/track_bubble.dart';
 import 'package:musi_link/widgets/chat/track_search_sheet.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla de conversación individual.
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   final String chatId;
   final String otherUserName;
   final String otherUserId;
@@ -23,13 +23,12 @@ class ChatScreen extends StatefulWidget {
   });
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-  final _chatService = ChatService.instance;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
@@ -37,7 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     // Marcar mensajes como leídos al abrir la conversación
-    _chatService.markMessagesAsRead(widget.chatId);
+    ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
   }
 
   @override
@@ -52,7 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
 
     _messageController.clear();
-    await _chatService.sendMessage(widget.chatId, text);
+    await ref.read(chatServiceProvider).sendMessage(widget.chatId, text);
 
     // Scroll al final tras enviar
     _scrollToBottom();
@@ -78,7 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (_) => TrackSearchSheet(
         onTrackSelected: (track) async {
           Navigator.of(context).pop();
-          await _chatService.sendTrackMessage(widget.chatId, track);
+          await ref.read(chatServiceProvider).sendTrackMessage(widget.chatId, track);
           _scrollToBottom();
         },
       ),
@@ -96,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
           onTap: () async {
             final nav = GoRouter.of(context);
             final user =
-                await UserService.instance.getUser(widget.otherUserId);
+                await ref.read(userServiceProvider).getUser(widget.otherUserId);
             if (user != null && mounted) {
               nav.push('/profile', extra: user);
             }
@@ -109,7 +108,7 @@ class _ChatScreenState extends State<ChatScreen> {
           // Lista de mensajes
           Expanded(
             child: StreamBuilder<List<Message>>(
-              stream: _chatService.getMessages(widget.chatId),
+              stream: ref.read(chatServiceProvider).getMessages(widget.chatId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -129,7 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
 
                 // Marcar como leídos cuando llegan nuevos
-                _chatService.markMessagesAsRead(widget.chatId);
+                ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
                 _scrollToBottom();
 
                 return ListView.builder(
@@ -148,7 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         colorScheme: colorScheme,
                         currentUid: _currentUid,
                         chatId: widget.chatId,
-                        chatService: _chatService,
+                        chatService: ref.read(chatServiceProvider),
                       );
                     }
 

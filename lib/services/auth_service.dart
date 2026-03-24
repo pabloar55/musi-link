@@ -6,9 +6,9 @@ import 'package:musi_link/services/user_service.dart';
 /// Servicio de autenticación con Firebase Auth.
 /// Soporta email+contraseña y Google Sign-In.
 class AuthService {
-  AuthService._();
-  static final AuthService instance = AuthService._();
+  AuthService(this._userService);
 
+  final UserService _userService;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _googleInitialized = false;
@@ -37,7 +37,7 @@ class AuthService {
       final user = credential.user;
       if (user != null) {
         await user.updateDisplayName(displayName);
-        await UserService.instance.createUserProfile(
+        await _userService.createUserProfile(
           uid: user.uid,
           email: email,
           displayName: displayName,
@@ -63,7 +63,7 @@ class AuthService {
       );
       final user = credential.user;
       if (user != null) {
-        await UserService.instance.updateLastLogin(user.uid);
+        await _userService.updateLastLogin(user.uid);
       }
       return user;
     } on FirebaseAuthException catch (e) {
@@ -93,15 +93,15 @@ class AuthService {
       final user = userCredential.user;
 
       if (user != null) {
-        final exists = await UserService.instance.userExists(user.uid);
+        final exists = await _userService.userExists(user.uid);
         if (!exists) {
-          await UserService.instance.createUserProfile(
+          await _userService.createUserProfile(
             uid: user.uid,
             email: user.email ?? '',
             displayName: user.displayName ?? googleUser.displayName ?? '',
           );
         } else {
-          await UserService.instance.updateLastLogin(user.uid);
+          await _userService.updateLastLogin(user.uid);
         }
       }
       return user;

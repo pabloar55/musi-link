@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/router/app_router.dart';
+import 'package:musi_link/screens/auth_screen.dart';
+import 'package:musi_link/screens/chat_screen.dart';
+import 'package:musi_link/screens/main_screen.dart';
+import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/screens/splash_screen.dart';
+import 'package:musi_link/screens/spotify_connect_screen.dart';
+import 'package:musi_link/screens/user_profile_screen.dart';
+import 'package:musi_link/screens/user_search_screen.dart';
+import 'package:musi_link/services/auth_service.dart';
+import 'package:musi_link/services/chat_service.dart';
+import 'package:musi_link/services/friend_service.dart';
+import 'package:musi_link/services/music_profile_service.dart';
+import 'package:musi_link/services/spotify_service.dart';
+import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/user_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// ── Servicios sin dependencias ──────────────────────────────────
+
+final userServiceProvider = Provider<UserService>((ref) {
+  return UserService();
+});
+
+final chatServiceProvider = Provider<ChatService>((ref) {
+  return ChatService();
+});
+
+final friendServiceProvider = Provider<FriendService>((ref) {
+  return FriendService();
+});
+
+// ── Servicios con dependencias ──────────────────────────────────
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService(ref.read(userServiceProvider));
+});
+
+final Provider<SpotifyService> spotifyServiceProvider =
+    Provider<SpotifyService>((ref) {
+  return SpotifyService(
+    userService: ref.read(userServiceProvider),
+    syncMusicProfile: (String uid) =>
+        ref.read(musicProfileServiceProvider).syncMusicProfile(uid),
+  );
+});
+
+final Provider<MusicProfileService> musicProfileServiceProvider =
+    Provider<MusicProfileService>((ref) {
+  return MusicProfileService(ref.read(spotifyStatsProvider));
+});
+
+final Provider<SpotifyGetStats> spotifyStatsProvider =
+    Provider<SpotifyGetStats>((ref) {
+  return SpotifyGetStats(ref.read(spotifyServiceProvider));
+});
+
+// ── Theme ───────────────────────────────────────────────────────
+
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() => ThemeMode.system;
+
+  bool get isDark {
+    if (state == ThemeMode.system) {
+      return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark;
+    }
+    return state == ThemeMode.dark;
+  }
+
+  void toggleDarkLight() {
+    state = isDark ? ThemeMode.light : ThemeMode.dark;
+  }
+}
+
+final themeModeProvider =
+    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+
+// ── Router ──────────────────────────────────────────────────────
+
+final appRouterNotifierProvider = Provider<AppRouterNotifier>((ref) {
+  final notifier = AppRouterNotifier();
+  ref.onDispose(() => notifier.dispose());
+  return notifier;
+});
+
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final notifier = ref.read(appRouterNotifierProvider);
+  return GoRouter(
+    initialLocation: '/splash',
+    refreshListenable: notifier,
+    redirect: (context, state) {
+      final location = state.matchedLocation;
+
+      if (!notifier.isInitialized) {
+        return location == '/splash' ? null : '/splash';
+      }
+
+      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+
+      if (!isLoggedIn) {
+        return location == '/auth' ? null : '/auth';
+      }
+
+      if (location == '/splash' || location == '/auth') {
+        return '/spotify-connect';
+      }
+
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/auth',
+        builder: (context, state) => const AuthScreen(),
+      ),
+      GoRoute(
+        path: '/spotify-connect',
+        builder: (context, state) => const SpotifyConnectScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const MainScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) =>
+            UserProfileScreen(user: state.extra as AppUser),
+      ),
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) {
+          final params = state.extra as Map<String, String>;
+          return ChatScreen(
+            chatId: params['chatId']!,
+            otherUserName: params['otherUserName']!,
+            otherUserId: params['otherUserId']!,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const UserSearchScreen(),
+      ),
+    ],
+  );
+});

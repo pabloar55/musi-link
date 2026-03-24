@@ -1,20 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/providers/providers.dart';
 
-class TrackSearchSheet extends StatefulWidget {
+class TrackSearchSheet extends ConsumerStatefulWidget {
   final ValueChanged<Track> onTrackSelected;
 
   const TrackSearchSheet({super.key, required this.onTrackSelected});
 
   @override
-  State<TrackSearchSheet> createState() => _TrackSearchSheetState();
+  ConsumerState<TrackSearchSheet> createState() => _TrackSearchSheetState();
 }
 
-class _TrackSearchSheetState extends State<TrackSearchSheet> {
+class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
   final _searchController = TextEditingController();
   List<Track> _results = [];
   bool _loading = false;
@@ -41,7 +42,7 @@ class _TrackSearchSheetState extends State<TrackSearchSheet> {
     }
 
     setState(() => _loading = true);
-    final results = await SpotifyGetStats.instance.searchTracks(query);
+    final results = await ref.read(spotifyStatsProvider).searchTracks(query);
     if (mounted) {
       setState(() {
         _results = results;

@@ -2,22 +2,23 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/app_user.dart';
-import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla para buscar usuarios y enviar solicitudes de amistad.
-class UserSearchScreen extends StatefulWidget {
+class UserSearchScreen extends ConsumerStatefulWidget {
   const UserSearchScreen({super.key});
 
   @override
-  State<UserSearchScreen> createState() => _UserSearchScreenState();
+  ConsumerState<UserSearchScreen> createState() => _UserSearchScreenState();
 }
 
-class _UserSearchScreenState extends State<UserSearchScreen> {
+class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   final _searchController = TextEditingController();
   Timer? _debounce;
   List<AppUser> _results = [];
@@ -60,14 +61,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       _hasSearched = true;
     });
 
-    final users = await UserService.instance
+    final users = await ref.read(userServiceProvider)
         .searchUsers(query, excludeUid: _currentUid);
 
     // Cargar relaciones para todos los resultados
     final relationships = <String, RelationshipResult>{};
     for (final user in users) {
       relationships[user.uid] =
-          await FriendService.instance.getRelationship(user.uid);
+          await ref.read(friendServiceProvider).getRelationship(user.uid);
     }
 
     if (mounted) {
@@ -82,19 +83,19 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Future<void> _sendRequest(String uid) async {
-    await FriendService.instance.sendRequest(uid);
+    await ref.read(friendServiceProvider).sendRequest(uid);
     if (!mounted) return;
     // Refrescar solo este usuario
-    final rel = await FriendService.instance.getRelationship(uid);
+    final rel = await ref.read(friendServiceProvider).getRelationship(uid);
     if (mounted) {
       setState(() => _relationships[uid] = rel);
     }
   }
 
   Future<void> _cancelRequest(String uid, String requestId) async {
-    await FriendService.instance.cancelRequest(requestId);
+    await ref.read(friendServiceProvider).cancelRequest(requestId);
     if (!mounted) return;
-    final rel = await FriendService.instance.getRelationship(uid);
+    final rel = await ref.read(friendServiceProvider).getRelationship(uid);
     if (mounted) {
       setState(() => _relationships[uid] = rel);
     }
@@ -111,7 +112,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _refreshRelationships() async {
     for (final user in _results) {
-      final rel = await FriendService.instance.getRelationship(user.uid);
+      final rel = await ref.read(friendServiceProvider).getRelationship(user.uid);
       if (mounted) {
         setState(() => _relationships[user.uid] = rel);
       }

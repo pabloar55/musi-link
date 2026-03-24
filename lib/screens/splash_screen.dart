@@ -3,17 +3,18 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/firebase_options.dart';
-import 'package:musi_link/router/app_router.dart';
+import 'package:musi_link/providers/providers.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -66,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (mounted) {
       // Marca la app como inicializada; el redirect de GoRouter
       // se encargará de navegar a /auth o /spotify-connect.
-      AppRouter.notifier.setInitialized();
+      ref.read(appRouterNotifierProvider).setInitialized();
     }
   }
 

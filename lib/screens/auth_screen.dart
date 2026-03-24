@@ -1,19 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:musi_link/services/auth_service.dart';
+import 'package:musi_link/providers/providers.dart';
 
 /// Pantalla de autenticación con Firebase.
 /// Permite login/registro con email+contraseña y Google Sign-In.
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey =
       GlobalKey<
         FormState
@@ -21,7 +22,6 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _auth = AuthService.instance;
 
   bool _isLogin = true; // true = login, false = registro
   bool _isLoading = false;
@@ -42,12 +42,12 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       User? user;
       if (_isLogin) {
-        user = await _auth.signInWithEmail(
+        user = await ref.read(authServiceProvider).signInWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
       } else {
-        user = await _auth.registerWithEmail(
+        user = await ref.read(authServiceProvider).registerWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
@@ -69,7 +69,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      final user = await _auth.signInWithGoogle();
+      final user = await ref.read(authServiceProvider).signInWithGoogle();
       if (user == null && mounted) {
         _showError(AppLocalizations.of(context)!.authErrorGoogleSignIn);
       }

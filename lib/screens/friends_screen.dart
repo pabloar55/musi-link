@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/services/friend_service.dart';
+import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/friends/section_header.dart';
@@ -11,15 +13,18 @@ import 'package:musi_link/widgets/remove_friend_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla de amigos: solicitudes pendientes + lista de amigos.
-class FriendsScreen extends StatefulWidget {
+class FriendsScreen extends ConsumerStatefulWidget {
   const FriendsScreen({super.key});
 
   @override
-  State<FriendsScreen> createState() => _FriendsScreenState();
+  ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends State<FriendsScreen>
+class _FriendsScreenState extends ConsumerState<FriendsScreen>
     with AutomaticKeepAliveClientMixin, UserFutureCache {
+  @override
+  UserService get userService => ref.read(userServiceProvider);
+
   @override
   bool get wantKeepAlive => true;
 
@@ -30,16 +35,16 @@ class _FriendsScreenState extends State<FriendsScreen>
   @override
   void initState() {
     super.initState();
-    _receivedRequestsStream = FriendService.instance.getReceivedRequests();
-    _sentRequestsStream = FriendService.instance.getSentRequests();
-    _friendsStream = FriendService.instance.getFriendsStream();
+    _receivedRequestsStream = ref.read(friendServiceProvider).getReceivedRequests();
+    _sentRequestsStream = ref.read(friendServiceProvider).getSentRequests();
+    _friendsStream = ref.read(friendServiceProvider).getFriendsStream();
   }
 
   Future<void> _showRemoveFriendDialog(String uid, String? name) async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
       invalidateUserFuture(uid);
-      await FriendService.instance.removeFriend(uid);
+      await ref.read(friendServiceProvider).removeFriend(uid);
     }
   }
 
@@ -80,13 +85,13 @@ class _FriendsScreenState extends State<FriendsScreen>
                           icon: Icon(Icons.check_circle,
                               color: colorScheme.primary),
                           tooltip: l10n.friendsAccept,
-                          onPressed: () => FriendService.instance
+                          onPressed: () => ref.read(friendServiceProvider)
                               .acceptRequest(request.id, request.senderId),
                         ),
                         IconButton(
                           icon: Icon(Icons.cancel, color: colorScheme.error),
                           tooltip: l10n.friendsReject,
-                          onPressed: () => FriendService.instance
+                          onPressed: () => ref.read(friendServiceProvider)
                               .rejectRequest(request.id),
                         ),
                       ],
@@ -121,7 +126,7 @@ class _FriendsScreenState extends State<FriendsScreen>
                     getUserFuture: getUserFuture,
                     trailing: TextButton(
                       onPressed: () =>
-                          FriendService.instance.cancelRequest(request.id),
+                          ref.read(friendServiceProvider).cancelRequest(request.id),
                       child: Text(l10n.friendsCancel),
                     ),
                   );

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/providers.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/filter_button.dart';
 import 'package:musi_link/widgets/genre_tile.dart';
@@ -7,20 +9,19 @@ import 'package:musi_link/widgets/track_tile.dart';
 import 'package:musi_link/models/artist.dart';
 import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/models/track.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
 
-class StatsScreen extends StatefulWidget {
+class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
 
   @override
-  State<StatsScreen> createState() => _StatsScreenState();
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
 }
 
 enum ContentType { tracks, artists, genres }
 
 enum TimeRange { shortTerm, mediumTerm, longTerm }
 
-class _StatsScreenState extends State<StatsScreen>
+class _StatsScreenState extends ConsumerState<StatsScreen>
     with AutomaticKeepAliveClientMixin<StatsScreen> {
   late Future<List<dynamic>> _dataFuture;
   ContentType _selectedContent = ContentType.tracks;
@@ -60,7 +61,7 @@ class _StatsScreenState extends State<StatsScreen>
       return;
     }
 
-    final api = SpotifyGetStats.instance;
+    final api = ref.read(spotifyStatsProvider);
 
     switch (_selectedContent) {
       case ContentType.tracks:
