@@ -5,9 +5,12 @@ import 'package:musi_link/models/track.dart';
 
 /// Servicio para gestionar perfiles de usuario en Firestore.
 class UserService {
+  UserService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final CollectionReference<Map<String, dynamic>> _usersRef =
-      FirebaseFirestore.instance.collection('users');
+  final FirebaseFirestore _firestore;
+  late final CollectionReference<Map<String, dynamic>> _usersRef =
+      _firestore.collection('users');
 
   /// Crea un perfil de usuario nuevo en Firestore.
   Future<void> createUserProfile({

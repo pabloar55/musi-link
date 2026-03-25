@@ -7,11 +7,16 @@ import 'package:musi_link/models/track.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService {
+  ChatService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
-  final CollectionReference<Map<String, dynamic>> _chatsRef =
-      FirebaseFirestore.instance.collection('chats');
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  late final CollectionReference<Map<String, dynamic>> _chatsRef =
+      _firestore.collection('chats');
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  String get _currentUid => _auth.currentUser!.uid;
 
   // ─── Chats ────────────────────────────────────────────────
 
@@ -68,7 +73,7 @@ class ChatService {
       // Eliminar todos los mensajes de la subcolección
       final messages =
           await _chatsRef.doc(chatId).collection('messages').get();
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
       for (final doc in messages.docs) {
         batch.delete(doc.reference);
       }
@@ -93,7 +98,7 @@ class ChatService {
         timestamp: now,
       );
 
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
 
       // Añadir el mensaje a la subcolección
       final msgRef = _chatsRef.doc(chatId).collection('messages').doc();
@@ -135,7 +140,7 @@ class ChatService {
 
       if (unread.docs.isEmpty) return;
 
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
       for (final doc in unread.docs) {
         batch.update(doc.reference, {'read': true});
       }
@@ -169,7 +174,7 @@ class ChatService {
         trackData: track,
       );
 
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
 
       final msgRef = _chatsRef.doc(chatId).collection('messages').doc();
       batch.set(msgRef, message.toFirestore());

@@ -15,13 +15,18 @@ class RelationshipResult {
 
 /// Servicio para gestionar solicitudes de amistad y amigos en Firestore.
 class FriendService {
+  FriendService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
-  final CollectionReference<Map<String, dynamic>> _requestsRef =
-      FirebaseFirestore.instance.collection('friend_requests');
-  final CollectionReference<Map<String, dynamic>> _usersRef =
-      FirebaseFirestore.instance.collection('users');
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  late final CollectionReference<Map<String, dynamic>> _requestsRef =
+      _firestore.collection('friend_requests');
+  late final CollectionReference<Map<String, dynamic>> _usersRef =
+      _firestore.collection('users');
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  String get _currentUid => _auth.currentUser!.uid;
 
   // ─── Solicitudes ────────────────────────────────────────
 
@@ -48,7 +53,7 @@ class FriendService {
   /// Actualiza el status y añade ambos UIDs a la lista de amigos de cada uno.
   Future<void> acceptRequest(String requestId, String otherUid) async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
 
       // Actualizar status del request
       batch.update(_requestsRef.doc(requestId), {
@@ -199,7 +204,7 @@ class FriendService {
   /// Elimina a [otherUid] de la lista de amigos de ambos.
   Future<void> removeFriend(String otherUid) async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _firestore.batch();
       batch.update(_usersRef.doc(_currentUid), {
         'friends': FieldValue.arrayRemove([otherUid]),
       });
