@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -114,8 +115,8 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
                               leading: track.imageUrl.isNotEmpty
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(4),
-                                      child: Image.network(
-                                        track.imageUrl,
+                                      child: CachedNetworkImage(
+                                        imageUrl: track.imageUrl,
                                         width: 48,
                                         height: 48,
                                         fit: BoxFit.cover,

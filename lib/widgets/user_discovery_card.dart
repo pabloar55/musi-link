@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
@@ -33,7 +34,7 @@ class UserDiscoveryCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundImage: user.photoUrl.isNotEmpty
-                        ? NetworkImage(user.photoUrl)
+                        ? CachedNetworkImageProvider(user.photoUrl)
                         : null,
                     child: user.photoUrl.isEmpty
                         ? const Icon(Icons.person)
@@ -117,8 +118,8 @@ class UserDiscoveryCard extends StatelessWidget {
                     if (user.dailySong!.imageUrl.isNotEmpty)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: Image.network(
-                          user.dailySong!.imageUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: user.dailySong!.imageUrl,
                           width: 24,
                           height: 24,
                           fit: BoxFit.cover,

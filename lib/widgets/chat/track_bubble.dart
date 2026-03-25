@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
@@ -84,8 +85,8 @@ class _TrackBubbleState extends State<TrackBubble> {
                   children: [
                     // Carátula
                     if (track.imageUrl.isNotEmpty)
-                      Image.network(
-                        track.imageUrl,
+                      CachedNetworkImage(
+                        imageUrl: track.imageUrl,
                         width: double.infinity,
                         height: 180,
                         fit: BoxFit.cover,

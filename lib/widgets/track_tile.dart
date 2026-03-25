@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/models/track.dart';
 
@@ -12,8 +13,8 @@ class TrackTile extends StatelessWidget {
       leading: track.imageUrl.isNotEmpty
           ? ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: Image.network(
-                track.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: track.imageUrl,
                 width: 56,
                 height: 56,
                 fit: BoxFit.cover,

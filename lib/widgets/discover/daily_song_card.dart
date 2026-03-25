@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/models/track.dart';
 
@@ -22,8 +23,8 @@ class DailySongCard extends StatelessWidget {
               if (song.imageUrl.isNotEmpty)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    song.imageUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: song.imageUrl,
                     width: 56,
                     height: 56,
                     fit: BoxFit.cover,

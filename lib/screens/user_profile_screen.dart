@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,7 +118,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             CircleAvatar(
               radius: 40,
               backgroundImage: user.photoUrl.isNotEmpty
-                  ? NetworkImage(user.photoUrl)
+                  ? CachedNetworkImageProvider(user.photoUrl)
                   : null,
               child: user.photoUrl.isEmpty
                   ? const Icon(Icons.person, size: 40)
@@ -204,8 +205,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         if (_dailySong!.imageUrl.isNotEmpty)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              _dailySong!.imageUrl,
+                            child: CachedNetworkImage(
+                              imageUrl: _dailySong!.imageUrl,
                               width: 56,
                               height: 56,
                               fit: BoxFit.cover,

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// CircleAvatar del usuario con imagen + fallback de letra inicial.
@@ -20,7 +21,7 @@ class UserCircleAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: radius,
-      backgroundImage: hasPhoto ? NetworkImage(photoUrl) : null,
+      backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
       child: hasPhoto
           ? null
           : Text(

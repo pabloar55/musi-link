@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/models/artist.dart';
 
@@ -11,8 +12,8 @@ class ArtistTile extends StatelessWidget {
     return ListTile(
       leading: artist.imageUrl.isNotEmpty
           ? ClipOval(
-              child: Image.network(
-                artist.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: artist.imageUrl,
                 width: 56,
                 height: 56,
                 fit: BoxFit.cover,
