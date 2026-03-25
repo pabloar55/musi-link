@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -r \"context.go\\\\|context.push\\\\|GoRouter\\\\|go_router\" /c/Users/pablo/projects/musi_link/lib --include=*.dart)",
-      "Bash(flutter pub:*)",
-      "Bash(flutter analyze:*)"
-    ]
-  }
-}
