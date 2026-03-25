@@ -76,8 +76,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(themeModeProvider);
-    final isDarkMode = ref.read(themeModeProvider.notifier).isDark;
+    final isDarkMode = ref.watch(isDarkProvider);
 
     return FutureBuilder<AppUser?>(
       future: _userFuture,

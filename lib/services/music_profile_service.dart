@@ -79,7 +79,7 @@ class MusicProfileService {
           continue;
         }
 
-        final result = _calculateCompatibility(
+        final result = MusicProfileService.calculateCompatibility(
           myArtistNames: myUser.topArtistNames,
           myGenreNames: myUser.topGenreNames,
           otherUser: user,
@@ -110,14 +110,15 @@ class MusicProfileService {
     }
 
     final myUser = AppUser.fromFirestore(myDoc);
-    return _calculateCompatibility(
+    return MusicProfileService.calculateCompatibility(
       myArtistNames: myUser.topArtistNames,
       myGenreNames: myUser.topGenreNames,
       otherUser: otherUser,
     );
   }
 
-  DiscoveryResult _calculateCompatibility({
+  @visibleForTesting
+  static DiscoveryResult calculateCompatibility({
     required List<String> myArtistNames,
     required List<String> myGenreNames,
     required AppUser otherUser,

@@ -29,12 +29,14 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  late final Stream<List<Message>> _messagesStream;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
     super.initState();
+    _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
     // Marcar mensajes como leídos al abrir la conversación
     ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
   }
@@ -108,7 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Lista de mensajes
           Expanded(
             child: StreamBuilder<List<Message>>(
-              stream: ref.read(chatServiceProvider).getMessages(widget.chatId),
+              stream: _messagesStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

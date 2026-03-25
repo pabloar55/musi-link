@@ -81,6 +81,17 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 final themeModeProvider =
     NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
+/// Provider derivado que indica si el tema actual es oscuro.
+/// Usar `ref.watch(isDarkProvider)` en lugar de acceder al notifier.
+final isDarkProvider = Provider<bool>((ref) {
+  final mode = ref.watch(themeModeProvider);
+  if (mode == ThemeMode.system) {
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark;
+  }
+  return mode == ThemeMode.dark;
+});
+
 // ── Router ──────────────────────────────────────────────────────
 
 final appRouterNotifierProvider = Provider<AppRouterNotifier>((ref) {
