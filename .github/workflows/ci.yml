@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.3'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create .env
+        run: touch .env
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test with coverage
+        run: flutter test --coverage
+
+      - name: Check coverage
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lcov > /dev/null
+          lcov --summary coverage/lcov.info
+          lcov --remove coverage/lcov.info '*.g.dart' 'lib/generated/*' -o coverage/lcov_cleaned.info --ignore-errors unused
+          genhtml coverage/lcov_cleaned.info -o coverage/html --quiet
+          echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
+          lcov --summary coverage/lcov_cleaned.info 2>&1 | tail -3 >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/html/
