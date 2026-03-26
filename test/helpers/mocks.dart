@@ -21,7 +21,19 @@ class MockGoogleSignInAuthentication extends Mock
     implements GoogleSignInAuthentication {}
 
 // ── Firestore ────────────────────────────────────────────────
-class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+class MockFirebaseFirestore extends Mock implements FirebaseFirestore {
+  /// Si se asigna, [runTransaction] ejecuta el handler con este fake.
+  FakeTransaction? fakeTransaction;
+
+  @override
+  Future<T> runTransaction<T>(
+    TransactionHandler<T> transactionHandler, {
+    Duration timeout = const Duration(seconds: 30),
+    int maxAttempts = 5,
+  }) async {
+    return await transactionHandler(fakeTransaction!);
+  }
+}
 
 class MockCollectionReference extends Mock
     implements CollectionReference<Map<String, dynamic>> {}
@@ -41,6 +53,31 @@ class MockQueryDocumentSnapshot extends Mock
 class MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
 class MockWriteBatch extends Mock implements WriteBatch {}
+
+/// Transaction es una clase concreta en cloud_firestore, no abstracta.
+/// Mock no puede interceptar métodos concretos, así que usamos un Fake
+/// que registra las llamadas para verificar en los tests.
+class FakeTransaction extends Fake implements Transaction {
+  DocumentSnapshot<Map<String, dynamic>>? getResult;
+  final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>>
+      updates = [];
+  bool getCalled = false;
+
+  @override
+  Future<DocumentSnapshot<T>> get<T extends Object?>(
+      DocumentReference<T> documentReference) async {
+    getCalled = true;
+    return getResult! as DocumentSnapshot<T>;
+  }
+
+  @override
+  Transaction update(
+      DocumentReference<Object?> documentReference,
+      Map<String, dynamic> data) {
+    updates.add(MapEntry(documentReference, Map<String, dynamic>.from(data)));
+    return this;
+  }
+}
 
 // ── Services ─────────────────────────────────────────────────
 class MockUserService extends Mock implements UserService {}

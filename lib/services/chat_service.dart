@@ -192,32 +192,37 @@ class ChatService {
   }
 
   /// Añade o quita una reacción del usuario actual en un mensaje.
+  /// Usa una transacción para evitar race conditions cuando varios
+  /// usuarios reaccionan al mismo mensaje simultáneamente.
   Future<void> toggleReaction(
       String chatId, String messageId, String emoji) async {
     try {
       final msgRef =
           _chatsRef.doc(chatId).collection('messages').doc(messageId);
-      final doc = await msgRef.get();
-      if (!doc.exists) return;
 
-      final data = doc.data()!;
-      final reactions =
-          Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
-      final users = List<String>.from(reactions[emoji] as List? ?? []);
+      await _firestore.runTransaction((transaction) async {
+        final doc = await transaction.get(msgRef);
+        if (!doc.exists) return;
 
-      if (users.contains(_currentUid)) {
-        users.remove(_currentUid);
-      } else {
-        users.add(_currentUid);
-      }
+        final data = doc.data()!;
+        final reactions =
+            Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
+        final users = List<String>.from(reactions[emoji] as List? ?? []);
 
-      if (users.isEmpty) {
-        reactions.remove(emoji);
-      } else {
-        reactions[emoji] = users;
-      }
+        if (users.contains(_currentUid)) {
+          users.remove(_currentUid);
+        } else {
+          users.add(_currentUid);
+        }
 
-      await msgRef.update({'reactions': reactions});
+        if (users.isEmpty) {
+          reactions.remove(emoji);
+        } else {
+          reactions[emoji] = users;
+        }
+
+        transaction.update(msgRef, {'reactions': reactions});
+      });
     } catch (e) {
       debugPrint("❌ Error al reaccionar: $e");
     }

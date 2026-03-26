@@ -6,14 +6,21 @@ import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 
 class MusicProfileService {
-  MusicProfileService(this._spotifyGetStats);
+  MusicProfileService(
+    this._spotifyGetStats, {
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   final SpotifyGetStats _spotifyGetStats;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
-  final CollectionReference<Map<String, dynamic>> _usersRef =
-      FirebaseFirestore.instance.collection('users');
+  late final CollectionReference<Map<String, dynamic>> _usersRef =
+      _firestore.collection('users');
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  String get _currentUid => _auth.currentUser!.uid;
 
   /// Sincroniza los datos musicales del usuario desde Spotify a Firestore.
   /// Aplica un cooldown de 24h para evitar llamadas innecesarias.

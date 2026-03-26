@@ -287,109 +287,85 @@ void main() {
     });
 
     group('toggleReaction', () {
-      test('añade reacción si el usuario no ha reaccionado', () async {
-        final mockChatDocRef = MockDocumentReference();
-        final mockMessagesCol = MockMessagesCollectionRef();
-        final mockMsgRef = MockDocumentReference();
-        final mockMsgSnap = MockDocumentSnapshot();
+      late MockDocumentReference mockChatDocRef;
+      late MockMessagesCollectionRef mockMessagesCol;
+      late MockDocumentReference mockMsgRef;
+      late MockDocumentSnapshot mockMsgSnap;
+      late FakeTransaction fakeTransaction;
+
+      setUp(() {
+        mockChatDocRef = MockDocumentReference();
+        mockMessagesCol = MockMessagesCollectionRef();
+        mockMsgRef = MockDocumentReference();
+        mockMsgSnap = MockDocumentSnapshot();
+        fakeTransaction = FakeTransaction();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
         when(() => mockChatDocRef.collection('messages'))
             .thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.doc('msg_123')).thenReturn(mockMsgRef);
-        when(() => mockMsgRef.get()).thenAnswer((_) async => mockMsgSnap);
+
+        // FakeTransaction devuelve mockMsgSnap al hacer get()
+        fakeTransaction.getResult = mockMsgSnap;
+
+        // runTransaction ejecuta el callback con el fakeTransaction
+        mockFirestore.fakeTransaction = fakeTransaction;
+      });
+
+      test('añade reacción si el usuario no ha reaccionado', () async {
         when(() => mockMsgSnap.exists).thenReturn(true);
         when(() => mockMsgSnap.data()).thenReturn({
           'reactions': <String, dynamic>{},
         });
-        when(() => mockMsgRef.update(any())).thenAnswer((_) async {});
 
         await chatService.toggleReaction('chat_123', 'msg_123', '👍');
 
-        final captured = Map<String, dynamic>.from(
-            verify(() => mockMsgRef.update(captureAny())).captured.single
-                as Map);
-        final reactions =
-            Map<String, dynamic>.from(captured['reactions'] as Map);
+        expect(fakeTransaction.updates, hasLength(1));
+        final reactions = Map<String, dynamic>.from(
+            fakeTransaction.updates.first.value['reactions'] as Map);
         expect(reactions['👍'], contains('current_uid'));
       });
 
       test('quita reacción si el usuario ya reaccionó', () async {
-        final mockChatDocRef = MockDocumentReference();
-        final mockMessagesCol = MockMessagesCollectionRef();
-        final mockMsgRef = MockDocumentReference();
-        final mockMsgSnap = MockDocumentSnapshot();
-
-        when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.doc('msg_123')).thenReturn(mockMsgRef);
-        when(() => mockMsgRef.get()).thenAnswer((_) async => mockMsgSnap);
         when(() => mockMsgSnap.exists).thenReturn(true);
         when(() => mockMsgSnap.data()).thenReturn({
           'reactions': {
             '👍': ['current_uid', 'other_uid']
           },
         });
-        when(() => mockMsgRef.update(any())).thenAnswer((_) async {});
 
         await chatService.toggleReaction('chat_123', 'msg_123', '👍');
 
-        final captured = Map<String, dynamic>.from(
-            verify(() => mockMsgRef.update(captureAny())).captured.single
-                as Map);
-        final reactions =
-            Map<String, dynamic>.from(captured['reactions'] as Map);
+        expect(fakeTransaction.updates, hasLength(1));
+        final reactions = Map<String, dynamic>.from(
+            fakeTransaction.updates.first.value['reactions'] as Map);
         final users = reactions['👍'] as List;
         expect(users, isNot(contains('current_uid')));
         expect(users, contains('other_uid'));
       });
 
       test('elimina emoji del mapa si ya no quedan usuarios', () async {
-        final mockChatDocRef = MockDocumentReference();
-        final mockMessagesCol = MockMessagesCollectionRef();
-        final mockMsgRef = MockDocumentReference();
-        final mockMsgSnap = MockDocumentSnapshot();
-
-        when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.doc('msg_123')).thenReturn(mockMsgRef);
-        when(() => mockMsgRef.get()).thenAnswer((_) async => mockMsgSnap);
         when(() => mockMsgSnap.exists).thenReturn(true);
         when(() => mockMsgSnap.data()).thenReturn({
           'reactions': {
             '👍': ['current_uid']
           },
         });
-        when(() => mockMsgRef.update(any())).thenAnswer((_) async {});
 
         await chatService.toggleReaction('chat_123', 'msg_123', '👍');
 
-        final captured = Map<String, dynamic>.from(
-            verify(() => mockMsgRef.update(captureAny())).captured.single
-                as Map);
-        final reactions =
-            Map<String, dynamic>.from(captured['reactions'] as Map);
+        expect(fakeTransaction.updates, hasLength(1));
+        final reactions = Map<String, dynamic>.from(
+            fakeTransaction.updates.first.value['reactions'] as Map);
         expect(reactions.containsKey('👍'), false);
       });
 
       test('no hace nada si el mensaje no existe', () async {
-        final mockChatDocRef = MockDocumentReference();
-        final mockMessagesCol = MockMessagesCollectionRef();
-        final mockMsgRef = MockDocumentReference();
-        final mockMsgSnap = MockDocumentSnapshot();
-
-        when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.doc('msg_123')).thenReturn(mockMsgRef);
-        when(() => mockMsgRef.get()).thenAnswer((_) async => mockMsgSnap);
         when(() => mockMsgSnap.exists).thenReturn(false);
 
         await chatService.toggleReaction('chat_123', 'msg_123', '👍');
 
-        verifyNever(() => mockMsgRef.update(any()));
+        expect(fakeTransaction.updates, isEmpty);
       });
     });
   });

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +32,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   late final Stream<List<Message>> _messagesStream;
+  StreamSubscription<List<Message>>? _messagesSubscription;
 
   String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
 
@@ -37,12 +40,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
-    // Marcar mensajes como leídos al abrir la conversación
-    ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
+
+    // Listener para marcar como leídos y hacer scroll cuando llegan mensajes nuevos,
+    // en vez de hacerlo dentro del builder del StreamBuilder (que se ejecuta en cada rebuild).
+    _messagesSubscription = _messagesStream.listen((messages) {
+      if (messages.isNotEmpty) {
+        ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
+        _scrollToBottom();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _messagesSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -128,10 +139,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   );
                 }
-
-                // Marcar como leídos cuando llegan nuevos
-                ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
-                _scrollToBottom();
 
                 return ListView.builder(
                   controller: _scrollController,

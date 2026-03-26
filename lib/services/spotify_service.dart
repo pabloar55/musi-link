@@ -19,11 +19,14 @@ class SpotifyService {
   SpotifyService({
     required UserService userService,
     required Future<void> Function(String uid) syncMusicProfile,
+    FirebaseAuth? auth,
   })  : _userService = userService,
-        _syncMusicProfile = syncMusicProfile;
+        _syncMusicProfile = syncMusicProfile,
+        _auth = auth ?? FirebaseAuth.instance;
 
   final UserService _userService;
   final Future<void> Function(String uid) _syncMusicProfile;
+  final FirebaseAuth _auth;
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? '';
   final String _redirectUri = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? '';
 
@@ -82,7 +85,7 @@ class SpotifyService {
 
     _lastNowPlayingTrack = track;
 
-    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final firebaseUser = _auth.currentUser;
     if (firebaseUser != null) {
       await _userService.updateNowPlaying(firebaseUser.uid, track);
     }
@@ -153,7 +156,7 @@ class SpotifyService {
       await _syncSpotifyProfileToFirestore();
 
       // Sincronizar datos musicales en Firestore
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser != null) {
         await _syncMusicProfile(firebaseUser.uid);
       }
@@ -198,7 +201,7 @@ class SpotifyService {
       await _syncSpotifyProfileToFirestore();
 
       // Sincronizar datos musicales en Firestore
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser != null) {
         await _syncMusicProfile(firebaseUser.uid);
       }
@@ -233,7 +236,7 @@ class SpotifyService {
     if (_api == null) return;
 
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser == null) return;
 
       final spotifyUser = await _api!.me.get();
@@ -261,7 +264,7 @@ class SpotifyService {
 
     // Limpiar nowPlaying en Firestore (best-effort, no debe bloquear el sign-out)
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser != null) {
         await _userService.updateNowPlaying(firebaseUser.uid, null);
       }
