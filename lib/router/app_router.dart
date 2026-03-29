@@ -6,16 +6,21 @@ import 'package:flutter/material.dart';
 /// Notifier que dispara los redirects de GoRouter cuando cambia
 /// el estado de autenticación o cuando la app termina la inicialización.
 class AppRouterNotifier extends ChangeNotifier {
+  final FirebaseAuth _auth;
+
+  AppRouterNotifier({required FirebaseAuth auth}) : _auth = auth;
+
   StreamSubscription<User?>? _sub;
   bool _initialized = false;
 
   bool get isInitialized => _initialized;
 
-  /// Llamar después de inicializar Firebase en el SplashScreen.
+  /// Llamar desde el SplashScreen una vez que la app ha terminado de
+  /// inicializarse (Firebase ya está listo desde main.dart).
   /// Inicia la escucha de authStateChanges y dispara el primer redirect.
   void setInitialized() {
     _initialized = true;
-    _sub = FirebaseAuth.instance.authStateChanges().listen((_) {
+    _sub = _auth.authStateChanges().listen((_) {
       notifyListeners();
     });
     notifyListeners();

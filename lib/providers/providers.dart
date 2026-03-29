@@ -124,7 +124,7 @@ final isDarkProvider = Provider<bool>((ref) {
 // ── Router ──────────────────────────────────────────────────────
 
 final appRouterNotifierProvider = Provider<AppRouterNotifier>((ref) {
-  final notifier = AppRouterNotifier();
+  final notifier = AppRouterNotifier(auth: ref.watch(firebaseAuthProvider));
   ref.onDispose(() => notifier.dispose());
   return notifier;
 });
