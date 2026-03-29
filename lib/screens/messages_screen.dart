@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -34,7 +34,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     _chatsStream = ref.read(chatServiceProvider).getChats();
   }
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  /// UID of the authenticated user from the Riverpod provider.
+  /// Returns empty string if session was lost (GoRouter redirects before this
+  /// is reached in normal flow, but race conditions are possible).
+  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   /// Obtiene el UID del otro participante del chat.
   String _otherUid(Chat chat) {

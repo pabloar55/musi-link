@@ -20,7 +20,13 @@ class MusicProfileService {
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection('users');
 
-  String get _currentUid => _auth.currentUser!.uid;
+  /// Returns the UID of the currently authenticated user.
+  /// Throws [StateError] instead of crashing if the session is lost.
+  String get _currentUid {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('MusicProfileService: no authenticated user.');
+    return uid;
+  }
 
   /// Sincroniza los datos musicales del usuario desde Spotify a Firestore.
   /// Aplica un cooldown de 24h para evitar llamadas innecesarias.

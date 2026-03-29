@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +28,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
   }
 
   Future<AppUser?> _getCurrentAppUser() async {
-    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
     if (firebaseUser == null) return null;
     return ref.read(userServiceProvider).getUser(firebaseUser.uid);
   }
@@ -36,7 +36,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
   Future<void> _handleUserMenuAction(_UserMenuAction action) async {
     switch (action) {
       case _UserMenuAction.profile:
-        final firebaseUser = FirebaseAuth.instance.currentUser;
+        final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
         if (firebaseUser == null) return;
         final appUser =
             await ref.read(userServiceProvider).getUser(firebaseUser.uid);
@@ -82,7 +82,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
     return FutureBuilder<AppUser?>(
       future: _userFuture,
       builder: (context, snapshot) {
-        final firebaseUser = FirebaseAuth.instance.currentUser;
+        final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
         final appUser = snapshot.data;
         final imageUrl = appUser?.photoUrl.isNotEmpty == true
             ? appUser!.photoUrl

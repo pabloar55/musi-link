@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -28,7 +28,9 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   // Cache de relaciones para los resultados actuales
   final Map<String, RelationshipResult> _relationships = {};
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  /// UID of the authenticated user from the Riverpod provider.
+  /// If empty (session lost), searchUsers will return no results safely.
+  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   void dispose() {

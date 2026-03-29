@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -28,8 +28,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   late Future<RelationshipResult> _relationshipFuture;
   Track? _dailySong;
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
-  bool get _isOwnProfile => widget.user.uid == _currentUid;
+  /// UID of the authenticated user from the Riverpod provider.
+  /// Returns empty string on session loss — _isOwnProfile then evaluates to
+  /// false (safe: shows the other-user view, actions are gated by GoRouter).
+  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  bool get _isOwnProfile => widget.user.uid == _currentUid && _currentUid.isNotEmpty;
 
   @override
   void initState() {

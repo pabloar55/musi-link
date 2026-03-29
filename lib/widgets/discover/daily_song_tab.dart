@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -25,7 +25,9 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
   List<AppUser> _friendsWithSongs = [];
   List<String> _friendIds = [];
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  /// UID of the authenticated user from the Riverpod provider.
+  /// Returns empty string on session loss — _loadData guards against this.
+  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   bool get wantKeepAlive => true;
@@ -37,7 +39,13 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
   }
 
   Future<void> _loadData() async {
-    final user = await ref.read(userServiceProvider).getUser(_currentUid);
+    final uid = _currentUid;
+    if (uid.isEmpty) {
+      // Session lost — GoRouter will redirect; bail out without crashing.
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    final user = await ref.read(userServiceProvider).getUser(uid);
     if (!mounted) return;
 
     final friendIds = user?.friends ?? [];
@@ -58,13 +66,15 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
   }
 
   Future<void> _chooseDailySong() async {
+    final uid = _currentUid;
+    if (uid.isEmpty) return; // Session lost — skip silently, GoRouter redirects.
     final track = await showModalBottomSheet<Track>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const DailySongSearchSheet(),
     );
     if (track == null || !mounted) return;
-    await ref.read(userServiceProvider).setDailySong(_currentUid, track);
+    await ref.read(userServiceProvider).setDailySong(uid, track);
     if (!mounted) return;
     setState(() => _dailySong = track);
   }

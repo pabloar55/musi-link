@@ -26,7 +26,14 @@ class FriendService {
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection('users');
 
-  String get _currentUid => _auth.currentUser!.uid;
+  /// Returns the UID of the currently authenticated user.
+  /// Throws [StateError] instead of crashing with a null-dereference if the
+  /// session has been lost (race condition during deep-link / session restore).
+  String get _currentUid {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('FriendService: no authenticated user.');
+    return uid;
+  }
 
   // ─── Solicitudes ────────────────────────────────────────
 

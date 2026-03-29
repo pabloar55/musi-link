@@ -16,7 +16,13 @@ class ChatService {
   late final CollectionReference<Map<String, dynamic>> _chatsRef =
       _firestore.collection('chats');
 
-  String get _currentUid => _auth.currentUser!.uid;
+  /// Returns the UID of the currently authenticated user.
+  /// Throws [StateError] instead of crashing if the session is lost.
+  String get _currentUid {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw StateError('ChatService: no authenticated user.');
+    return uid;
+  }
 
   // ─── Chats ────────────────────────────────────────────────
 

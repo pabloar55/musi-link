@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -34,7 +34,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final Stream<List<Message>> _messagesStream;
   StreamSubscription<List<Message>>? _messagesSubscription;
 
-  String get _currentUid => FirebaseAuth.instance.currentUser!.uid;
+  /// UID of the authenticated user from the Riverpod provider.
+  /// Returns empty string if session was lost — message bubbles fall back to
+  /// always showing "other" side, which is safe for the UI.
+  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   void initState() {
