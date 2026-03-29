@@ -6,9 +6,9 @@ import 'package:musi_link/services/user_service.dart';
 /// Servicio de autenticación con Firebase Auth.
 /// Soporta email+contraseña y Google Sign-In.
 class AuthService {
-  AuthService(this._userService, {FirebaseAuth? auth, GoogleSignIn? googleSignIn})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
+  AuthService(this._userService, {required FirebaseAuth auth, required GoogleSignIn googleSignIn})
+      : _auth = auth,
+        _googleSignIn = googleSignIn;
 
   final UserService _userService;
   final FirebaseAuth _auth;

@@ -18,14 +18,11 @@ import 'package:spotify/spotify.dart';
 class SpotifyService {
   SpotifyService({
     required UserService userService,
-    required Future<void> Function(String uid) syncMusicProfile,
-    FirebaseAuth? auth,
+    required FirebaseAuth auth,
   })  : _userService = userService,
-        _syncMusicProfile = syncMusicProfile,
-        _auth = auth ?? FirebaseAuth.instance;
+        _auth = auth;
 
   final UserService _userService;
-  final Future<void> Function(String uid) _syncMusicProfile;
   final FirebaseAuth _auth;
   final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? '';
   final String _redirectUri = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? '';
@@ -155,13 +152,7 @@ class SpotifyService {
       // Sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
 
-      // Sincronizar datos musicales en Firestore
-      final firebaseUser = _auth.currentUser;
-      if (firebaseUser != null) {
-        await _syncMusicProfile(firebaseUser.uid);
-      }
-
-      // Iniciar el polling de Now Playing
+      // Sincronizar datos musicales en Firestore — gestionado por el caller
       startPollingNowPlaying();
 
       debugPrint('✅ Spotify conectado vía PKCE');
@@ -200,13 +191,7 @@ class SpotifyService {
       // Re-sincronizar perfil de Spotify en Firestore
       await _syncSpotifyProfileToFirestore();
 
-      // Sincronizar datos musicales en Firestore
-      final firebaseUser = _auth.currentUser;
-      if (firebaseUser != null) {
-        await _syncMusicProfile(firebaseUser.uid);
-      }
-
-      // Iniciar el polling de Now Playing
+      // Sincronizar datos musicales en Firestore — gestionado por el caller
       startPollingNowPlaying();
 
       debugPrint('✅ Sesión de Spotify restaurada');

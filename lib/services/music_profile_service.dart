@@ -8,10 +8,10 @@ import 'package:musi_link/services/spotify_stats_service.dart';
 class MusicProfileService {
   MusicProfileService(
     this._spotifyGetStats, {
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    required FirebaseFirestore firestore,
+    required FirebaseAuth auth,
+  })  : _firestore = firestore,
+        _auth = auth;
 
   final SpotifyGetStats _spotifyGetStats;
   final FirebaseFirestore _firestore;

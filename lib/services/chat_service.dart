@@ -7,9 +7,9 @@ import 'package:musi_link/models/track.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService {
-  ChatService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  ChatService({required FirebaseFirestore firestore, required FirebaseAuth auth})
+      : _firestore = firestore,
+        _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;

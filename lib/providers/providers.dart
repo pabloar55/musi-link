@@ -18,40 +18,69 @@ import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/user_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+// ── Providers Globales de Firebase ──────────────────────────────
+
+final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
+  return FirebaseAuth.instance;
+});
+
+final firebaseFirestoreProvider = Provider<FirebaseFirestore>((ref) {
+  return FirebaseFirestore.instance;
+});
+
+final googleSignInProvider = Provider<GoogleSignIn>((ref) {
+  return GoogleSignIn.instance;
+});
 
 // ── Servicios sin dependencias ──────────────────────────────────
 
 final userServiceProvider = Provider<UserService>((ref) {
-  return UserService();
+  return UserService(firestore: ref.watch(firebaseFirestoreProvider));
 });
 
 final chatServiceProvider = Provider<ChatService>((ref) {
-  return ChatService();
+  return ChatService(
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
 });
 
 final friendServiceProvider = Provider<FriendService>((ref) {
-  return FriendService();
+  return FriendService(
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
 });
 
 // ── Servicios con dependencias ──────────────────────────────────
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService(ref.watch(userServiceProvider));
+  return AuthService(
+    ref.watch(userServiceProvider),
+    auth: ref.watch(firebaseAuthProvider),
+    googleSignIn: ref.watch(googleSignInProvider),
+  );
 });
 
 final Provider<SpotifyService> spotifyServiceProvider =
     Provider<SpotifyService>((ref) {
   return SpotifyService(
     userService: ref.watch(userServiceProvider),
-    syncMusicProfile: (String uid) =>
-        ref.read(musicProfileServiceProvider).syncMusicProfile(uid),
+    auth: ref.watch(firebaseAuthProvider),
   );
 });
 
 final Provider<MusicProfileService> musicProfileServiceProvider =
     Provider<MusicProfileService>((ref) {
-  return MusicProfileService(ref.watch(spotifyStatsProvider));
+  return MusicProfileService(
+    ref.watch(spotifyStatsProvider),
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
 });
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
@@ -112,7 +141,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return location == '/splash' ? null : '/splash';
       }
 
-      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      final isLoggedIn = ref.read(firebaseAuthProvider).currentUser != null;
 
       if (!isLoggedIn) {
         return location == '/auth' ? null : '/auth';

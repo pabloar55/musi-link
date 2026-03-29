@@ -38,7 +38,12 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
         prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
 
     if (restored && mounted) {
-      // Navegar directamente con go_router
+      // Sincronizar perfil musical (SpotifyService ya no llama esto)
+      final auth = ref.read(firebaseAuthProvider);
+      final uid = auth.currentUser?.uid;
+      if (uid != null) {
+        ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
+      }
       if (onboardingDone) {
         context.go('/');
       } else {
@@ -59,6 +64,13 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
     if (!mounted) return;
 
     if (result) {
+      // Sincronizar perfil musical (SpotifyService ya no llama esto)
+      final auth = ref.read(firebaseAuthProvider);
+      final uid = auth.currentUser?.uid;
+      if (uid != null) {
+        ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final onboardingDone =
           prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
