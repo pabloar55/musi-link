@@ -178,5 +178,7 @@
   "onboardingFriendsDesc": "Add friends, see their music profiles, and stay connected through your shared passion for music.",
   "onboardingNext": "Next",
   "onboardingGetStarted": "Get started",
-  "onboardingSkip": "Skip"
+  "onboardingSkip": "Skip",
+
+  "genericError": "Something went wrong. Please try again."
 }

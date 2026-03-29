@@ -408,4 +408,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSkip => 'Skip';
+
+  @override
+  String get genericError => 'Something went wrong. Please try again.';
 }

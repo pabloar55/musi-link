@@ -69,6 +69,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
+              if (snapshot.hasError) {
+                return Center(child: Text(l10n.genericError));
+              }
               final requests = snapshot.data ?? [];
               if (requests.isEmpty) {
                 return EmptyMessage(text: l10n.friendsNoRequests);
@@ -115,6 +118,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   child: Center(child: CircularProgressIndicator()),
                 );
               }
+              if (snapshot.hasError) {
+                return Center(child: Text(l10n.genericError));
+              }
               final requests = snapshot.data ?? [];
               if (requests.isEmpty) {
                 return EmptyMessage(text: l10n.friendsNoRequests);
@@ -147,6 +153,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                   padding: EdgeInsets.all(16),
                   child: Center(child: CircularProgressIndicator()),
                 );
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text(l10n.genericError));
               }
               final friendUids = snapshot.data ?? [];
               if (friendUids.isEmpty) {

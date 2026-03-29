@@ -40,6 +40,12 @@ jobs:
           echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
           lcov --summary coverage/lcov_cleaned.info 2>&1 | tail -3 >> $GITHUB_STEP_SUMMARY
 
+      - name: Check coverage threshold
+        run: |
+          LINES=$(lcov --summary coverage/lcov_cleaned.info 2>&1 | grep "lines" | grep -oP '\d+\.\d+(?=%)')
+          echo "Line coverage: $LINES%"
+          python3 -c "import sys; sys.exit(0 if float('$LINES') >= 70 else 1)"
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

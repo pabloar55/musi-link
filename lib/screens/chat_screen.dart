@@ -127,6 +127,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                if (snapshot.hasError) {
+                  return Center(child: Text(l10n.genericError));
+                }
+
                 final messages = snapshot.data ?? [];
 
                 if (messages.isEmpty) {

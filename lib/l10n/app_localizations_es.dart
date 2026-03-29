@@ -410,4 +410,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingSkip => 'Saltar';
+
+  @override
+  String get genericError => 'Algo salió mal. Inténtalo de nuevo.';
 }

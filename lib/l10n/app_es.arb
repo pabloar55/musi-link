@@ -143,5 +143,7 @@
   "onboardingFriendsDesc": "Añade amigos, mira sus perfiles musicales y mantened el contacto a través de vuestra pasión compartida por la música.",
   "onboardingNext": "Siguiente",
   "onboardingGetStarted": "Empezar",
-  "onboardingSkip": "Saltar"
+  "onboardingSkip": "Saltar",
+
+  "genericError": "Algo salió mal. Inténtalo de nuevo."
 }

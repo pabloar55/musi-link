@@ -417,4 +417,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingSkip => 'Passer';
+
+  @override
+  String get genericError => 'Une erreur s\'est produite. Veuillez réessayer.';
 }
