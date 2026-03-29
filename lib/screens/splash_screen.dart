@@ -121,23 +121,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             ),
 
             const Spacer(flex: 3),
-
-            // Optional bottom text
-            FadeTransition(
-              opacity: _fadeAnim,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 48),
-                child: Text(
-                  'Conectando tu música',
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
