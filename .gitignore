@@ -37,6 +37,7 @@ migrate_working_dir/
 ios/Pods/
 ios/.symlinks/
 .env
+.env.json
 # Symbolication related
 app.*.symbols
 

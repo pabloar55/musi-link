@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/utils/tokens.dart';
@@ -24,8 +24,10 @@ class SpotifyService {
 
   final UserService _userService;
   final FirebaseAuth _auth;
-  final String _clientId = dotenv.env['SPOTIFY_CLIENT_ID'] ?? '';
-  final String _redirectUri = dotenv.env['SPOTIFY_REDIRECT_URL'] ?? '';
+  static const String _clientId =
+      String.fromEnvironment('SPOTIFY_CLIENT_ID');
+  static const String _redirectUri =
+      String.fromEnvironment('SPOTIFY_REDIRECT_URL');
 
   static const List<String> _scopes = [
     'app-remote-control',
