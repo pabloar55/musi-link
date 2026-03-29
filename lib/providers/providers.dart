@@ -176,11 +176,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
+        redirect: (context, state) {
+          if (state.extra is! AppUser) return '/';
+          return null;
+        },
         builder: (context, state) =>
             UserProfileScreen(user: state.extra as AppUser),
       ),
       GoRoute(
         path: '/chat',
+        redirect: (context, state) {
+          if (state.extra is! Map<String, String>) return '/';
+          final params = state.extra as Map<String, String>;
+          if (params['chatId'] == null ||
+              params['otherUserName'] == null ||
+              params['otherUserId'] == null) {
+            return '/';
+          }
+          return null;
+        },
         builder: (context, state) {
           final params = state.extra as Map<String, String>;
           return ChatScreen(
