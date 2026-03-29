@@ -37,13 +37,13 @@ final friendServiceProvider = Provider<FriendService>((ref) {
 // ── Servicios con dependencias ──────────────────────────────────
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService(ref.read(userServiceProvider));
+  return AuthService(ref.watch(userServiceProvider));
 });
 
 final Provider<SpotifyService> spotifyServiceProvider =
     Provider<SpotifyService>((ref) {
   return SpotifyService(
-    userService: ref.read(userServiceProvider),
+    userService: ref.watch(userServiceProvider),
     syncMusicProfile: (String uid) =>
         ref.read(musicProfileServiceProvider).syncMusicProfile(uid),
   );
@@ -51,12 +51,12 @@ final Provider<SpotifyService> spotifyServiceProvider =
 
 final Provider<MusicProfileService> musicProfileServiceProvider =
     Provider<MusicProfileService>((ref) {
-  return MusicProfileService(ref.read(spotifyStatsProvider));
+  return MusicProfileService(ref.watch(spotifyStatsProvider));
 });
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
     Provider<SpotifyGetStats>((ref) {
-  return SpotifyGetStats(ref.read(spotifyServiceProvider));
+  return SpotifyGetStats(ref.watch(spotifyServiceProvider));
 });
 
 // ── Theme ───────────────────────────────────────────────────────
