@@ -1,10 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:musi_link/firebase_options.dart';
 import 'package:musi_link/providers/providers.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -49,17 +45,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Start a timer so the splash is shown for at least 1.2s (animation length)
     final minSplash = Future.delayed(const Duration(milliseconds: 1200));
 
-    try {
-      await dotenv.load(fileName: ".env");
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
-      FirebaseAnalytics.instance.logEvent(name: 'app_open', parameters: null);
-    } catch (_) {
-      // Firebase might already be initialized – continue
-    }
+    FirebaseAnalytics.instance.logEvent(name: 'app_open', parameters: null);
 
     // Wait for the minimum splash duration to complete
     await minSplash;
