@@ -17,7 +17,7 @@ class Chat {
   });
 
   factory Chat.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data()! as Map<String, dynamic>;
     return Chat(
       id: doc.id,
       participants: List<String>.from(data['participants'] ?? []),

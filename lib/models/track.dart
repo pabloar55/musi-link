@@ -13,16 +13,16 @@ class Track {
 
   factory Track.fromJson(Map<String, dynamic> json) {
     final artists = json['artists'] as List<dynamic>?;
-    final images = json['album']?['images'] as List<dynamic>?;
+    final images = (json['album'] as Map<String, dynamic>?)?['images'] as List<dynamic>?;
     final trackId = (json['id'] ?? '').toString();
 
     return Track(
       title: (json['name'] ?? 'Sin título').toString(),
       artist: (artists != null && artists.isNotEmpty)
-          ? (artists[0]['name'] ?? 'Artista desconocido').toString()
+          ? ((artists[0] as Map<String, dynamic>)['name'] ?? 'Artista desconocido').toString()
           : 'Artista desconocido',
       imageUrl: (images != null && images.isNotEmpty)
-          ? (images[0]['url'] ?? '').toString()
+          ? ((images[0] as Map<String, dynamic>)['url'] ?? '').toString()
           : '',
       spotifyUrl: trackId.isNotEmpty
           ? 'https://open.spotify.com/track/$trackId'

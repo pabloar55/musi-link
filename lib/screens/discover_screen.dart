@@ -39,9 +39,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _loadDiscovery();
-    });
+    setState(_loadDiscovery);
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,7 +47,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Start a timer so the splash is shown for at least 1.2s (animation length)
     final minSplash = Future.delayed(const Duration(milliseconds: 1200));
 
-    FirebaseAnalytics.instance.logEvent(name: 'app_open', parameters: null);
+    unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
 
     // Wait for the minimum splash duration to complete
     await minSplash;

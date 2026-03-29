@@ -80,9 +80,13 @@ void main() {
     test('contiene pending, accepted, rejected', () {
       expect(FriendRequestStatus.values, contains(FriendRequestStatus.pending));
       expect(
-          FriendRequestStatus.values, contains(FriendRequestStatus.accepted));
+        FriendRequestStatus.values,
+        contains(FriendRequestStatus.accepted),
+      );
       expect(
-          FriendRequestStatus.values, contains(FriendRequestStatus.rejected));
+        FriendRequestStatus.values,
+        contains(FriendRequestStatus.rejected),
+      );
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter/material.dart';
@@ -41,7 +43,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
         final appUser =
             await ref.read(userServiceProvider).getUser(firebaseUser.uid);
         if (appUser != null && mounted) {
-          context.push('/profile', extra: appUser);
+          unawaited(context.push('/profile', extra: appUser));
         }
         break;
 

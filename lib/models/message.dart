@@ -29,7 +29,7 @@ class Message {
   bool get isTrack => type == MessageType.track;
 
   factory Message.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data()! as Map<String, dynamic>;
 
     final typeStr = (data['type'] ?? 'text').toString();
     final type = typeStr == 'track' ? MessageType.track : MessageType.text;

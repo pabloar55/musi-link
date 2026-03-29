@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:flutter_test/flutter_test.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/music_profile_service.dart';

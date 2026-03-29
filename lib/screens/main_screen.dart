@@ -59,7 +59,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: Image.asset('assets/images/logo.png', width: 150),
-        actions: [const UserAvatarMenu()],
+        actions: const [UserAvatarMenu()],
       ),
 
       body: PageView(
@@ -74,10 +74,10 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
 
       bottomNavigationBar: NavigationBar(
         destinations: [
-          NavigationDestination(icon: Icon(Icons.explore), label: l10n.navDiscover),
-          NavigationDestination(icon: Icon(Icons.bar_chart), label: l10n.navStats),
-          NavigationDestination(icon: Icon(Icons.chat_bubble), label: l10n.navMessages),
-          NavigationDestination(icon: Icon(Icons.people), label: l10n.navFriends),
+          NavigationDestination(icon: const Icon(Icons.explore), label: l10n.navDiscover),
+          NavigationDestination(icon: const Icon(Icons.bar_chart), label: l10n.navStats),
+          NavigationDestination(icon: const Icon(Icons.chat_bubble), label: l10n.navMessages),
+          NavigationDestination(icon: const Icon(Icons.people), label: l10n.navFriends),
         ],
         selectedIndex: currentPageIndex,
 

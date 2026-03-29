@@ -113,7 +113,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             final user =
                 await ref.read(userServiceProvider).getUser(widget.otherUserId);
             if (user != null && mounted) {
-              nav.push('/profile', extra: user);
+              unawaited(nav.push('/profile', extra: user));
             }
           },
           child: Text(widget.otherUserName),

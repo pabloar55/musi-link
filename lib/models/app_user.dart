@@ -43,7 +43,7 @@ class AppUser {
   });
 
   factory AppUser.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data()! as Map<String, dynamic>;
     return AppUser(
       uid: doc.id,
       email: (data['email'] ?? '').toString(),

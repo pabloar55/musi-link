@@ -11,11 +11,8 @@ mixin UserFutureCache {
   UserService get userService;
 
   Future<AppUser?> getUserFuture(String uid) {
-    if (uid.isEmpty) return Future.value(null);
-    return userFutures.putIfAbsent(
-      uid,
-      () => userService.getUser(uid),
-    );
+    if (uid.isEmpty) return Future.value();
+    return userFutures.putIfAbsent(uid, () => userService.getUser(uid));
   }
 
   void invalidateUserFuture(String uid) {

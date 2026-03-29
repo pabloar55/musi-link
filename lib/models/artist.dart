@@ -16,7 +16,7 @@ class Artist {
     return Artist(
       name: (json['name'] ?? 'Artista desconocido').toString(),
       imageUrl: (images != null && images.isNotEmpty)
-          ? (images[0]['url'] ?? '').toString()
+          ? ((images[0] as Map<String, dynamic>)['url'] ?? '').toString()
           : '',
       genres: genresList?.map((g) => g.toString()).toList() ?? [],
     );

@@ -26,7 +26,7 @@ class GenreTile extends StatelessWidget {
                   color: colorScheme.primary,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 genre.name,
                 style: const TextStyle(

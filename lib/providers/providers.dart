@@ -125,7 +125,7 @@ final isDarkProvider = Provider<bool>((ref) {
 
 final appRouterNotifierProvider = Provider<AppRouterNotifier>((ref) {
   final notifier = AppRouterNotifier(auth: ref.watch(firebaseAuthProvider));
-  ref.onDispose(() => notifier.dispose());
+  ref.onDispose(notifier.dispose);
   return notifier;
 });
 
@@ -181,13 +181,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return null;
         },
         builder: (context, state) =>
-            UserProfileScreen(user: state.extra as AppUser),
+            UserProfileScreen(user: state.extra! as AppUser),
       ),
       GoRoute(
         path: '/chat',
         redirect: (context, state) {
           if (state.extra is! Map<String, String>) return '/';
-          final params = state.extra as Map<String, String>;
+          final params = state.extra! as Map<String, String>;
           if (params['chatId'] == null ||
               params['otherUserName'] == null ||
               params['otherUserId'] == null) {
@@ -196,7 +196,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           return null;
         },
         builder: (context, state) {
-          final params = state.extra as Map<String, String>;
+          final params = state.extra! as Map<String, String>;
           return ChatScreen(
             chatId: params['chatId']!,
             otherUserName: params['otherUserName']!,

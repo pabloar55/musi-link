@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter/material.dart';
@@ -57,11 +59,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final chat =
         await ref.read(chatServiceProvider).getOrCreateChat(widget.user.uid);
     if (!mounted) return;
-    context.push('/chat', extra: <String, String>{
+    unawaited(context.push('/chat', extra: <String, String>{
       'chatId': chat.id,
       'otherUserName': widget.user.displayName,
       'otherUserId': widget.user.uid,
-    });
+    }));
   }
 
   Future<void> _sendRequest() async {
