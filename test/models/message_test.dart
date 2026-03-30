@@ -114,7 +114,7 @@ void main() {
 
         expect(map['type'], 'track');
         expect(map['trackData'], isA<Map<String, dynamic>>());
-        expect(map['trackData']['title'], 'Song');
+        expect((map['trackData'] as Map<String, dynamic>)['title'], 'Song');
       });
 
       test('serializa mensaje con reacciones', () {
