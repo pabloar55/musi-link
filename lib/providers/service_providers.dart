@@ -40,10 +40,12 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
 final Provider<SpotifyService> spotifyServiceProvider =
     Provider<SpotifyService>((ref) {
-  return SpotifyService(
+  final service = SpotifyService(
     userService: ref.watch(userServiceProvider),
     auth: ref.watch(firebaseAuthProvider),
   );
+  ref.onDispose(service.stopPollingNowPlaying);
+  return service;
 });
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
