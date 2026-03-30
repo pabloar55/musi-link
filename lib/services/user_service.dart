@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/track.dart';
+import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar perfiles de usuario en Firestore.
 class UserService {
@@ -10,7 +11,7 @@ class UserService {
 
   final FirebaseFirestore _firestore;
   late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection('users');
+      _firestore.collection(FirestoreCollections.users);
 
   /// Crea un perfil de usuario nuevo en Firestore.
   Future<void> createUserProfile({

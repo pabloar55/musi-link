@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/friend_request.dart';
+import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Estado de la relación entre el usuario actual y otro usuario.
 enum RelationshipStatus { none, requestSent, requestReceived, friends }
@@ -22,9 +23,9 @@ class FriendService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   late final CollectionReference<Map<String, dynamic>> _requestsRef =
-      _firestore.collection('friend_requests');
+      _firestore.collection(FirestoreCollections.friendRequests);
   late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection('users');
+      _firestore.collection(FirestoreCollections.users);
 
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing with a null-dereference if the

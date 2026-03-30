@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/models/track.dart';
+import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService {
@@ -14,7 +15,7 @@ class ChatService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   late final CollectionReference<Map<String, dynamic>> _chatsRef =
-      _firestore.collection('chats');
+      _firestore.collection(FirestoreCollections.chats);
 
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing if the session is lost.
@@ -78,7 +79,7 @@ class ChatService {
     try {
       // Eliminar todos los mensajes de la subcolección
       final messages =
-          await _chatsRef.doc(chatId).collection('messages').get();
+          await _chatsRef.doc(chatId).collection(FirestoreCollections.messages).get();
       final batch = _firestore.batch();
       for (final doc in messages.docs) {
         batch.delete(doc.reference);
@@ -107,7 +108,7 @@ class ChatService {
       final batch = _firestore.batch();
 
       // Añadir el mensaje a la subcolección
-      final msgRef = _chatsRef.doc(chatId).collection('messages').doc();
+      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
       batch.set(msgRef, message.toFirestore());
 
       // Actualizar último mensaje en el documento del chat
@@ -127,7 +128,7 @@ class ChatService {
   Stream<List<Message>> getMessages(String chatId) {
     return _chatsRef
         .doc(chatId)
-        .collection('messages')
+        .collection(FirestoreCollections.messages)
         .orderBy('timestamp', descending: false)
         .snapshots()
         .map((snapshot) =>
@@ -139,7 +140,7 @@ class ChatService {
     try {
       final unread = await _chatsRef
           .doc(chatId)
-          .collection('messages')
+          .collection(FirestoreCollections.messages)
           .where('read', isEqualTo: false)
           .where('senderId', isNotEqualTo: _currentUid)
           .get();
@@ -160,7 +161,7 @@ class ChatService {
   Stream<int> getUnreadCount(String chatId) {
     return _chatsRef
         .doc(chatId)
-        .collection('messages')
+        .collection(FirestoreCollections.messages)
         .where('read', isEqualTo: false)
         .where('senderId', isNotEqualTo: _currentUid)
         .snapshots()
@@ -182,7 +183,7 @@ class ChatService {
 
       final batch = _firestore.batch();
 
-      final msgRef = _chatsRef.doc(chatId).collection('messages').doc();
+      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
       batch.set(msgRef, message.toFirestore());
 
       batch.update(_chatsRef.doc(chatId), {
@@ -204,7 +205,7 @@ class ChatService {
       String chatId, String messageId, String emoji) async {
     try {
       final msgRef =
-          _chatsRef.doc(chatId).collection('messages').doc(messageId);
+          _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc(messageId);
 
       await _firestore.runTransaction((transaction) async {
         final doc = await transaction.get(msgRef);

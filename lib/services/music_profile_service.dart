@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/utils/firestore_collections.dart';
 
 class MusicProfileService {
   MusicProfileService(
@@ -18,7 +19,7 @@ class MusicProfileService {
   final FirebaseAuth _auth;
 
   late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection('users');
+      _firestore.collection(FirestoreCollections.users);
 
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing if the session is lost.
