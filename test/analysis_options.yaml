@@ -1,0 +1,7 @@
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # mocktail requiere closures en when(() => mock.method()) y thenAnswer((_) => ...)
+    # que el linter de tearoffs detecta como lambdas innecesarias.
+    unnecessary_lambdas: false
