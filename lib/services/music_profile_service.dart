@@ -21,6 +21,22 @@ class MusicProfileService {
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection(FirestoreCollections.users);
 
+  // --- Discovery cache & pagination state ---
+  List<DiscoveryResult>? _cachedResults;
+  DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
+  DateTime? _cacheTime;
+  bool _hasMorePages = false;
+
+  static const _cacheTtl = Duration(minutes: 5);
+  static const _pageSize = 20;
+
+  bool get hasMoreDiscoveryUsers => _hasMorePages;
+
+  bool get _isCacheValid =>
+      _cachedResults != null &&
+      _cacheTime != null &&
+      DateTime.now().difference(_cacheTime!) < _cacheTtl;
+
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing if the session is lost.
   String get _currentUid {
@@ -60,10 +76,22 @@ class MusicProfileService {
     }
   }
 
-  /// Obtiene la lista de usuarios para el feed de descubrimiento,
-  /// ordenados por compatibilidad musical con el usuario actual.
-  Future<List<DiscoveryResult>> getDiscoveryUsers() async {
+  /// Obtiene la primera página de usuarios para el feed de descubrimiento.
+  /// Usa caché con TTL de 5 minutos. Pasa [forceRefresh] para invalidarlo.
+  Future<List<DiscoveryResult>> getDiscoveryUsers({
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh && _isCacheValid) {
+      debugPrint('Discovery: sirviendo ${_cachedResults!.length} resultados desde caché');
+      return List<DiscoveryResult>.unmodifiable(_cachedResults!);
+    }
+
     try {
+      // Reset de paginación en cada carga fresca
+      _lastDocument = null;
+      _hasMorePages = false;
+      _cachedResults = null;
+
       final myDoc = await _usersRef.doc(_currentUid).get();
       if (!myDoc.exists) {
         debugPrint('Discovery: documento del usuario actual no existe');
@@ -76,39 +104,77 @@ class MusicProfileService {
         return [];
       }
 
-      final snapshot = await _usersRef
-          .orderBy('musicDataUpdatedAt', descending: true)
-          .limit(100)
-          .get();
-
-      debugPrint('Discovery: encontrados ${snapshot.docs.length} usuarios con datos musicales');
-
-      final results = <DiscoveryResult>[];
-
-      for (final doc in snapshot.docs) {
-        if (doc.id == _currentUid) continue;
-
-        final user = AppUser.fromFirestore(doc);
-        if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) {
-          continue;
-        }
-
-        final result = MusicProfileService.calculateCompatibility(
-          myArtistNames: myUser.topArtistNames,
-          myGenreNames: myUser.topGenreNames,
-          otherUser: user,
-        );
-
-        results.add(result);
-      }
-
-      debugPrint('Discovery: ${results.length} usuarios compatibles encontrados');
-      results.sort((a, b) => b.score.compareTo(a.score));
-      return results;
+      final results = await _fetchPage(myUser);
+      _cachedResults = results;
+      _cacheTime = DateTime.now();
+      debugPrint('Discovery: ${results.length} usuarios cargados (página 1)');
+      return List<DiscoveryResult>.unmodifiable(results);
     } catch (e) {
       debugPrint('Error obteniendo usuarios para descubrimiento: $e');
       return [];
     }
+  }
+
+  /// Carga la siguiente página y la añade al caché acumulado.
+  /// Devuelve la lista completa actualizada y si quedan más páginas.
+  Future<(List<DiscoveryResult>, bool hasMore)> loadMoreDiscoveryUsers() async {
+    if (!_hasMorePages || _cachedResults == null) {
+      return (List<DiscoveryResult>.unmodifiable(_cachedResults ?? []), false);
+    }
+
+    try {
+      final myDoc = await _usersRef.doc(_currentUid).get();
+      if (!myDoc.exists) {
+        return (List<DiscoveryResult>.unmodifiable(_cachedResults!), false);
+      }
+
+      final myUser = AppUser.fromFirestore(myDoc);
+      final newResults = await _fetchPage(myUser);
+
+      _cachedResults = [..._cachedResults!, ...newResults];
+      debugPrint('Discovery: ${newResults.length} usuarios más cargados, total ${_cachedResults!.length}');
+      return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
+    } catch (e) {
+      debugPrint('Error cargando más usuarios: $e');
+      return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
+    }
+  }
+
+  Future<List<DiscoveryResult>> _fetchPage(AppUser myUser) async {
+    Query<Map<String, dynamic>> query = _usersRef
+        .orderBy('musicDataUpdatedAt', descending: true)
+        .limit(_pageSize);
+
+    if (_lastDocument != null) {
+      query = query.startAfterDocument(_lastDocument!);
+    }
+
+    final snapshot = await query.get();
+
+    if (snapshot.docs.isEmpty) {
+      _hasMorePages = false;
+      return [];
+    }
+
+    _lastDocument = snapshot.docs.last;
+    _hasMorePages = snapshot.docs.length >= _pageSize;
+
+    final results = <DiscoveryResult>[];
+    for (final doc in snapshot.docs) {
+      if (doc.id == _currentUid) continue;
+
+      final user = AppUser.fromFirestore(doc);
+      if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
+
+      results.add(calculateCompatibility(
+        myArtistNames: myUser.topArtistNames,
+        myGenreNames: myUser.topGenreNames,
+        otherUser: user,
+      ));
+    }
+
+    results.sort((a, b) => b.score.compareTo(a.score));
+    return results;
   }
 
   /// Calcula la compatibilidad entre el usuario actual y otro usuario.

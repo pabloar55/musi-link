@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -15,8 +17,13 @@ class DiscoverScreen extends ConsumerStatefulWidget {
 
 class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     with AutomaticKeepAliveClientMixin<DiscoverScreen>, TickerProviderStateMixin {
-  late Future<List<DiscoveryResult>> _discoveryFuture;
   late TabController _tabController;
+
+  List<DiscoveryResult> _results = [];
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMore = false;
+  Object? _error;
 
   @override
   bool get wantKeepAlive => true;
@@ -25,7 +32,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadDiscovery();
+    unawaited(_loadDiscovery());
   }
 
   @override
@@ -34,12 +41,48 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     super.dispose();
   }
 
-  void _loadDiscovery() {
-    _discoveryFuture = ref.read(musicProfileServiceProvider).getDiscoveryUsers();
+  Future<void> _loadDiscovery({bool forceRefresh = false}) async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      if (forceRefresh) _results = [];
+    });
+    try {
+      final service = ref.read(musicProfileServiceProvider);
+      final results = await service.getDiscoveryUsers(forceRefresh: forceRefresh);
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _isLoading = false;
+        _hasMore = service.hasMoreDiscoveryUsers;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = e;
+      });
+    }
   }
 
-  Future<void> _refresh() async {
-    setState(_loadDiscovery);
+  Future<void> _refresh() => _loadDiscovery(forceRefresh: true);
+
+  Future<void> _loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    try {
+      final (allResults, hasMore) =
+          await ref.read(musicProfileServiceProvider).loadMoreDiscoveryUsers();
+      if (!mounted) return;
+      setState(() {
+        _results = allResults;
+        _isLoadingMore = false;
+        _hasMore = hasMore;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingMore = false);
+    }
   }
 
   @override
@@ -64,8 +107,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
             physics: const NeverScrollableScrollPhysics(),
             children: [
               PeopleTab(
-                discoveryFuture: _discoveryFuture,
+                results: _results,
+                isLoading: _isLoading,
+                isLoadingMore: _isLoadingMore,
+                hasMore: _hasMore,
+                hasError: _error != null,
                 onRefresh: _refresh,
+                onLoadMore: _loadMore,
               ),
               const DailySongTab(),
             ],
@@ -75,4 +123,3 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
     );
   }
 }
-
