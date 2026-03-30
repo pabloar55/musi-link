@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/user_avatar_menu.dart';
 import 'package:musi_link/screens/discover_screen.dart';
 import 'package:musi_link/screens/messages_screen.dart';

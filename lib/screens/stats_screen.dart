@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/filter_button.dart';
 import 'package:musi_link/widgets/genre_tile.dart';

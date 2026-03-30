@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/discover/people_tab.dart';
 import 'package:musi_link/widgets/discover/daily_song_tab.dart';
 

@@ -1,0 +1,61 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/services/auth_service.dart';
+import 'package:musi_link/services/chat_service.dart';
+import 'package:musi_link/services/friend_service.dart';
+import 'package:musi_link/services/music_profile_service.dart';
+import 'package:musi_link/services/spotify_service.dart';
+import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/user_service.dart';
+
+// ── Servicios sin dependencias ──────────────────────────────────
+
+final userServiceProvider = Provider<UserService>((ref) {
+  return UserService(firestore: ref.watch(firebaseFirestoreProvider));
+});
+
+final chatServiceProvider = Provider<ChatService>((ref) {
+  return ChatService(
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
+});
+
+final friendServiceProvider = Provider<FriendService>((ref) {
+  return FriendService(
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
+});
+
+// ── Servicios con dependencias ──────────────────────────────────
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService(
+    ref.watch(userServiceProvider),
+    auth: ref.watch(firebaseAuthProvider),
+    googleSignIn: ref.watch(googleSignInProvider),
+  );
+});
+
+final Provider<SpotifyService> spotifyServiceProvider =
+    Provider<SpotifyService>((ref) {
+  return SpotifyService(
+    userService: ref.watch(userServiceProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
+});
+
+final Provider<SpotifyGetStats> spotifyStatsProvider =
+    Provider<SpotifyGetStats>((ref) {
+  return SpotifyGetStats(ref.watch(spotifyServiceProvider));
+});
+
+final Provider<MusicProfileService> musicProfileServiceProvider =
+    Provider<MusicProfileService>((ref) {
+  return MusicProfileService(
+    ref.watch(spotifyStatsProvider),
+    firestore: ref.watch(firebaseFirestoreProvider),
+    auth: ref.watch(firebaseAuthProvider),
+  );
+});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/services/user_service.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/user_future_cache.dart';

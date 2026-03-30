@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse

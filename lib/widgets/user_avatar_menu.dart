@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
-import 'package:musi_link/providers/providers.dart';
+import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/providers/theme_provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
 
