@@ -23,7 +23,6 @@ class AppRouterNotifier extends ChangeNotifier {
     _sub = _auth.authStateChanges().listen((_) {
       notifyListeners();
     });
-    notifyListeners();
   }
 
   @override
