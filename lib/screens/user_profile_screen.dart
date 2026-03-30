@@ -60,11 +60,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final chat =
         await ref.read(chatServiceProvider).getOrCreateChat(widget.user.uid);
     if (!mounted) return;
-    unawaited(context.push('/chat', extra: <String, String>{
-      'chatId': chat.id,
-      'otherUserName': widget.user.displayName,
-      'otherUserId': widget.user.uid,
-    }));
+    unawaited(context.push(
+      Uri(path: '/chat', queryParameters: {
+        'chatId': chat.id,
+        'otherUserName': widget.user.displayName,
+        'otherUserId': widget.user.uid,
+      }).toString(),
+    ));
   }
 
   Future<void> _sendRequest() async {

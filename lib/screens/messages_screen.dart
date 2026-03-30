@@ -169,11 +169,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
                       ),
                     ),
                     onTap: () {
-                      context.push('/chat', extra: <String, String>{
-                        'chatId': chat.id,
-                        'otherUserName': name,
-                        'otherUserId': otherUid,
-                      });
+                      context.push(
+                        Uri(path: '/chat', queryParameters: {
+                          'chatId': chat.id,
+                          'otherUserName': name,
+                          'otherUserId': otherUid,
+                        }).toString(),
+                      );
                     },
                   );
                 },

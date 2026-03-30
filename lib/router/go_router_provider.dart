@@ -77,21 +77,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chat',
         redirect: (context, state) {
-          if (state.extra is! Map<String, String>) return '/';
-          final params = state.extra! as Map<String, String>;
-          if (params['chatId'] == null ||
-              params['otherUserName'] == null ||
-              params['otherUserId'] == null) {
+          final q = state.uri.queryParameters;
+          if (q['chatId'] == null ||
+              q['otherUserName'] == null ||
+              q['otherUserId'] == null) {
             return '/';
           }
           return null;
         },
         builder: (context, state) {
-          final params = state.extra! as Map<String, String>;
+          final q = state.uri.queryParameters;
           return ChatScreen(
-            chatId: params['chatId']!,
-            otherUserName: params['otherUserName']!,
-            otherUserId: params['otherUserId']!,
+            chatId: q['chatId']!,
+            otherUserName: q['otherUserName']!,
+            otherUserId: q['otherUserId']!,
           );
         },
       ),
