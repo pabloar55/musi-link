@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Almacenamiento seguro de credenciales OAuth de Spotify (PKCE).
@@ -25,8 +25,8 @@ class Tokens {
       await _storage.write(key: _refreshTokenKey, value: refreshToken);
       await _storage.write(key: _expirationKey, value: expiration);
       await _storage.write(key: _codeVerifierKey, value: codeVerifier);
-    } catch (e) {
-      debugPrint("Error al guardar credenciales: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -46,8 +46,8 @@ class Tokens {
         'expiration': await _storage.read(key: _expirationKey),
         'codeVerifier': codeVerifier,
       };
-    } catch (e) {
-      debugPrint("Error al leer credenciales: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return null;
     }
   }
@@ -59,8 +59,8 @@ class Tokens {
       await _storage.delete(key: _refreshTokenKey);
       await _storage.delete(key: _expirationKey);
       await _storage.delete(key: _codeVerifierKey);
-    } catch (e) {
-      debugPrint("Error al eliminar credenciales: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 }

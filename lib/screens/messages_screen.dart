@@ -10,6 +10,7 @@ import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
 class MessagesScreen extends ConsumerStatefulWidget {
@@ -77,7 +78,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
           }
 
           if (snapshot.hasError) {
-            debugPrint('❌ Error en stream de chats: ${snapshot.error}');
+            reportError(snapshot.error!, StackTrace.current);
             return Center(
               child: Text(
                 l10n.socialErrorLoading,

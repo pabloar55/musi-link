@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
@@ -29,8 +29,8 @@ class UserService {
         lastLogin: now,
       );
       await _usersRef.doc(uid).set(user.toFirestore());
-    } catch (e) {
-      debugPrint("❌ Error al crear perfil: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -41,8 +41,8 @@ class UserService {
       final doc = await _usersRef.doc(uid).get();
       if (!doc.exists) return null;
       return AppUser.fromFirestore(doc);
-    } catch (e) {
-      debugPrint("❌ Error al obtener usuario: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return null;
     }
   }
@@ -52,8 +52,8 @@ class UserService {
     try {
       final doc = await _usersRef.doc(uid).get();
       return doc.exists;
-    } catch (e) {
-      debugPrint("❌ Error al verificar usuario: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return false;
     }
   }
@@ -64,8 +64,8 @@ class UserService {
       await _usersRef.doc(uid).update({
         'lastLogin': Timestamp.fromDate(DateTime.now()),
       });
-    } catch (e) {
-      debugPrint("❌ Error al actualizar lastLogin: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -84,8 +84,8 @@ class UserService {
       }
 
       await _usersRef.doc(uid).update(updates);
-    } catch (e) {
-      debugPrint("❌ Error al vincular perfil de Spotify: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -105,8 +105,8 @@ class UserService {
       if (updates.isNotEmpty) {
         await _usersRef.doc(uid).update(updates);
       }
-    } catch (e) {
-      debugPrint("❌ Error al actualizar perfil: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -128,8 +128,8 @@ class UserService {
           .map(AppUser.fromFirestore)
           .where((u) => u.uid != excludeUid)
           .toList();
-    } catch (e) {
-      debugPrint("❌ Error al buscar usuarios: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }
@@ -141,8 +141,8 @@ class UserService {
         'dailySong': track.toMap(),
         'dailySongUpdatedAt': Timestamp.fromDate(DateTime.now()),
       });
-    } catch (e) {
-      debugPrint("❌ Error al establecer canción del día: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -154,8 +154,8 @@ class UserService {
         'nowPlayingUpdatedAt': track != null ? Timestamp.fromDate(DateTime.now()) : null,
       };
       await _usersRef.doc(uid).update(updates);
-    } catch (e) {
-      debugPrint("❌ Error al actualizar nowPlaying: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -173,8 +173,8 @@ class UserService {
         users.addAll(snapshot.docs.map(AppUser.fromFirestore));
       }
       return users;
-    } catch (e) {
-      debugPrint("❌ Error al obtener usuarios por IDs: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }

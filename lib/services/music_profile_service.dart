@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
 class MusicProfileService {
@@ -71,8 +72,8 @@ class MusicProfileService {
         'topGenreNames': genres.map((g) => g.name).toList(),
         'musicDataUpdatedAt': Timestamp.now(),
       });
-    } catch (e) {
-      debugPrint('Error sincronizando perfil musical: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -82,7 +83,6 @@ class MusicProfileService {
     bool forceRefresh = false,
   }) async {
     if (!forceRefresh && _isCacheValid) {
-      debugPrint('Discovery: sirviendo ${_cachedResults!.length} resultados desde caché');
       return List<DiscoveryResult>.unmodifiable(_cachedResults!);
     }
 
@@ -94,23 +94,20 @@ class MusicProfileService {
 
       final myDoc = await _usersRef.doc(_currentUid).get();
       if (!myDoc.exists) {
-        debugPrint('Discovery: documento del usuario actual no existe');
         return [];
       }
 
       final myUser = AppUser.fromFirestore(myDoc);
       if (myUser.topArtistNames.isEmpty && myUser.topGenreNames.isEmpty) {
-        debugPrint('Discovery: el usuario actual no tiene datos musicales en Firestore');
         return [];
       }
 
       final results = await _fetchPage(myUser);
       _cachedResults = results;
       _cacheTime = DateTime.now();
-      debugPrint('Discovery: ${results.length} usuarios cargados (página 1)');
       return List<DiscoveryResult>.unmodifiable(results);
-    } catch (e) {
-      debugPrint('Error obteniendo usuarios para descubrimiento: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }
@@ -132,10 +129,9 @@ class MusicProfileService {
       final newResults = await _fetchPage(myUser);
 
       _cachedResults = [..._cachedResults!, ...newResults];
-      debugPrint('Discovery: ${newResults.length} usuarios más cargados, total ${_cachedResults!.length}');
       return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
-    } catch (e) {
-      debugPrint('Error cargando más usuarios: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
       return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
     }
   }

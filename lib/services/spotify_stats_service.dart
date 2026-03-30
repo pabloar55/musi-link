@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/models/track.dart' as app;
@@ -21,7 +21,6 @@ class SpotifyGetStats {
 
   Future<List<app.Track>> getTopTracks(int limit, String timeRange) async {
     try {
-      debugPrint("----------Obteniendo top tracks...---------");
       final api = _spotifyService.api;
       final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
       final pages = api.me.topTracks(timeRange: tr);
@@ -44,15 +43,14 @@ class SpotifyGetStats {
             );
           }).toList() ??
           [];
-    } catch (e) {
-      debugPrint("❌ Error al obtener top tracks: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }
 
   Future<List<app.Artist>> getTopArtists(int limit, String timeRange) async {
     try {
-      debugPrint("----------Obteniendo top artists...---------");
       final api = _spotifyService.api;
       final tr = _timeRangeMap[timeRange] ?? TimeRange.mediumTerm;
       final pages = api.me.topArtists(timeRange: tr);
@@ -69,8 +67,8 @@ class SpotifyGetStats {
             );
           }).toList() ??
           [];
-    } catch (e) {
-      debugPrint("❌ Error al obtener top artists: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }
@@ -134,8 +132,8 @@ class SpotifyGetStats {
         }
       }
       return tracks;
-    } catch (e) {
-      debugPrint("Error al buscar tracks: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return [];
     }
   }

@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:musi_link/services/user_service.dart';
 
@@ -46,8 +46,8 @@ class AuthService {
         );
       }
       return user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Error registro email: ${e.code} - ${e.message}");
+    } on FirebaseAuthException catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -68,8 +68,8 @@ class AuthService {
         await _userService.updateLastLogin(user.uid);
       }
       return user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Error login email: ${e.code} - ${e.message}");
+    } on FirebaseAuthException catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -107,11 +107,11 @@ class AuthService {
         }
       }
       return user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint("❌ Error Google sign-in: ${e.code} - ${e.message}");
+    } on FirebaseAuthException catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
-    } catch (e) {
-      debugPrint("❌ Error Google sign-in: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }

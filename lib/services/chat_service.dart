@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/models/track.dart';
@@ -55,8 +55,8 @@ class ChatService {
       final docRef = await _chatsRef.add(chat.toFirestore());
       final newDoc = await docRef.get();
       return Chat.fromFirestore(newDoc);
-    } catch (e) {
-      debugPrint("❌ Error al crear/obtener chat: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -67,9 +67,7 @@ class ChatService {
         .where('participants', arrayContains: _currentUid)
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
-        .handleError((error) {
-          debugPrint('❌ Error en stream de chats: $error');
-        })
+        .handleError(reportError)
         .map((snapshot) =>
             snapshot.docs.map(Chat.fromFirestore).toList());
   }
@@ -86,13 +84,13 @@ class ChatService {
       }
       batch.delete(_chatsRef.doc(chatId));
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al eliminar chat: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
 
-  //  Mensajes 
+  //  Mensajes
 
   /// Envía un mensaje de texto en un chat.
   Future<void> sendMessage(String chatId, String text) async {
@@ -118,8 +116,8 @@ class ChatService {
       });
 
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al enviar mensaje: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -152,8 +150,8 @@ class ChatService {
         batch.update(doc.reference, {'read': true});
       }
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al marcar como leídos: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -192,8 +190,8 @@ class ChatService {
       });
 
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al enviar canción: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -230,8 +228,8 @@ class ChatService {
 
         transaction.update(msgRef, {'reactions': reactions});
       });
-    } catch (e) {
-      debugPrint("❌ Error al reaccionar: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 }

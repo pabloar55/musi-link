@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
@@ -51,8 +51,8 @@ class FriendService {
         updatedAt: now,
       );
       await _requestsRef.add(request.toFirestore());
-    } catch (e) {
-      debugPrint("❌ Error al enviar solicitud: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -78,8 +78,8 @@ class FriendService {
       });
 
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al aceptar solicitud: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -91,8 +91,8 @@ class FriendService {
         'status': FriendRequestStatus.rejected.name,
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
-    } catch (e) {
-      debugPrint("❌ Error al rechazar solicitud: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -101,8 +101,8 @@ class FriendService {
   Future<void> cancelRequest(String requestId) async {
     try {
       await _requestsRef.doc(requestId).delete();
-    } catch (e) {
-      debugPrint("❌ Error al cancelar solicitud: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }
@@ -116,9 +116,7 @@ class FriendService {
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .handleError((error) {
-          debugPrint('❌ Error en stream de solicitudes recibidas: $error');
-        })
+        .handleError(reportError)
         .map((snapshot) =>
             snapshot.docs.map(FriendRequest.fromFirestore).toList());
   }
@@ -130,9 +128,7 @@ class FriendService {
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .handleError((error) {
-          debugPrint('❌ Error en stream de solicitudes enviadas: $error');
-        })
+        .handleError(reportError)
         .map((snapshot) =>
             snapshot.docs.map(FriendRequest.fromFirestore).toList());
   }
@@ -159,8 +155,8 @@ class FriendService {
       if (!doc.exists) return false;
       final friends = List<String>.from(doc.data()?['friends'] as List? ?? []);
       return friends.contains(otherUid);
-    } catch (e) {
-      debugPrint("❌ Error al comprobar amistad: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return false;
     }
   }
@@ -201,8 +197,8 @@ class FriendService {
       }
 
       return const RelationshipResult(RelationshipStatus.none);
-    } catch (e) {
-      debugPrint("❌ Error al obtener relación: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return const RelationshipResult(RelationshipStatus.none);
     }
   }
@@ -220,8 +216,8 @@ class FriendService {
         'friends': FieldValue.arrayRemove([_currentUid]),
       });
       await batch.commit();
-    } catch (e) {
-      debugPrint("❌ Error al eliminar amigo: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       rethrow;
     }
   }

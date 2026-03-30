@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -115,8 +115,8 @@ class SpotifyService {
         );
       }
       return null;
-    } catch (e) {
-      debugPrint("❌ Error al obtener currently playing: $e");
+    } catch (e, stack) {
+      await reportError(e, stack);
       return null;
     }
   }
@@ -157,10 +157,9 @@ class SpotifyService {
       // Sincronizar datos musicales en Firestore — gestionado por el caller
       startPollingNowPlaying();
 
-      debugPrint('✅ Spotify conectado vía PKCE');
       return true;
-    } catch (e) {
-      debugPrint('❌ Error en autorización PKCE: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
       return false;
     }
   }
@@ -196,10 +195,9 @@ class SpotifyService {
       // Sincronizar datos musicales en Firestore — gestionado por el caller
       startPollingNowPlaying();
 
-      debugPrint('✅ Sesión de Spotify restaurada');
       return true;
-    } catch (e) {
-      debugPrint('❌ Error al restaurar sesión: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
       return false;
     }
   }
@@ -214,8 +212,8 @@ class SpotifyService {
         expiration: creds.expiration?.toIso8601String() ?? '',
         codeVerifier: creds.codeVerifier ?? preserveCodeVerifier ?? '',
       );
-    } catch (e) {
-      debugPrint('❌ Error al guardar credenciales: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -240,8 +238,8 @@ class SpotifyService {
         spotifyId: spotifyId,
         photoUrl: spotifyPhotoUrl,
       );
-    } catch (e) {
-      debugPrint('❌ Error al sincronizar perfil de Spotify: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -255,8 +253,8 @@ class SpotifyService {
       if (firebaseUser != null) {
         await _userService.updateNowPlaying(firebaseUser.uid, null);
       }
-    } catch (e) {
-      debugPrint('⚠️ No se pudo limpiar nowPlaying: $e');
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
 
     _api = null;
