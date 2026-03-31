@@ -35,6 +35,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final Stream<List<Message>> _messagesStream;
   StreamSubscription<List<Message>>? _messagesSubscription;
 
+  // Paginación: lista única de mensajes acumulados.
+  List<Message> _allMessages = [];
+  bool _isInitialLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreMessages = true;
+
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string if session was lost — message bubbles fall back to
   /// always showing "other" side, which is safe for the UI.
@@ -45,22 +51,101 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
 
-    // Listener para marcar como leídos y hacer scroll cuando llegan mensajes nuevos,
-    // en vez de hacerlo dentro del builder del StreamBuilder (que se ejecuta en cada rebuild).
-    _messagesSubscription = _messagesStream.listen((messages) {
-      if (messages.isNotEmpty) {
+    _messagesSubscription = _messagesStream.listen((streamMessages) {
+      if (!mounted) return;
+      final isFirst = _isInitialLoading;
+      setState(() {
+        if (streamMessages.isNotEmpty) {
+          // Preservar mensajes más antiguos ya cargados por paginación.
+          final oldestStreamTimestamp = streamMessages.first.timestamp;
+          final preserved = _allMessages
+              .where((m) => m.timestamp.isBefore(oldestStreamTimestamp))
+              .toList();
+          _allMessages = [...preserved, ...streamMessages];
+        } else {
+          _allMessages = [];
+        }
+        _isInitialLoading = false;
+        // Si la primera carga tiene menos del límite de página, no hay mensajes más antiguos.
+        if (isFirst) {
+          _hasMoreMessages = streamMessages.length >= 30;
+        }
+      });
+      if (streamMessages.isNotEmpty) {
         ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
         _scrollToBottom();
       }
     });
+
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _messagesSubscription?.cancel();
+    _scrollController.removeListener(_onScroll);
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    if (_scrollController.position.pixels <= 100 &&
+        !_isLoadingMore &&
+        _hasMoreMessages) {
+      _loadMoreMessages();
+    }
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_allMessages.isEmpty) return;
+    final cursor = _allMessages.first.timestamp;
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      final older = await ref
+          .read(chatServiceProvider)
+          .loadOlderMessages(widget.chatId, before: cursor);
+
+      if (!mounted) return;
+
+      if (older.isEmpty) {
+        setState(() {
+          _isLoadingMore = false;
+          _hasMoreMessages = false;
+        });
+        return;
+      }
+
+      // Capturar posición justo antes de modificar la lista para que el
+      // delta refleje exactamente cuánto contenido se añade arriba.
+      final oldOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+      final oldExtent = _scrollController.hasClients
+          ? _scrollController.position.maxScrollExtent
+          : 0.0;
+
+      final existingIds = _allMessages.map((m) => m.id).toSet();
+      final newMessages =
+          older.where((m) => !existingIds.contains(m.id)).toList();
+
+      setState(() {
+        _isLoadingMore = false;
+        _allMessages = [...newMessages, ..._allMessages];
+        if (older.length < 30) _hasMoreMessages = false;
+      });
+
+      // Ajustar scroll para que el contenido visible no salte.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final delta = _scrollController.position.maxScrollExtent - oldExtent;
+          if (delta > 0) _scrollController.jumpTo(oldOffset + delta);
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -124,63 +209,68 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Lista de mensajes
           Expanded(
-            child: StreamBuilder<List<Message>>(
-              stream: _messagesStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text(l10n.genericError));
-                }
-
-                final messages = snapshot.data ?? [];
-
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Text(
-                      l10n.chatSendFirst,
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withAlpha(120),
-                      ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final isMe = msg.senderId == _currentUid;
-
-                    if (msg.isTrack) {
-                      return TrackBubble(
-                        message: msg,
-                        isMe: isMe,
-                        colorScheme: colorScheme,
-                        currentUid: _currentUid,
-                        chatId: widget.chatId,
-                        chatService: ref.read(chatServiceProvider),
-                      );
-                    }
-
-                    return MessageBubble(
-                      message: msg,
-                      isMe: isMe,
-                      colorScheme: colorScheme,
-                    );
-                  },
-                );
-              },
-            ),
+            child: _buildMessageList(colorScheme, l10n),
           ),
           _buildInputBar(colorScheme),
         ],
       ),
+    );
+  }
+
+  Widget _buildMessageList(ColorScheme colorScheme, AppLocalizations l10n) {
+    if (_isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_allMessages.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.chatSendFirst,
+          style: TextStyle(color: colorScheme.onSurface.withAlpha(120)),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (_isLoadingMore)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            itemCount: _allMessages.length,
+            itemBuilder: (context, index) {
+              final msg = _allMessages[index];
+              final isMe = msg.senderId == _currentUid;
+
+              if (msg.isTrack) {
+                return TrackBubble(
+                  message: msg,
+                  isMe: isMe,
+                  colorScheme: colorScheme,
+                  currentUid: _currentUid,
+                  chatId: widget.chatId,
+                  chatService: ref.read(chatServiceProvider),
+                );
+              }
+
+              return MessageBubble(
+                message: msg,
+                isMe: isMe,
+                colorScheme: colorScheme,
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

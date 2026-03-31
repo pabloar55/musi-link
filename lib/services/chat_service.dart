@@ -122,15 +122,42 @@ class ChatService {
     }
   }
 
-  /// Stream de mensajes de un chat, ordenados cronológicamente.
+  static const int messagesPageSize = 30;
+
+  /// Stream de los últimos [messagesPageSize] mensajes de un chat, en tiempo real.
+  /// Los resultados se devuelven ordenados cronológicamente (ascendente).
   Stream<List<Message>> getMessages(String chatId) {
     return _chatsRef
         .doc(chatId)
         .collection(FirestoreCollections.messages)
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true)
+        .limit(messagesPageSize)
         .snapshots()
+        .handleError(reportError)
         .map((snapshot) =>
-            snapshot.docs.map(Message.fromFirestore).toList());
+            snapshot.docs.reversed.map(Message.fromFirestore).toList());
+  }
+
+  /// Carga mensajes anteriores a [before] para paginación inversa.
+  /// Devuelve hasta [messagesPageSize] mensajes en orden cronológico ascendente.
+  Future<List<Message>> loadOlderMessages(
+    String chatId, {
+    required DateTime before,
+  }) async {
+    try {
+      final snapshot = await _chatsRef
+          .doc(chatId)
+          .collection(FirestoreCollections.messages)
+          .where('timestamp', isLessThan: Timestamp.fromDate(before))
+          .orderBy('timestamp', descending: true)
+          .limit(messagesPageSize)
+          .get();
+
+      return snapshot.docs.reversed.map(Message.fromFirestore).toList();
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
   }
 
   /// Marca todos los mensajes no leídos del otro usuario como leídos.
