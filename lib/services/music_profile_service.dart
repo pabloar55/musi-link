@@ -98,6 +98,7 @@ class MusicProfileService {
       }
 
       final myUser = AppUser.fromFirestore(myDoc);
+      if (myUser == null) return [];
       if (myUser.topArtistNames.isEmpty && myUser.topGenreNames.isEmpty) {
         return [];
       }
@@ -126,6 +127,7 @@ class MusicProfileService {
       }
 
       final myUser = AppUser.fromFirestore(myDoc);
+      if (myUser == null) return (List<DiscoveryResult>.unmodifiable(_cachedResults!), false);
       final newResults = await _fetchPage(myUser);
 
       _cachedResults = [..._cachedResults!, ...newResults];
@@ -160,6 +162,7 @@ class MusicProfileService {
       if (doc.id == _currentUid) continue;
 
       final user = AppUser.fromFirestore(doc);
+      if (user == null) continue;
       if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
 
       results.add(calculateCompatibility(
@@ -186,6 +189,14 @@ class MusicProfileService {
     }
 
     final myUser = AppUser.fromFirestore(myDoc);
+    if (myUser == null) {
+      return DiscoveryResult(
+        user: otherUser,
+        score: 0,
+        sharedArtistNames: [],
+        sharedGenreNames: [],
+      );
+    }
     return MusicProfileService.calculateCompatibility(
       myArtistNames: myUser.topArtistNames,
       myGenreNames: myUser.topGenreNames,

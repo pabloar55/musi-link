@@ -147,6 +147,7 @@ class UserService {
         if (!completer.isCompleted) {
           completer.complete(snapshot.docs
               .map(AppUser.fromFirestore)
+              .whereType<AppUser>()
               .where((u) => u.uid != excludeUid)
               .toList());
         }
@@ -195,7 +196,7 @@ class UserService {
         final snapshot = await _usersRef
             .where(FieldPath.documentId, whereIn: chunk)
             .get();
-        users.addAll(snapshot.docs.map(AppUser.fromFirestore));
+        users.addAll(snapshot.docs.map(AppUser.fromFirestore).whereType<AppUser>());
       }
       return users;
     } catch (e, stack) {

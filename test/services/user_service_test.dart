@@ -93,14 +93,16 @@ void main() {
         expect(user, isNull);
       });
 
-      test('devuelve null si Firestore falla', () async {
+      test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
         when(() => mockDocRef.get())
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
-        final user = await userService.getUser('uid123');
-        expect(user, isNull);
+        expect(
+          () => userService.getUser('uid123'),
+          throwsA(isA<FirebaseException>()),
+        );
       });
     });
 
@@ -125,13 +127,16 @@ void main() {
         expect(await userService.userExists('uid123'), false);
       });
 
-      test('devuelve false si Firestore falla', () async {
+      test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
         when(() => mockDocRef.get())
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
-        expect(await userService.userExists('uid123'), false);
+        expect(
+          () => userService.userExists('uid123'),
+          throwsA(isA<FirebaseException>()),
+        );
       });
     });
 

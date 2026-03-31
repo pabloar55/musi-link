@@ -42,8 +42,9 @@ class AppUser {
     this.nowPlayingUpdatedAt,
   });
 
-  factory AppUser.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data()! as Map<String, dynamic>;
+  static AppUser? fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>?;
+    if (data == null) return null;
     return AppUser(
       uid: doc.id,
       email: (data['email'] ?? '').toString(),

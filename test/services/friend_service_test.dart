@@ -170,13 +170,16 @@ void main() {
         expect(await friendService.areFriends('other_uid'), false);
       });
 
-      test('devuelve false si Firestore falla', () async {
+      test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('current_uid')).thenReturn(mockDocRef);
         when(() => mockDocRef.get())
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
-        expect(await friendService.areFriends('other_uid'), false);
+        expect(
+          () => friendService.areFriends('other_uid'),
+          throwsA(isA<FirebaseException>()),
+        );
       });
     });
 
@@ -328,14 +331,16 @@ void main() {
         expect(result.requestId, isNull);
       });
 
-      test('devuelve none si Firestore falla', () async {
+      test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('current_uid')).thenReturn(mockDocRef);
         when(() => mockDocRef.get())
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
-        final result = await friendService.getRelationship('other_uid');
-        expect(result.status, RelationshipStatus.none);
+        expect(
+          () => friendService.getRelationship('other_uid'),
+          throwsA(isA<FirebaseException>()),
+        );
       });
     });
 
