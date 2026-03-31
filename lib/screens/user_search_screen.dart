@@ -28,6 +28,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
 
   // Cache de relaciones para los resultados actuales
   final Map<String, RelationshipResult> _relationships = {};
+  bool _hasError = false;
 
   /// UID of the authenticated user from the Riverpod provider.
   /// If empty (session lost), searchUsers will return no results safely.
@@ -47,6 +48,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
         _results = [];
         _hasSearched = false;
         _isLoading = false;
+        _hasError = false;
         _relationships.clear();
       });
       return;
@@ -62,26 +64,36 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     setState(() {
       _isLoading = true;
       _hasSearched = true;
+      _hasError = false;
     });
 
-    final users = await ref.read(userServiceProvider)
-        .searchUsers(query, excludeUid: _currentUid);
+    try {
+      final users = await ref.read(userServiceProvider)
+          .searchUsers(query, excludeUid: _currentUid);
 
-    // Cargar relaciones para todos los resultados
-    final relationships = <String, RelationshipResult>{};
-    for (final user in users) {
-      relationships[user.uid] =
-          await ref.read(friendServiceProvider).getRelationship(user.uid);
-    }
+      // Cargar relaciones para todos los resultados
+      final relationships = <String, RelationshipResult>{};
+      for (final user in users) {
+        relationships[user.uid] =
+            await ref.read(friendServiceProvider).getRelationship(user.uid);
+      }
 
-    if (mounted) {
-      setState(() {
-        _results = users;
-        _relationships
-          ..clear()
-          ..addAll(relationships);
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _results = users;
+          _relationships
+            ..clear()
+            ..addAll(relationships);
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -115,9 +127,13 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
 
   Future<void> _refreshRelationships() async {
     for (final user in _results) {
-      final rel = await ref.read(friendServiceProvider).getRelationship(user.uid);
-      if (mounted) {
-        setState(() => _relationships[user.uid] = rel);
+      try {
+        final rel = await ref.read(friendServiceProvider).getRelationship(user.uid);
+        if (mounted) {
+          setState(() => _relationships[user.uid] = rel);
+        }
+      } catch (_) {
+        // Silencioso: si falla una relación en el refresh, se mantiene el valor anterior
       }
     }
   }
@@ -171,45 +187,54 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _results.isEmpty
+                : _hasError
                     ? Center(
                         child: Text(
-                          _hasSearched
-                              ? l10n.searchNoResults
-                              : l10n.searchTypeToSearch,
+                          l10n.genericError,
                           style: TextStyle(
-                            color: colorScheme.onSurface.withAlpha(120),
+                            color: colorScheme.error,
                           ),
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: _results.length,
-                        itemBuilder: (context, index) {
-                          final user = _results[index];
-                          final photoUrl = user.photoUrl;
-                          final rel = _relationships[user.uid];
-
-                          return ListTile(
-                            leading: UserCircleAvatar(
-                              photoUrl: photoUrl,
-                              name: user.displayName,
+                    : _results.isEmpty
+                        ? Center(
+                            child: Text(
+                              _hasSearched
+                                  ? l10n.searchNoResults
+                                  : l10n.searchTypeToSearch,
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withAlpha(120),
+                              ),
                             ),
-                            title: Text(user.displayName),
-                            subtitle: user.spotifyId != null
-                                ? Text(
-                                    l10n.searchSpotifyConnected,
-                                    style: TextStyle(
-                                      color: colorScheme.primary,
-                                      fontSize: 12,
-                                    ),
-                                  )
-                                : null,
-                            trailing: _buildTrailingAction(
-                                user, rel, colorScheme, l10n),
-                            onTap: () => _openProfile(user),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.builder(
+                            itemCount: _results.length,
+                            itemBuilder: (context, index) {
+                              final user = _results[index];
+                              final photoUrl = user.photoUrl;
+                              final rel = _relationships[user.uid];
+
+                              return ListTile(
+                                leading: UserCircleAvatar(
+                                  photoUrl: photoUrl,
+                                  name: user.displayName,
+                                ),
+                                title: Text(user.displayName),
+                                subtitle: user.spotifyId != null
+                                    ? Text(
+                                        l10n.searchSpotifyConnected,
+                                        style: TextStyle(
+                                          color: colorScheme.primary,
+                                          fontSize: 12,
+                                        ),
+                                      )
+                                    : null,
+                                trailing: _buildTrailingAction(
+                                    user, rel, colorScheme, l10n),
+                                onTap: () => _openProfile(user),
+                              );
+                            },
+                          ),
           ),
         ],
       ),

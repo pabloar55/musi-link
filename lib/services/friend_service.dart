@@ -157,7 +157,7 @@ class FriendService {
       return friends.contains(otherUid);
     } catch (e, stack) {
       await reportError(e, stack);
-      return false;
+      rethrow;
     }
   }
 
@@ -199,7 +199,7 @@ class FriendService {
       return const RelationshipResult(RelationshipStatus.none);
     } catch (e, stack) {
       await reportError(e, stack);
-      return const RelationshipResult(RelationshipStatus.none);
+      rethrow;
     }
   }
 

@@ -48,7 +48,7 @@ class UserService {
       return AppUser.fromFirestore(doc);
     } catch (e, stack) {
       await reportError(e, stack);
-      return null;
+      rethrow;
     }
   }
 
@@ -59,7 +59,7 @@ class UserService {
       return doc.exists;
     } catch (e, stack) {
       await reportError(e, stack);
-      return false;
+      rethrow;
     }
   }
 
@@ -112,6 +112,7 @@ class UserService {
       }
     } catch (e, stack) {
       await reportError(e, stack);
+      rethrow;
     }
   }
 
@@ -151,7 +152,7 @@ class UserService {
         }
       } catch (e, stack) {
         await reportError(e, stack);
-        if (!completer.isCompleted) completer.complete([]);
+        if (!completer.isCompleted) completer.completeError(e, stack);
       }
     });
 
@@ -199,7 +200,7 @@ class UserService {
       return users;
     } catch (e, stack) {
       await reportError(e, stack);
-      return [];
+      rethrow;
     }
   }
 }

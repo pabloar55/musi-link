@@ -45,7 +45,7 @@ class SpotifyGetStats {
           [];
     } catch (e, stack) {
       await reportError(e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -69,7 +69,7 @@ class SpotifyGetStats {
           [];
     } catch (e, stack) {
       await reportError(e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -134,7 +134,7 @@ class SpotifyGetStats {
       return tracks;
     } catch (e, stack) {
       await reportError(e, stack);
-      return [];
+      rethrow;
     }
   }
 }

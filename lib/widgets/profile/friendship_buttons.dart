@@ -37,6 +37,8 @@ class FriendshipButtons extends StatelessWidget {
           );
         }
 
+        if (snapshot.hasError) return const SizedBox.shrink();
+
         final relationship =
             snapshot.data ?? const RelationshipResult(RelationshipStatus.none);
 
