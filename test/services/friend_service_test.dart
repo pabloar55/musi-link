@@ -82,15 +82,15 @@ void main() {
 
         // Verificar que se actualizó el request
         verify(() => mockBatch.update(mockRequestDoc, any(
-            that: predicate<Map<String, dynamic>>(
+            that: predicate<Map<Object, Object?>>(
                 (m) => m['status'] == 'accepted')))).called(1);
 
         // Verificar que se añadieron amigos a ambos usuarios
         verify(() => mockBatch.update(mockCurrentUserDoc, any(
-            that: predicate<Map<String, dynamic>>(
+            that: predicate<Map<Object, Object?>>(
                 (m) => m.containsKey('friends'))))).called(1);
         verify(() => mockBatch.update(mockOtherUserDoc, any(
-            that: predicate<Map<String, dynamic>>(
+            that: predicate<Map<Object, Object?>>(
                 (m) => m.containsKey('friends'))))).called(1);
 
         verify(() => mockBatch.commit()).called(1);
@@ -362,10 +362,10 @@ void main() {
         await friendService.removeFriend('other_uid');
 
         verify(() => mockBatch.update(mockCurrentUserDoc, any(
-            that: predicate<Map<String, dynamic>>(
+            that: predicate<Map<Object, Object?>>(
                 (m) => m.containsKey('friends'))))).called(1);
         verify(() => mockBatch.update(mockOtherUserDoc, any(
-            that: predicate<Map<String, dynamic>>(
+            that: predicate<Map<Object, Object?>>(
                 (m) => m.containsKey('friends'))))).called(1);
         verify(() => mockBatch.commit()).called(1);
       });
