@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/app_user.dart';
@@ -12,6 +14,9 @@ class UserService {
   final FirebaseFirestore _firestore;
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection(FirestoreCollections.users);
+
+  Timer? _searchDebounce;
+  Completer<List<AppUser>>? _pendingSearch;
 
   /// Crea un perfil de usuario nuevo en Firestore.
   Future<void> createUserProfile({
@@ -110,28 +115,47 @@ class UserService {
     }
   }
 
-  /// Busca usuarios por nombre
+  /// Busca usuarios por nombre con debounce interno de 300 ms.
   /// Excluye al usuario con [excludeUid] de los resultados. (el que hace la búsqueda)
+  /// Si llega una nueva llamada antes de que expire el timer, la anterior
+  /// se resuelve con [] (fue superada) y el timer se reinicia.
   Future<List<AppUser>> searchUsers(String query,
       {String? excludeUid}) async {
-    try {
-      if (query.trim().isEmpty) return [];
-      final lowerQuery = query.trim().toLowerCase();
-      final snapshot = await _usersRef
-          .where('displayNameLower',
-              isGreaterThanOrEqualTo: lowerQuery)
-          .where('displayNameLower',
-              isLessThanOrEqualTo: '$lowerQuery\uf8ff')
-          .limit(20)
-          .get();
-      return snapshot.docs
-          .map(AppUser.fromFirestore)
-          .where((u) => u.uid != excludeUid)
-          .toList();
-    } catch (e, stack) {
-      await reportError(e, stack);
-      return [];
+    _searchDebounce?.cancel();
+
+    final pending = _pendingSearch;
+    if (pending != null && !pending.isCompleted) {
+      pending.complete([]);
     }
+
+    if (query.trim().isEmpty) return [];
+
+    final completer = Completer<List<AppUser>>();
+    _pendingSearch = completer;
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () async {
+      try {
+        final lowerQuery = query.trim().toLowerCase();
+        final snapshot = await _usersRef
+            .where('displayNameLower',
+                isGreaterThanOrEqualTo: lowerQuery)
+            .where('displayNameLower',
+                isLessThanOrEqualTo: '$lowerQuery\uf8ff')
+            .limit(20)
+            .get();
+        if (!completer.isCompleted) {
+          completer.complete(snapshot.docs
+              .map(AppUser.fromFirestore)
+              .where((u) => u.uid != excludeUid)
+              .toList());
+        }
+      } catch (e, stack) {
+        await reportError(e, stack);
+        if (!completer.isCompleted) completer.complete([]);
+      }
+    });
+
+    return completer.future;
   }
 
   /// Establece la canción del día del usuario.
