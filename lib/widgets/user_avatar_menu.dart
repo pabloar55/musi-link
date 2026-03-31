@@ -63,6 +63,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
         try {
           await ref.read(authServiceProvider).signOut();
         } catch (_) {}
+        ref.invalidate(musicProfileServiceProvider);
         if (!mounted) return;
         context.go('/auth');
         break;
