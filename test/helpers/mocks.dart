@@ -73,7 +73,7 @@ class FakeTransaction extends Fake implements Transaction {
   @override
   Transaction update(
       DocumentReference<Object?> documentReference,
-      Map<String, dynamic> data) {
+      Map<Object, Object?> data) {
     updates.add(MapEntry(documentReference, Map<String, dynamic>.from(data)));
     return this;
   }

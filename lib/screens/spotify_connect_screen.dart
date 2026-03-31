@@ -108,7 +108,7 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
           child: Column(
             children: [
               const Spacer(flex: 2),
-              Icon(
+              FaIcon(
                 FontAwesomeIcons.spotify,
                 size: 80,
                 color: colorScheme.primary,
@@ -132,7 +132,7 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
                 height: 48,
                 child: FilledButton.icon(
                   onPressed: _connectSpotify,
-                  icon: const Icon(FontAwesomeIcons.spotify),
+                  icon: const FaIcon(FontAwesomeIcons.spotify),
                   label: Text(l10n.spotifyConnectButton),
                 ),
               ),

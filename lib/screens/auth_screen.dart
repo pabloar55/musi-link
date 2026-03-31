@@ -266,7 +266,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   height: 48,
                   child: OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signInWithGoogle,
-                    icon: const Icon(FontAwesomeIcons.google, size: 20),
+                    icon: const FaIcon(FontAwesomeIcons.google, size: 20),
                     label: Text(l10n.authContinueGoogle),
                   ),
                 ),

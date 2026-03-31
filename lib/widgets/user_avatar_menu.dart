@@ -108,9 +108,9 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
             PopupMenuItem(
               value: _UserMenuAction.darkLightMode,
               child: ListTile(
-                leading: Icon(
-                  isDarkMode ? Icons.sunny : FontAwesomeIcons.solidMoon,
-                ),
+                leading: isDarkMode
+                    ? const Icon(Icons.sunny)
+                    : const FaIcon(FontAwesomeIcons.solidMoon),
                 title: Text(
                   isDarkMode ? AppLocalizations.of(context)!.menuLightMode : AppLocalizations.of(context)!.menuDarkMode,
                 ),

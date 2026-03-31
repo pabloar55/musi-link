@@ -7,19 +7,19 @@ environment:
   sdk: ^3.10.1
 
 dependencies:
-  firebase_core: ^4.2.1
-  firebase_analytics: ^12.0.4
-  firebase_auth: ^6.1.2
-  cloud_firestore: ^6.1.0
+  firebase_core: ^4.6.0
+  firebase_analytics: ^12.2.0
+  firebase_auth: ^6.3.0
+  cloud_firestore: ^6.2.0
   google_sign_in: ^7.2.0
-  firebase_crashlytics: ^5.0.5
+  firebase_crashlytics: ^5.1.0
   http: ^1.2.0  # Para llamadas a la API
   flutter_secure_storage: ^10.0.0 # Para guardar el token de forma segura
   spotify: ^0.16.0              # Conexión a Spotify Web API
   flutter_web_auth_2: ^5.0.1   # Para abrir navegador en OAuth
-  font_awesome_flutter: ^10.12.0 # Para iconos
+  font_awesome_flutter: ^11.0.0 # Para iconos
   url_launcher: ^6.3.2
-  shared_preferences: ^2.5.0
+  shared_preferences: ^2.5.5
   flutter_riverpod: ^3.3.1
   go_router: ^17.1.0
   intl: ^0.20.2
