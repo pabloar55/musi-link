@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/services/user_service.dart';
-import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/friends/section_header.dart';
 import 'package:musi_link/widgets/friends/empty_message.dart';
@@ -28,18 +27,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
   @override
   bool get wantKeepAlive => true;
 
-  late final Stream<List<FriendRequest>> _receivedRequestsStream;
-  late final Stream<List<FriendRequest>> _sentRequestsStream;
-  late final Stream<List<String>> _friendsStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _receivedRequestsStream = ref.read(friendServiceProvider).getReceivedRequests();
-    _sentRequestsStream = ref.read(friendServiceProvider).getSentRequests();
-    _friendsStream = ref.read(friendServiceProvider).getFriendsStream();
-  }
-
   Future<void> _showRemoveFriendDialog(String uid, String? name) async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
@@ -54,25 +41,23 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
+    final receivedAsync = ref.watch(receivedRequestsProvider);
+    final sentAsync = ref.watch(sentRequestsProvider);
+    final friendsAsync = ref.watch(friendsStreamProvider);
+
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           // ─── Solicitudes recibidas ───────────────────
           SectionHeader(title: l10n.friendsReceivedRequests),
-          StreamBuilder<List<FriendRequest>>(
-            stream: _receivedRequestsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text(l10n.genericError));
-              }
-              final requests = snapshot.data ?? [];
+          receivedAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Center(child: Text(l10n.genericError)),
+            data: (requests) {
               if (requests.isEmpty) {
                 return EmptyMessage(text: l10n.friendsNoRequests);
               }
@@ -88,13 +73,15 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                           icon: Icon(Icons.check_circle,
                               color: colorScheme.primary),
                           tooltip: l10n.friendsAccept,
-                          onPressed: () => ref.read(friendServiceProvider)
+                          onPressed: () => ref
+                              .read(friendServiceProvider)
                               .acceptRequest(request.id, request.senderId),
                         ),
                         IconButton(
                           icon: Icon(Icons.cancel, color: colorScheme.error),
                           tooltip: l10n.friendsReject,
-                          onPressed: () => ref.read(friendServiceProvider)
+                          onPressed: () => ref
+                              .read(friendServiceProvider)
                               .rejectRequest(request.id),
                         ),
                       ],
@@ -109,19 +96,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
           // ─── Solicitudes enviadas ────────────────────
           SectionHeader(title: l10n.friendsSentRequests),
-          StreamBuilder<List<FriendRequest>>(
-            stream: _sentRequestsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text(l10n.genericError));
-              }
-              final requests = snapshot.data ?? [];
+          sentAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Center(child: Text(l10n.genericError)),
+            data: (requests) {
               if (requests.isEmpty) {
                 return EmptyMessage(text: l10n.friendsNoRequests);
               }
@@ -131,8 +112,9 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                     uid: request.receiverId,
                     getUserFuture: getUserFuture,
                     trailing: TextButton(
-                      onPressed: () =>
-                          ref.read(friendServiceProvider).cancelRequest(request.id),
+                      onPressed: () => ref
+                          .read(friendServiceProvider)
+                          .cancelRequest(request.id),
                       child: Text(l10n.friendsCancel),
                     ),
                   );
@@ -145,19 +127,13 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
 
           // ─── Lista de amigos ─────────────────────────
           SectionHeader(title: l10n.friendsMyFriends),
-          StreamBuilder<List<String>>(
-            stream: _friendsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text(l10n.genericError));
-              }
-              final friendUids = snapshot.data ?? [];
+          friendsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => Center(child: Text(l10n.genericError)),
+            data: (friendUids) {
               if (friendUids.isEmpty) {
                 return Column(
                   children: [
@@ -205,4 +181,3 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
     );
   }
 }
-

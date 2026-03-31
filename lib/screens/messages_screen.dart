@@ -28,14 +28,6 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
   @override
   bool get wantKeepAlive => true;
 
-  late final Stream<List<Chat>> _chatsStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _chatsStream = ref.read(chatServiceProvider).getChats();
-  }
-
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string if session was lost (GoRouter redirects before this
   /// is reached in normal flow, but race conditions are possible).
@@ -70,25 +62,18 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      body: StreamBuilder<List<Chat>>(
-        stream: _chatsStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            reportError(snapshot.error!, StackTrace.current);
-            return Center(
-              child: Text(
-                l10n.socialErrorLoading,
-                style: TextStyle(color: colorScheme.onSurface.withAlpha(150)),
-              ),
-            );
-          }
-
-          final chats = snapshot.data ?? [];
-
+      body: ref.watch(chatsProvider).when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) {
+          reportError(error, StackTrace.current);
+          return Center(
+            child: Text(
+              l10n.socialErrorLoading,
+              style: TextStyle(color: colorScheme.onSurface.withAlpha(150)),
+            ),
+          );
+        },
+        data: (chats) {
           if (chats.isEmpty) {
             return Center(
               child: Column(

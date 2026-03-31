@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:musi_link/models/chat.dart';
+import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/services/chat_service.dart';
@@ -60,4 +62,22 @@ final Provider<MusicProfileService> musicProfileServiceProvider =
     firestore: ref.watch(firebaseFirestoreProvider),
     auth: ref.watch(firebaseAuthProvider),
   );
+});
+
+// ── StreamProviders de Firestore ────────────────────────────────
+
+final receivedRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
+  return ref.watch(friendServiceProvider).getReceivedRequests();
+});
+
+final sentRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
+  return ref.watch(friendServiceProvider).getSentRequests();
+});
+
+final friendsStreamProvider = StreamProvider<List<String>>((ref) {
+  return ref.watch(friendServiceProvider).getFriendsStream();
+});
+
+final chatsProvider = StreamProvider<List<Chat>>((ref) {
+  return ref.watch(chatServiceProvider).getChats();
 });
