@@ -24,14 +24,15 @@ class MusicProfileService {
 
   // --- Discovery cache & pagination state ---
   List<DiscoveryResult>? _cachedResults;
-  DocumentSnapshot<Map<String, dynamic>>? _lastDocument;
+  int _displayedCount = 0;
   DateTime? _cacheTime;
-  bool _hasMorePages = false;
 
   static const _cacheTtl = Duration(minutes: 5);
   static const _pageSize = 20;
+  static const _queryLimit = 100;
 
-  bool get hasMoreDiscoveryUsers => _hasMorePages;
+  bool get hasMoreDiscoveryUsers =>
+      _cachedResults != null && _displayedCount < _cachedResults!.length;
 
   bool get _isCacheValid =>
       _cachedResults != null &&
@@ -83,14 +84,14 @@ class MusicProfileService {
     bool forceRefresh = false,
   }) async {
     if (!forceRefresh && _isCacheValid) {
-      return List<DiscoveryResult>.unmodifiable(_cachedResults!);
+      return List<DiscoveryResult>.unmodifiable(
+        _cachedResults!.take(_displayedCount),
+      );
     }
 
     try {
-      // Reset de paginación en cada carga fresca
-      _lastDocument = null;
-      _hasMorePages = false;
       _cachedResults = null;
+      _displayedCount = 0;
 
       final myDoc = await _usersRef.doc(_currentUid).get();
       if (!myDoc.exists) {
@@ -103,64 +104,72 @@ class MusicProfileService {
         return [];
       }
 
-      final results = await _fetchPage(myUser);
+      final results = await _fetchRelevantUsers(myUser);
       _cachedResults = results;
       _cacheTime = DateTime.now();
-      return List<DiscoveryResult>.unmodifiable(results);
+      _displayedCount = results.length.clamp(0, _pageSize);
+      return List<DiscoveryResult>.unmodifiable(
+        results.take(_displayedCount),
+      );
     } catch (e, stack) {
       await reportError(e, stack);
       return [];
     }
   }
 
-  /// Carga la siguiente página y la añade al caché acumulado.
-  /// Devuelve la lista completa actualizada y si quedan más páginas.
+  /// Devuelve la siguiente página desde el caché local (0 Firestore reads).
   Future<(List<DiscoveryResult>, bool hasMore)> loadMoreDiscoveryUsers() async {
-    if (!_hasMorePages || _cachedResults == null) {
+    if (_cachedResults == null || _displayedCount >= _cachedResults!.length) {
       return (List<DiscoveryResult>.unmodifiable(_cachedResults ?? []), false);
     }
 
-    try {
-      final myDoc = await _usersRef.doc(_currentUid).get();
-      if (!myDoc.exists) {
-        return (List<DiscoveryResult>.unmodifiable(_cachedResults!), false);
-      }
-
-      final myUser = AppUser.fromFirestore(myDoc);
-      if (myUser == null) return (List<DiscoveryResult>.unmodifiable(_cachedResults!), false);
-      final newResults = await _fetchPage(myUser);
-
-      _cachedResults = [..._cachedResults!, ...newResults];
-      return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
-    } catch (e, stack) {
-      await reportError(e, stack);
-      return (List<DiscoveryResult>.unmodifiable(_cachedResults!), _hasMorePages);
-    }
+    _displayedCount =
+        (_displayedCount + _pageSize).clamp(0, _cachedResults!.length);
+    return (
+      List<DiscoveryResult>.unmodifiable(_cachedResults!.take(_displayedCount)),
+      _displayedCount < _cachedResults!.length,
+    );
   }
 
-  Future<List<DiscoveryResult>> _fetchPage(AppUser myUser) async {
-    Query<Map<String, dynamic>> query = _usersRef
-        .orderBy('musicDataUpdatedAt', descending: true)
-        .limit(_pageSize);
+  /// Lanza dos queries en paralelo usando arrayContainsAny para traer
+  /// solo usuarios que comparten al menos un artista o género.
+  /// Máximo ~200 reads (100 por query) en vez de escanear toda la colección.
+  Future<List<DiscoveryResult>> _fetchRelevantUsers(AppUser myUser) async {
+    final artistNames = myUser.topArtistNames.take(10).toList();
+    final genreNames = myUser.topGenreNames.take(10).toList();
 
-    if (_lastDocument != null) {
-      query = query.startAfterDocument(_lastDocument!);
+    // Lanzar ambas queries en paralelo
+    final artistFuture = artistNames.isNotEmpty
+        ? _usersRef
+            .where('topArtistNames', arrayContainsAny: artistNames)
+            .limit(_queryLimit)
+            .get()
+        : null;
+
+    final genreFuture = genreNames.isNotEmpty
+        ? _usersRef
+            .where('topGenreNames', arrayContainsAny: genreNames)
+            .limit(_queryLimit)
+            .get()
+        : null;
+
+    final seen = <String>{_currentUid};
+    final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+
+    if (artistFuture != null) {
+      for (final doc in (await artistFuture).docs) {
+        if (seen.add(doc.id)) allDocs.add(doc);
+      }
     }
 
-    final snapshot = await query.get();
-
-    if (snapshot.docs.isEmpty) {
-      _hasMorePages = false;
-      return [];
+    if (genreFuture != null) {
+      for (final doc in (await genreFuture).docs) {
+        if (seen.add(doc.id)) allDocs.add(doc);
+      }
     }
-
-    _lastDocument = snapshot.docs.last;
-    _hasMorePages = snapshot.docs.length >= _pageSize;
 
     final results = <DiscoveryResult>[];
-    for (final doc in snapshot.docs) {
-      if (doc.id == _currentUid) continue;
-
+    for (final doc in allDocs) {
       final user = AppUser.fromFirestore(doc);
       if (user == null) continue;
       if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;

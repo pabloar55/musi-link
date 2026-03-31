@@ -165,16 +165,17 @@ void main() {
     });
   });
 
-  // ── Paginación y caché ───────────────────────────────────────────────────
+  // ── Filtrado server-side y caché ─────────────────────────────────────────
 
-  group('MusicProfileService discovery (paginación y caché)', () {
+  group('MusicProfileService discovery (filtrado server-side y caché)', () {
     late MockFirebaseFirestore mockFirestore;
     late MockFirebaseAuth mockAuth;
     late MockUser mockCurrentUser;
     late MockCollectionReference mockUsersRef;
     late MockDocumentReference mockMyDocRef;
     late MockDocumentSnapshot mockMyDocSnap;
-    late MockQuery mockQuery;
+    late MockQuery mockArtistQuery;
+    late MockQuery mockGenreQuery;
     late MusicProfileService service;
 
     const myUid = 'me';
@@ -195,6 +196,16 @@ void main() {
       });
     }
 
+    void stubQueries({
+      List<MockQueryDocumentSnapshot> artistDocs = const [],
+      List<MockQueryDocumentSnapshot> genreDocs = const [],
+    }) {
+      when(() => mockArtistQuery.get())
+          .thenAnswer((_) async => buildSnapshot(artistDocs));
+      when(() => mockGenreQuery.get())
+          .thenAnswer((_) async => buildSnapshot(genreDocs));
+    }
+
     setUp(() {
       mockFirestore = MockFirebaseFirestore();
       mockAuth = MockFirebaseAuth();
@@ -202,11 +213,11 @@ void main() {
       mockUsersRef = MockCollectionReference();
       mockMyDocRef = MockDocumentReference();
       mockMyDocSnap = MockDocumentSnapshot();
-      mockQuery = MockQuery();
+      mockArtistQuery = MockQuery();
+      mockGenreQuery = MockQuery();
 
       registerFallbackValues();
-      // Necesario para `startAfterDocument(any())`
-      registerFallbackValue(MockDocumentSnapshot());
+      registerFallbackValue(<Object?>[]);
 
       when(() => mockAuth.currentUser).thenReturn(mockCurrentUser);
       when(() => mockCurrentUser.uid).thenReturn(myUid);
@@ -214,15 +225,18 @@ void main() {
 
       stubMyUserDoc();
 
-      // Cadena de query sin cursor:
-      // _usersRef.orderBy(...).limit(20)
-      when(
-        () => mockUsersRef.orderBy(
-          'musicDataUpdatedAt',
-          descending: true,
-        ),
-      ).thenReturn(mockQuery);
-      when(() => mockQuery.limit(any())).thenReturn(mockQuery);
+      // Mock de las queries arrayContainsAny
+      when(() => mockUsersRef.where(
+            'topArtistNames',
+            arrayContainsAny: any(named: 'arrayContainsAny'),
+          )).thenReturn(mockArtistQuery);
+      when(() => mockArtistQuery.limit(any())).thenReturn(mockArtistQuery);
+
+      when(() => mockUsersRef.where(
+            'topGenreNames',
+            arrayContainsAny: any(named: 'arrayContainsAny'),
+          )).thenReturn(mockGenreQuery);
+      when(() => mockGenreQuery.limit(any())).thenReturn(mockGenreQuery);
 
       service = MusicProfileService(
         MockSpotifyGetStats(),
@@ -232,21 +246,26 @@ void main() {
     });
 
     group('getDiscoveryUsers', () {
-      test('Firestore devuelve 20 docs → hasMoreDiscoveryUsers es true', () async {
-        final docs = List.generate(20, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+      test('más de 20 resultados relevantes → hasMoreDiscoveryUsers es true',
+          () async {
+        final artistDocs = List.generate(15, (i) => buildUserDoc('artist$i'));
+        final genreDocs = List.generate(10, (i) => buildUserDoc('genre$i'));
+        stubQueries(artistDocs: artistDocs, genreDocs: genreDocs);
 
-        await service.getDiscoveryUsers();
+        final results = await service.getDiscoveryUsers();
 
+        expect(results.length, 20); // primera página
         expect(service.hasMoreDiscoveryUsers, isTrue);
       });
 
-      test('Firestore devuelve < 20 docs → hasMoreDiscoveryUsers es false', () async {
+      test('menos de 20 resultados relevantes → hasMoreDiscoveryUsers es false',
+          () async {
         final docs = List.generate(15, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+        stubQueries(artistDocs: docs, genreDocs: []);
 
-        await service.getDiscoveryUsers();
+        final results = await service.getDiscoveryUsers();
 
+        expect(results.length, 15);
         expect(service.hasMoreDiscoveryUsers, isFalse);
       });
 
@@ -256,12 +275,21 @@ void main() {
           buildUserDoc('other1'),
           buildUserDoc('other2'),
         ];
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+        stubQueries(artistDocs: docs, genreDocs: []);
 
         final results = await service.getDiscoveryUsers();
 
         expect(results.length, 2);
         expect(results.any((r) => r.user.uid == myUid), isFalse);
+      });
+
+      test('deduplica usuarios que aparecen en ambas queries', () async {
+        final sharedDoc = buildUserDoc('shared');
+        stubQueries(artistDocs: [sharedDoc], genreDocs: [sharedDoc]);
+
+        final results = await service.getDiscoveryUsers();
+
+        expect(results.length, 1);
       });
 
       test('resultados se ordenan por score descendente', () async {
@@ -291,9 +319,7 @@ void main() {
         });
 
         // Devuelve doc2 primero (menor score), doc1 segundo
-        when(() => mockQuery.get()).thenAnswer(
-          (_) async => buildSnapshot([doc2, doc1]),
-        );
+        stubQueries(artistDocs: [doc2, doc1], genreDocs: []);
 
         final results = await service.getDiscoveryUsers();
 
@@ -302,86 +328,80 @@ void main() {
         expect(results.last.user.uid, 'other2');
       });
 
-      test('segunda llamada sin forceRefresh sirve caché sin consultar Firestore', () async {
+      test('segunda llamada sin forceRefresh sirve caché sin consultar Firestore',
+          () async {
         final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+        stubQueries(artistDocs: docs, genreDocs: []);
 
         await service.getDiscoveryUsers();
         await service.getDiscoveryUsers(); // debe usar caché
 
-        verify(() => mockQuery.get()).called(1);
+        verify(() => mockArtistQuery.get()).called(1);
       });
 
-      test('forceRefresh invalida caché y vuelve a consultar Firestore', () async {
+      test('forceRefresh invalida caché y vuelve a consultar Firestore',
+          () async {
         final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+        stubQueries(artistDocs: docs, genreDocs: []);
 
         await service.getDiscoveryUsers(forceRefresh: true);
         await service.getDiscoveryUsers(forceRefresh: true);
 
-        verify(() => mockQuery.get()).called(2);
+        verify(() => mockArtistQuery.get()).called(2);
       });
     });
 
     group('loadMoreDiscoveryUsers', () {
-      test('sin carga previa devuelve lista vacía sin llamar a Firestore', () async {
+      test('sin carga previa devuelve lista vacía', () async {
         final (results, hasMore) = await service.loadMoreDiscoveryUsers();
 
         expect(results, isEmpty);
         expect(hasMore, isFalse);
-        verifyNever(() => mockQuery.get());
       });
 
-      test('si hasMoreDiscoveryUsers es false no llama a Firestore', () async {
-        // Primera carga: 5 docs → hasMore = false
+      test('si total <= pageSize, loadMore no amplía resultados', () async {
         final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(docs));
+        stubQueries(artistDocs: docs, genreDocs: []);
         await service.getDiscoveryUsers();
 
-        // loadMore no debe hacer nueva consulta
-        await service.loadMoreDiscoveryUsers();
+        final (results, hasMore) = await service.loadMoreDiscoveryUsers();
 
-        verify(() => mockQuery.get()).called(1); // solo la primera carga
+        expect(results.length, 5);
+        expect(hasMore, isFalse);
       });
 
-      test('carga la segunda página usando startAfterDocument', () async {
-        // Página 1: 20 docs (activa el cursor)
-        final page1Docs = List.generate(20, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(page1Docs));
+      test('devuelve siguiente lote del caché sin consultar Firestore',
+          () async {
+        // 25 total → página 1: 20, página 2: 25
+        final artistDocs = List.generate(25, (i) => buildUserDoc('user$i'));
+        stubQueries(artistDocs: artistDocs, genreDocs: []);
+
         await service.getDiscoveryUsers();
         expect(service.hasMoreDiscoveryUsers, isTrue);
 
-        // Stub del cursor: .startAfterDocument(lastDoc) devuelve mockQueryPage2
-        final mockQueryPage2 = MockQuery();
-        when(() => mockQuery.startAfterDocument(any())).thenReturn(mockQueryPage2);
-
-        // Página 2: 5 docs
-        final page2Docs = List.generate(5, (i) => buildUserDoc('page2user$i'));
-        when(() => mockQueryPage2.get()).thenAnswer((_) async => buildSnapshot(page2Docs));
-
         final (allResults, hasMore) = await service.loadMoreDiscoveryUsers();
 
-        expect(allResults.length, 25); // 20 (pág 1) + 5 (pág 2)
-        expect(hasMore, isFalse); // 5 < 20
-        verify(() => mockQuery.startAfterDocument(any())).called(1);
+        expect(allResults.length, 25);
+        expect(hasMore, isFalse);
+        // Solo 1 llamada a Firestore (desde getDiscoveryUsers)
+        verify(() => mockArtistQuery.get()).called(1);
       });
 
-      test('segunda página con 20 docs mantiene hasMore en true', () async {
-        // Página 1: 20 docs
-        final page1Docs = List.generate(20, (i) => buildUserDoc('user$i'));
-        when(() => mockQuery.get()).thenAnswer((_) async => buildSnapshot(page1Docs));
+      test('múltiples loadMore pagina correctamente desde caché', () async {
+        // 50 total → página 1: 20, página 2: 40, página 3: 50
+        final artistDocs = List.generate(50, (i) => buildUserDoc('user$i'));
+        stubQueries(artistDocs: artistDocs, genreDocs: []);
+
         await service.getDiscoveryUsers();
+        expect(service.hasMoreDiscoveryUsers, isTrue);
 
-        final mockQueryPage2 = MockQuery();
-        when(() => mockQuery.startAfterDocument(any())).thenReturn(mockQueryPage2);
+        final (results1, hasMore1) = await service.loadMoreDiscoveryUsers();
+        expect(results1.length, 40);
+        expect(hasMore1, isTrue);
 
-        // Página 2: también 20 docs
-        final page2Docs = List.generate(20, (i) => buildUserDoc('page2user$i'));
-        when(() => mockQueryPage2.get()).thenAnswer((_) async => buildSnapshot(page2Docs));
-
-        final (_, hasMore) = await service.loadMoreDiscoveryUsers();
-
-        expect(hasMore, isTrue);
+        final (results2, hasMore2) = await service.loadMoreDiscoveryUsers();
+        expect(results2.length, 50);
+        expect(hasMore2, isFalse);
       });
     });
   });
