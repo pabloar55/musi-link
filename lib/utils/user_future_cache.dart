@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/user_service.dart';
 
@@ -16,8 +18,15 @@ class _CachedUser {
 /// Cachea el valor resuelto (no el Future) con un TTL de [cacheTtl].
 /// Pasado ese tiempo, o tras llamar a [invalidateUserFuture], se hace
 /// una nueva petición a Firestore.
+///
+/// Implementa LRU con tamaño máximo [_maxCacheSize] para evitar
+/// crecimiento ilimitado en sesiones largas (p.ej. scroll infinito).
 mixin UserFutureCache {
-  final Map<String, _CachedUser> _userCache = {};
+  static const int _maxCacheSize = 100;
+
+  // LinkedHashMap mantiene orden de inserción: el primer elemento
+  // es siempre el menos recientemente usado (LRU).
+  final LinkedHashMap<String, _CachedUser> _userCache = LinkedHashMap();
 
   /// TTL del caché. Sobreescribir para ajustar por pantalla.
   Duration get cacheTtl => const Duration(minutes: 5);
@@ -31,13 +40,25 @@ mixin UserFutureCache {
 
     final cached = _userCache[uid];
     if (cached != null && !cached.isExpired(cacheTtl)) {
+      // Mover al final para marcarlo como el más recientemente usado.
+      _userCache
+        ..remove(uid)
+        ..[uid] = cached;
       return Future.value(cached.user);
     }
 
     return userService.getUser(uid).then((user) {
+      _userCache.remove(uid); // Eliminar entrada expirada si existía.
+      _evictIfNeeded();
       _userCache[uid] = _CachedUser(user);
       return user;
     });
+  }
+
+  void _evictIfNeeded() {
+    while (_userCache.length >= _maxCacheSize) {
+      _userCache.remove(_userCache.keys.first);
+    }
   }
 
   void invalidateUserFuture(String uid) {
