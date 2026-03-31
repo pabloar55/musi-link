@@ -175,6 +175,7 @@ void main() {
       test('elimina todos los mensajes y el documento del chat', () async {
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
+        final mockLimitQuery = MockQuery();
         final mockMsgSnapshot = MockQuerySnapshot();
         final mockBatch = MockWriteBatch();
 
@@ -186,7 +187,8 @@ void main() {
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
         when(() => mockChatDocRef.collection('messages'))
             .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.get())
+        when(() => mockMessagesCol.limit(499)).thenReturn(mockLimitQuery);
+        when(() => mockLimitQuery.get())
             .thenAnswer((_) async => mockMsgSnapshot);
         when(() => mockMsgSnapshot.docs).thenReturn([mockMsgDoc1, mockMsgDoc2]);
         when(() => mockMsgDoc1.reference).thenReturn(mockMsgRef1);
@@ -195,37 +197,38 @@ void main() {
         when(() => mockFirestore.batch()).thenReturn(mockBatch);
         when(() => mockBatch.delete(any())).thenReturn(null);
         when(() => mockBatch.commit()).thenAnswer((_) async {});
+        when(() => mockChatDocRef.delete()).thenAnswer((_) async {});
 
         await chatService.deleteChat('chat_123');
 
-        // 2 mensajes + 1 chat = 3 deletes
+        // 2 mensajes en su propio batch; el doc del chat se borra por separado
         verify(() => mockBatch.delete(mockMsgRef1)).called(1);
         verify(() => mockBatch.delete(mockMsgRef2)).called(1);
-        verify(() => mockBatch.delete(mockChatDocRef)).called(1);
         verify(() => mockBatch.commit()).called(1);
+        verify(() => mockChatDocRef.delete()).called(1);
+        verifyNever(() => mockBatch.delete(mockChatDocRef));
       });
 
       test('elimina chat vacío (sin mensajes)', () async {
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
+        final mockLimitQuery = MockQuery();
         final mockMsgSnapshot = MockQuerySnapshot();
-        final mockBatch = MockWriteBatch();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
         when(() => mockChatDocRef.collection('messages'))
             .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.get())
+        when(() => mockMessagesCol.limit(499)).thenReturn(mockLimitQuery);
+        when(() => mockLimitQuery.get())
             .thenAnswer((_) async => mockMsgSnapshot);
         when(() => mockMsgSnapshot.docs).thenReturn([]);
-
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
-        when(() => mockBatch.delete(any())).thenReturn(null);
-        when(() => mockBatch.commit()).thenAnswer((_) async {});
+        when(() => mockChatDocRef.delete()).thenAnswer((_) async {});
 
         await chatService.deleteChat('chat_123');
 
-        verify(() => mockBatch.delete(mockChatDocRef)).called(1);
-        verify(() => mockBatch.commit()).called(1);
+        // Sin mensajes no se crea ningún batch
+        verifyNever(() => mockFirestore.batch());
+        verify(() => mockChatDocRef.delete()).called(1);
       });
     });
 
