@@ -72,18 +72,30 @@ class ChatService {
             snapshot.docs.map(Chat.fromFirestore).toList());
   }
 
+  static const int _deleteBatchSize = 499;
+
   /// Elimina un chat y todos sus mensajes.
   Future<void> deleteChat(String chatId) async {
     try {
-      // Eliminar todos los mensajes de la subcolección
-      final messages =
-          await _chatsRef.doc(chatId).collection(FirestoreCollections.messages).get();
-      final batch = _firestore.batch();
-      for (final doc in messages.docs) {
-        batch.delete(doc.reference);
+      final messagesRef =
+          _chatsRef.doc(chatId).collection(FirestoreCollections.messages);
+
+      // Paginar el borrado para no superar el límite de 500 ops por batch.
+      while (true) {
+        final snapshot =
+            await messagesRef.limit(_deleteBatchSize).get();
+        if (snapshot.docs.isEmpty) break;
+
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+
+        if (snapshot.docs.length < _deleteBatchSize) break;
       }
-      batch.delete(_chatsRef.doc(chatId));
-      await batch.commit();
+
+      await _chatsRef.doc(chatId).delete();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
