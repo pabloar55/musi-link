@@ -50,6 +50,7 @@ class SpotifyService {
 
   Timer? _nowPlayingTimer;
   app.Track? _lastNowPlayingTrack;
+  Future<void>? _syncInProgress;
 
   /// Inicia el polling de la canción actual.
   void startPollingNowPlaying() {
@@ -217,7 +218,14 @@ class SpotifyService {
     }
   }
 
-  Future<void> _syncSpotifyProfileToFirestore() async {
+  /// Deduplicates concurrent calls: si ya hay una sincronización en vuelo,
+  /// ambos llamadores awaitan el mismo Future en lugar de lanzar uno nuevo.
+  Future<void> _syncSpotifyProfileToFirestore() {
+    return _syncInProgress ??= _doSyncSpotifyProfileToFirestore()
+        .whenComplete(() => _syncInProgress = null);
+  }
+
+  Future<void> _doSyncSpotifyProfileToFirestore() async {
     if (_api == null) return;
 
     try {
