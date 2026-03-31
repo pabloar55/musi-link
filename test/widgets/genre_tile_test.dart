@@ -16,6 +16,9 @@ void main() {
         ),
       );
 
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
+
       expect(find.text('rock'), findsOneWidget);
       expect(find.text('#1'), findsOneWidget);
     });
@@ -30,6 +33,10 @@ void main() {
           ),
         ),
       );
+      
+      await tester.pump(const Duration(milliseconds: 100));
+  
+      await tester.pumpAndSettle();
 
       expect(find.text('33.3%'), findsOneWidget);
       expect(find.text('#2'), findsOneWidget);
@@ -46,6 +53,10 @@ void main() {
         ),
       );
 
+      await tester.pump(const Duration(milliseconds: 150));
+
+      await tester.pumpAndSettle();
+
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
 
@@ -60,6 +71,10 @@ void main() {
         ),
       );
 
+      await tester.pump(const Duration(milliseconds: 250));
+
+      await tester.pumpAndSettle();
+      
       expect(find.text('0.0%'), findsOneWidget);
     });
   });

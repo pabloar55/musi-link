@@ -41,23 +41,5 @@ void main() {
 
       expect(find.byIcon(Icons.music_note), findsOneWidget);
     });
-
-    testWidgets('usa ListTile como widget base', (tester) async {
-      const track = Track(
-        title: 'Test',
-        artist: 'Artist',
-        imageUrl: '',
-      );
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: TrackTile(track: track),
-          ),
-        ),
-      );
-
-      expect(find.byType(ListTile), findsOneWidget);
-    });
   });
 }

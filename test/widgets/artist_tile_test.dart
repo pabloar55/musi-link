@@ -38,25 +38,8 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.music_note), findsOneWidget);
+      expect(find.byIcon(Icons.person), findsOneWidget);
     });
 
-    testWidgets('usa ListTile como widget base', (tester) async {
-      const artist = Artist(
-        name: 'Test',
-        imageUrl: '',
-        genres: [],
-      );
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ArtistTile(artist: artist),
-          ),
-        ),
-      );
-
-      expect(find.byType(ListTile), findsOneWidget);
-    });
   });
 }

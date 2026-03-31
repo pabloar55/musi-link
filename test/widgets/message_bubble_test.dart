@@ -57,8 +57,8 @@ void main() {
 
       await tester.pumpWidget(buildBubble(message: message, isMe: true));
 
-      expect(find.byIcon(Icons.done), findsOneWidget);
-      expect(find.byIcon(Icons.done_all), findsNothing);
+      expect(find.byIcon(Icons.done_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.done_all_rounded), findsNothing);
     });
 
     testWidgets('muestra icono done_all cuando isMe y leído', (tester) async {
@@ -72,7 +72,7 @@ void main() {
 
       await tester.pumpWidget(buildBubble(message: message, isMe: true));
 
-      expect(find.byIcon(Icons.done_all), findsOneWidget);
+      expect(find.byIcon(Icons.done_all_rounded), findsOneWidget);
     });
 
     testWidgets('no muestra iconos de check cuando no es mío', (tester) async {
