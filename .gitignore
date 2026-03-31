@@ -46,6 +46,7 @@ app.*.map.json
 
 # Android Studio will place build artifacts here
 /android/app/debug
+/android/build
 /android/app/profile
 /android/app/release
 contexto_proyecto.md
