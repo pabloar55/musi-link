@@ -61,8 +61,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      body: ref.watch(chatsProvider).when(
+    return ref.watch(chatsProvider).when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) {
           reportError(error, StackTrace.current);
@@ -169,7 +168,6 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
             },
           );
         },
-      ),
-    );
+      );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/models/message.dart';
+import 'package:musi_link/theme/app_theme.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -15,6 +16,8 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = colorScheme;
+    final tt = Theme.of(context).textTheme;
     final time =
         '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}';
 
@@ -24,17 +27,18 @@ class MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.symmetric(vertical: AppTokens.spaceXS),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.spaceMD,
+          vertical: AppTokens.spaceSM + 2,
+        ),
         decoration: BoxDecoration(
-          color: isMe
-              ? colorScheme.primary
-              : colorScheme.surfaceContainerHighest,
+          color: isMe ? cs.primary : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
+            topLeft: const Radius.circular(AppTokens.radiusLG),
+            topRight: const Radius.circular(AppTokens.radiusLG),
+            bottomLeft: Radius.circular(isMe ? AppTokens.radiusLG : 4),
+            bottomRight: Radius.circular(isMe ? 4 : AppTokens.radiusLG),
           ),
         ),
         child: Column(
@@ -44,31 +48,32 @@ class MessageBubble extends StatelessWidget {
           children: [
             Text(
               message.text,
-              style: TextStyle(
-                color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
+              style: tt.bodyMedium?.copyWith(
+                color: isMe ? cs.onPrimary : cs.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppTokens.spaceXS),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   time,
-                  style: TextStyle(
+                  style: tt.labelSmall?.copyWith(
                     fontSize: 11,
                     color: isMe
-                        ? colorScheme.onPrimary.withAlpha(180)
-                        : colorScheme.onSurface.withAlpha(120),
+                        ? cs.onPrimary.withAlpha(AppTokens.alphaMedium)
+                        : cs.onSurface.withAlpha(AppTokens.alphaLow),
                   ),
                 ),
                 if (isMe) ...[
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppTokens.spaceXS),
                   Icon(
-                    message.read ? Icons.done_all : Icons.done,
+                    message.read ? Icons.done_all_rounded : Icons.done_rounded,
                     size: 14,
+                    // Usa el token semántico del design system (no hardcodeado)
                     color: message.read
-                        ? const Color.fromARGB(255, 0, 140, 255)
-                        : colorScheme.onPrimary.withAlpha(180),
+                        ? AppTokens.readReceiptColor
+                        : cs.onPrimary.withAlpha(AppTokens.alphaMedium),
                   ),
                 ],
               ],

@@ -178,9 +178,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           itemBuilder: (context, index) {
             final item = data[index];
             if (item is Track) {
-              return TrackTile(track: item);
+              return TrackTile(track: item, rank: index + 1);
             } else if (item is Artist) {
-              return ArtistTile(artist: item);
+              return ArtistTile(artist: item, rank: index + 1);
             } else if (item is Genre) {
               return GenreTile(genre: item, rank: index + 1);
             }

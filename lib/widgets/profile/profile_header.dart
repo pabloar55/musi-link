@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/theme/app_theme.dart';
 
 class ProfileHeader extends StatelessWidget {
   final AppUser user;
@@ -9,23 +10,79 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundImage: user.photoUrl.isNotEmpty
-              ? CachedNetworkImageProvider(user.photoUrl)
-              : null,
-          child: user.photoUrl.isEmpty
-              ? const Icon(Icons.person, size: 40)
-              : null,
+        // Avatar con anillo decorativo
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Anillo exterior con color primario
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    cs.primary,
+                    cs.primary.withAlpha(120),
+                  ],
+                ),
+              ),
+            ),
+            // Avatar con borde interior (gap visual)
+            Container(
+              width: 94,
+              height: 94,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.surface,
+              ),
+            ),
+            ClipOval(
+              child: SizedBox(
+                width: 90,
+                height: 90,
+                child: user.photoUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: user.photoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (ctx, url) => _avatarPlaceholder(cs),
+                        errorWidget: (ctx, url, err) => _avatarPlaceholder(cs),
+                      )
+                    : _avatarPlaceholder(cs),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTokens.spaceMD),
+
+        // Nombre de usuario
         Text(
           user.displayName,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: tt.headlineSmall,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
+    );
+  }
+
+  Widget _avatarPlaceholder(ColorScheme cs) {
+    return Container(
+      color: cs.surfaceContainerHighest,
+      child: Icon(
+        Icons.person_rounded,
+        size: 44,
+        color: cs.onSurfaceVariant,
+      ),
     );
   }
 }

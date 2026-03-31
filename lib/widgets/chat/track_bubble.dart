@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
+import 'package:musi_link/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TrackBubble extends StatefulWidget {
@@ -30,7 +31,8 @@ class _TrackBubbleState extends State<TrackBubble> {
   bool _showingPicker = false;
 
   void _toggleReaction(String emoji) {
-    widget.chatService.toggleReaction(widget.chatId, widget.message.id, emoji);
+    widget.chatService.toggleReaction(
+        widget.chatId, widget.message.id, emoji);
     setState(() => _showingPicker = false);
   }
 
@@ -38,8 +40,8 @@ class _TrackBubbleState extends State<TrackBubble> {
   Widget build(BuildContext context) {
     final message = widget.message;
     final isMe = widget.isMe;
-    final colorScheme = widget.colorScheme;
-    final currentUid = widget.currentUid;
+    final cs = widget.colorScheme;
+    final tt = Theme.of(context).textTheme;
     final track = message.trackData!;
     final time =
         '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}';
@@ -50,14 +52,15 @@ class _TrackBubbleState extends State<TrackBubble> {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        margin: const EdgeInsets.symmetric(vertical: AppTokens.spaceXS),
         child: Column(
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             // Card de la canción
             GestureDetector(
-              onLongPress: () => setState(() => _showingPicker = !_showingPicker),
+              onLongPress: () =>
+                  setState(() => _showingPicker = !_showingPicker),
               onTap: track.spotifyUrl.isNotEmpty
                   ? () async {
                       final uri = Uri.parse(track.spotifyUrl);
@@ -69,14 +72,14 @@ class _TrackBubbleState extends State<TrackBubble> {
                   : null,
               child: Container(
                 decoration: BoxDecoration(
-                  color: isMe
-                      ? colorScheme.primary
-                      : colorScheme.surfaceContainerHighest,
+                  color: isMe ? cs.primary : cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMe ? 16 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 16),
+                    topLeft: const Radius.circular(AppTokens.radiusLG),
+                    topRight: const Radius.circular(AppTokens.radiusLG),
+                    bottomLeft:
+                        Radius.circular(isMe ? AppTokens.radiusLG : 4),
+                    bottomRight:
+                        Radius.circular(isMe ? 4 : AppTokens.radiusLG),
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -88,21 +91,29 @@ class _TrackBubbleState extends State<TrackBubble> {
                       CachedNetworkImage(
                         imageUrl: track.imageUrl,
                         width: double.infinity,
-                        height: 180,
+                        height: 160,
                         fit: BoxFit.cover,
                       )
                     else
                       Container(
                         width: double.infinity,
-                        height: 180,
-                        color: colorScheme.surfaceContainerHigh,
-                        child: Icon(Icons.music_note,
-                            size: 64,
-                            color: colorScheme.onSurface.withAlpha(80)),
+                        height: 160,
+                        color: cs.surfaceContainerHigh,
+                        child: Icon(
+                          Icons.music_note_rounded,
+                          size: 56,
+                          color: cs.onSurface.withAlpha(AppTokens.alphaDisabled),
+                        ),
                       ),
+
                     // Info canción
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTokens.spaceMD,
+                        AppTokens.spaceSM + 2,
+                        AppTokens.spaceMD,
+                        AppTokens.spaceXS,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -110,11 +121,8 @@ class _TrackBubbleState extends State<TrackBubble> {
                             track.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isMe
-                                  ? colorScheme.onPrimary
-                                  : colorScheme.onSurface,
+                            style: tt.titleSmall?.copyWith(
+                              color: isMe ? cs.onPrimary : cs.onSurface,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -122,39 +130,49 @@ class _TrackBubbleState extends State<TrackBubble> {
                             track.artist,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
+                            style: tt.bodySmall?.copyWith(
                               color: isMe
-                                  ? colorScheme.onPrimary.withAlpha(200)
-                                  : colorScheme.onSurface.withAlpha(160),
+                                  ? cs.onPrimary.withAlpha(AppTokens.alphaMedium)
+                                  : cs.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
+
                     // Timestamp + read receipt
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTokens.spaceMD,
+                        0,
+                        AppTokens.spaceMD,
+                        AppTokens.spaceSM,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             time,
-                            style: TextStyle(
+                            style: tt.labelSmall?.copyWith(
                               fontSize: 11,
                               color: isMe
-                                  ? colorScheme.onPrimary.withAlpha(180)
-                                  : colorScheme.onSurface.withAlpha(120),
+                                  ? cs.onPrimary
+                                      .withAlpha(AppTokens.alphaMedium)
+                                  : cs.onSurface.withAlpha(AppTokens.alphaLow),
                             ),
                           ),
                           if (isMe) ...[
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppTokens.spaceXS),
                             Icon(
-                              message.read ? Icons.done_all : Icons.done,
+                              message.read
+                                  ? Icons.done_all_rounded
+                                  : Icons.done_rounded,
                               size: 14,
+                              // Token semántico del design system
                               color: message.read
-                                  ? const Color.fromARGB(255, 0, 140, 255)
-                                  : colorScheme.onPrimary.withAlpha(180),
+                                  ? AppTokens.readReceiptColor
+                                  : cs.onPrimary
+                                      .withAlpha(AppTokens.alphaMedium),
                             ),
                           ],
                         ],
@@ -164,59 +182,87 @@ class _TrackBubbleState extends State<TrackBubble> {
                 ),
               ),
             ),
+
             // Picker de reacciones inline
             if (_showingPicker)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: AppTokens.spaceXS),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.spaceSM,
+                    vertical: AppTokens.spaceXS,
+                  ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(24),
+                    color: cs.surfaceContainerHigh,
+                    borderRadius:
+                        BorderRadius.circular(AppTokens.radiusFull),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: ['❤️', '🔥', '👏', '😍', '🎶'].map((emoji) {
-                      final hasReacted =
-                          message.reactions[emoji]?.contains(currentUid) ?? false;
+                      final hasReacted = widget.message.reactions[emoji]
+                              ?.contains(widget.currentUid) ??
+                          false;
                       return GestureDetector(
                         onTap: () => _toggleReaction(emoji),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: hasReacted
-                                ? colorScheme.primaryContainer
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
+                        // Touch target mínimo de 44px
+                        child: SizedBox(
+                          width: AppTokens.minTouchTarget,
+                          height: AppTokens.minTouchTarget,
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: AppTokens.durationFast,
+                              padding: const EdgeInsets.all(
+                                  AppTokens.spaceXS + 2),
+                              decoration: BoxDecoration(
+                                color: hasReacted
+                                    ? cs.primaryContainer
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                emoji,
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
                           ),
-                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
                         ),
                       );
                     }).toList(),
                   ),
                 ),
               ),
-            // Reacciones
+
+            // Reacciones existentes
             if (message.reactions.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: AppTokens.spaceXS),
                 child: Wrap(
-                  spacing: 4,
+                  spacing: AppTokens.spaceXS,
+                  runSpacing: AppTokens.spaceXS,
                   children: message.reactions.entries.map((entry) {
-                    final hasReacted = entry.value.contains(currentUid);
+                    final hasReacted =
+                        entry.value.contains(widget.currentUid);
                     return GestureDetector(
                       onTap: () => _toggleReaction(entry.key),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: AppTokens.durationFast,
+                        constraints: const BoxConstraints(
+                          minHeight: AppTokens.minTouchTarget - 8,
+                        ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: AppTokens.spaceSM + 2,
+                          vertical: AppTokens.spaceXS,
+                        ),
                         decoration: BoxDecoration(
                           color: hasReacted
-                              ? colorScheme.primaryContainer
-                              : colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
+                              ? cs.primaryContainer
+                              : cs.surfaceContainerHighest,
+                          borderRadius:
+                              BorderRadius.circular(AppTokens.radiusMD),
                           border: hasReacted
                               ? Border.all(
-                                  color: colorScheme.primary, width: 1.5)
+                                  color: cs.primary, width: 1.5)
                               : null,
                         ),
                         child: Text(
