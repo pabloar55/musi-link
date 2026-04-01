@@ -86,6 +86,7 @@
   "spotifyConnectDescription": "Para ver tus estadísticas musicales necesitamos acceso a tu cuenta de Spotify.",
   "spotifyConnectButton": "Conectar Spotify",
   "spotifyConnectError": "Error al conectar con Spotify",
+  "spotifyAlreadyLinkedError": "Esta cuenta de Spotify ya está vinculada a otro usuario",
 
   "menuProfile": "Mi perfil",
   "menuAccountOptions": "Opciones de cuenta",

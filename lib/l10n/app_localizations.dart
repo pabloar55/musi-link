@@ -562,6 +562,12 @@ abstract class AppLocalizations {
   /// **'Error connecting to Spotify'**
   String get spotifyConnectError;
 
+  /// No description provided for @spotifyAlreadyLinkedError.
+  ///
+  /// In en, this message translates to:
+  /// **'This Spotify account is already linked to another user'**
+  String get spotifyAlreadyLinkedError;
+
   /// No description provided for @menuProfile.
   ///
   /// In en, this message translates to:

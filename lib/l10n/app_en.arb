@@ -106,6 +106,7 @@
   "spotifyConnectDescription": "To see your music stats we need access to your Spotify account.",
   "spotifyConnectButton": "Connect Spotify",
   "spotifyConnectError": "Error connecting to Spotify",
+  "spotifyAlreadyLinkedError": "This Spotify account is already linked to another user",
 
   "menuProfile": "My profile",
   "menuAccountOptions": "Account options",

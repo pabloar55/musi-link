@@ -259,6 +259,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get spotifyConnectError => 'Erreur lors de la connexion à Spotify';
 
   @override
+  String get spotifyAlreadyLinkedError =>
+      'Ce compte Spotify est déjà lié à un autre utilisateur';
+
+  @override
   String get menuProfile => 'Mon profil';
 
   @override

@@ -6,6 +6,12 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
+/// Excepción lanzada cuando se intenta vincular un Spotify ID
+/// que ya está asociado a otra cuenta de usuario.
+class SpotifyAlreadyLinkedException implements Exception {
+  const SpotifyAlreadyLinkedException();
+}
+
 /// Servicio para gestionar perfiles de usuario en Firestore.
 class UserService {
   UserService({required FirebaseFirestore firestore})
@@ -75,11 +81,23 @@ class UserService {
   }
 
   /// Vincula datos de Spotify (id y foto de perfil) al usuario.
+  /// Lanza [SpotifyAlreadyLinkedException] si el [spotifyId] ya está
+  /// vinculado a una cuenta diferente.
   Future<void> linkSpotifyProfile(
     String uid, {
     required String spotifyId,
     required String photoUrl,
   }) async {
+    if (spotifyId.isNotEmpty) {
+      final existing = await _usersRef
+          .where('spotifyId', isEqualTo: spotifyId)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty && existing.docs.first.id != uid) {
+        throw const SpotifyAlreadyLinkedException();
+      }
+    }
+
     try {
       final updates = <String, dynamic>{
         'spotifyId': spotifyId,
@@ -90,6 +108,7 @@ class UserService {
 
       await _usersRef.doc(uid).update(updates);
     } catch (e, stack) {
+      if (e is SpotifyAlreadyLinkedException) rethrow;
       await reportError(e, stack);
     }
   }

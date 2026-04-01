@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/services/user_service.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
 /// con Firebase. Si el usuario ya tiene token de Spotify válido,
@@ -61,32 +62,52 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
 
   Future<void> _connectSpotify() async {
     setState(() => _isLoading = true);
-    final result = await ref.read(spotifyServiceProvider).authorizeAndConnect();
-    if (!mounted) return;
-
-    if (result) {
-      // Sincronizar perfil musical (SpotifyService ya no llama esto)
-      final auth = ref.read(firebaseAuthProvider);
-      final uid = auth.currentUser?.uid;
-      if (uid != null) {
-        ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingDone =
-          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
+    try {
+      final result = await ref.read(spotifyServiceProvider).authorizeAndConnect();
       if (!mounted) return;
 
-      if (onboardingDone) {
-        context.go('/');
+      if (result) {
+        // Sincronizar perfil musical (SpotifyService ya no llama esto)
+        final auth = ref.read(firebaseAuthProvider);
+        final uid = auth.currentUser?.uid;
+        if (uid != null) {
+          ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        final onboardingDone =
+            prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
+        if (!mounted) return;
+
+        if (onboardingDone) {
+          context.go('/');
+        } else {
+          context.go('/onboarding');
+        }
       } else {
-        context.go('/onboarding');
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.spotifyConnectError)),
+        );
       }
-    } else {
+    } on SpotifyAlreadyLinkedException {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.spotifyConnectError)),
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          content: Text(AppLocalizations.of(ctx)!.spotifyAlreadyLinkedError),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
+            ),
+          ],
+        ),
       );
+      if (!mounted) return;
+      await ref.read(authServiceProvider).signOut();
     }
   }
 

@@ -159,6 +159,8 @@ class SpotifyService {
       startPollingNowPlaying();
 
       return true;
+    } on SpotifyAlreadyLinkedException {
+      rethrow;
     } catch (e, stack) {
       await reportError(e, stack);
       return false;
@@ -246,6 +248,8 @@ class SpotifyService {
         spotifyId: spotifyId,
         photoUrl: spotifyPhotoUrl,
       );
+    } on SpotifyAlreadyLinkedException {
+      rethrow;
     } catch (e, stack) {
       await reportError(e, stack);
     }
