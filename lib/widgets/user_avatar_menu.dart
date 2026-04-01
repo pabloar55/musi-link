@@ -10,7 +10,6 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/theme_provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
 
 enum _UserMenuAction { profile, darkLightMode, logout }
@@ -97,33 +96,37 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
           tooltip: AppLocalizations.of(context)!.menuAccountOptions,
           splashRadius: 0,
           style: const ButtonStyle(splashFactory: NoSplash.splashFactory),
+          popUpAnimationStyle: const AnimationStyle(
+            duration: Duration(milliseconds: 150),
+            curve: Curves.easeInOut,
+          ),
           onSelected: _handleUserMenuAction,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: _UserMenuAction.profile,
-              child: ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(AppLocalizations.of(context)!.menuProfile),
+              child: _MenuRow(
+                icon: const Icon(Icons.person_outline_rounded),
+                label: AppLocalizations.of(context)!.menuProfile,
               ),
             ),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: _UserMenuAction.darkLightMode,
-              child: ListTile(
-                leading: isDarkMode
-                    ? const Icon(Icons.sunny)
-                    : const FaIcon(FontAwesomeIcons.solidMoon),
-                title: Text(
-                  isDarkMode ? AppLocalizations.of(context)!.menuLightMode : AppLocalizations.of(context)!.menuDarkMode,
-                ),
+              child: _MenuRow(
+                icon: isDarkMode
+                    ? const Icon(Icons.wb_sunny_outlined)
+                    : const Icon(Icons.dark_mode_outlined),
+                label: isDarkMode
+                    ? AppLocalizations.of(context)!.menuLightMode
+                    : AppLocalizations.of(context)!.menuDarkMode,
               ),
             ),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: _UserMenuAction.logout,
-              child: ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(AppLocalizations.of(context)!.menuSignOut),
+              child: _MenuRow(
+                icon: const Icon(Icons.logout_rounded),
+                label: AppLocalizations.of(context)!.menuSignOut,
               ),
             ),
           ],
@@ -133,6 +136,28 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
           ),
         );
       },
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  final Widget icon;
+  final String label;
+
+  const _MenuRow({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        IconTheme(
+          data: IconThemeData(size: 20, color: cs.onSurfaceVariant),
+          child: icon,
+        ),
+        const SizedBox(width: 12),
+        Text(label),
+      ],
     );
   }
 }

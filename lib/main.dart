@@ -9,6 +9,7 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,16 @@ void main() async {
     return true;
   };
 
-  runApp(const ProviderScope(child: MainApp()));
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends ConsumerWidget {

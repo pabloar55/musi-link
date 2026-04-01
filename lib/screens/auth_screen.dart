@@ -150,7 +150,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           decoration: InputDecoration(
                             labelText: l10n.authName,
                             prefixIcon: const Icon(Icons.person_outline),
-                            border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (!_isLogin &&
@@ -170,7 +169,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         decoration: InputDecoration(
                           labelText: l10n.authEmail,
                           prefixIcon: const Icon(Icons.email_outlined),
-                          border: const OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -191,7 +189,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         decoration: InputDecoration(
                           labelText: l10n.authPassword,
                           prefixIcon: const Icon(Icons.lock_outline),
-                          border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword

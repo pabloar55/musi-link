@@ -284,6 +284,68 @@ class AppTheme {
     );
   }
 
+  static InputDecorationTheme _buildInputDecorationTheme(ColorScheme cs) {
+    final radius = BorderRadius.circular(AppTokens.radiusMD);
+    final borderColor = cs.outline;
+
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: cs.surfaceContainerHighest.withAlpha(80),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppTokens.spaceLG,
+        vertical: AppTokens.spaceMD,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: cs.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: cs.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: cs.error, width: 2),
+      ),
+      labelStyle: TextStyle(color: cs.onSurfaceVariant),
+      floatingLabelStyle: TextStyle(color: cs.primary),
+      prefixIconColor: cs.onSurfaceVariant,
+      suffixIconColor: cs.onSurfaceVariant,
+    );
+  }
+
+  static PopupMenuThemeData _buildPopupMenuTheme(ColorScheme cs) {
+    return PopupMenuThemeData(
+      color: cs.surfaceContainerHigh,
+      surfaceTintColor: Colors.transparent,
+      elevation: 8,
+      shadowColor: cs.shadow.withAlpha(60),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusMD),
+      ),
+      textStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: cs.onSurface,
+      ),
+      labelTextStyle: WidgetStatePropertyAll(
+        TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: cs.onSurface,
+        ),
+      ),
+    );
+  }
+
   static DividerThemeData _buildDividerTheme(ColorScheme cs) {
     return DividerThemeData(
       color: cs.onSurface.withAlpha(25),
@@ -309,9 +371,13 @@ class AppTheme {
   }
 
   static SnackBarThemeData _buildSnackBarTheme(ColorScheme cs) {
+    final isDark = cs.brightness == Brightness.dark;
     return SnackBarThemeData(
-      backgroundColor: cs.inverseSurface,
-      contentTextStyle: TextStyle(color: cs.onInverseSurface),
+      // Dark mode: superficie elevada oscura. Light mode: inverseSurface oscuro.
+      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.inverseSurface,
+      contentTextStyle: TextStyle(
+        color: isDark ? cs.onSurface : cs.onInverseSurface,
+      ),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusMD),
@@ -366,6 +432,8 @@ class AppTheme {
       filledButtonTheme: _buildFilledButtonTheme(cs),
       outlinedButtonTheme: _buildOutlinedButtonTheme(cs),
       dividerTheme: _buildDividerTheme(cs),
+      inputDecorationTheme: _buildInputDecorationTheme(cs),
+      popupMenuTheme: _buildPopupMenuTheme(cs),
       snackBarTheme: _buildSnackBarTheme(cs),
       iconTheme: IconThemeData(color: cs.onSurfaceVariant, size: 24),
       splashFactory: InkRipple.splashFactory,
@@ -423,6 +491,8 @@ class AppTheme {
       filledButtonTheme: _buildFilledButtonTheme(cs),
       outlinedButtonTheme: _buildOutlinedButtonTheme(cs),
       dividerTheme: _buildDividerTheme(cs),
+      inputDecorationTheme: _buildInputDecorationTheme(cs),
+      popupMenuTheme: _buildPopupMenuTheme(cs),
       snackBarTheme: _buildSnackBarTheme(cs),
       iconTheme: IconThemeData(color: cs.onSurfaceVariant, size: 24),
       splashFactory: InkRipple.splashFactory,
