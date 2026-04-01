@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "701824546350-11ctotph6d84l1h0s7u82fh3r650mc0p.apps.googleusercontent.com",
+          "client_id": "701824546350-i2p9dqk5b91b9f17egt1sgidcptorp90.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.musi_link",
-            "certificate_hash": "da7684c52a4b37ca8146b92d0f1fb95774b90b89"
+            "certificate_hash": "29cf847622598f46221d6e860a464d58bb379d6b"
           }
         },
         {

@@ -110,6 +110,10 @@ class AuthService {
     } on FirebaseAuthException catch (e, stack) {
       await reportError(e, stack);
       rethrow;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) rethrow;
+      await reportError(e, StackTrace.current);
+      rethrow;
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
