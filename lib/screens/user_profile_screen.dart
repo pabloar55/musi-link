@@ -149,14 +149,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             if (!_isOwnProfile) ...[
               CompatibilityCard(future: _compatibilityFuture),
               const SizedBox(height: 16),
-              FriendshipButtons(
-                future: _relationshipFuture,
-                onStartChat: _startChat,
-                onSendRequest: _sendRequest,
-                onAcceptRequest: _acceptRequest,
-                onRejectRequest: _rejectRequest,
-                onCancelRequest: _cancelRequest,
-                onRemoveFriend: _removeFriend,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: FriendshipButtons(
+                  future: _relationshipFuture,
+                  onStartChat: _startChat,
+                  onSendRequest: _sendRequest,
+                  onAcceptRequest: _acceptRequest,
+                  onRejectRequest: _rejectRequest,
+                  onCancelRequest: _cancelRequest,
+                  onRemoveFriend: _removeFriend,
+                ),
               ),
             ],
 
