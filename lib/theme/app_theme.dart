@@ -165,6 +165,15 @@ class AppTheme {
     return NavigationBarThemeData(
       backgroundColor: cs.surface,
       indicatorColor: cs.primary.withAlpha(40),
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return cs.primary.withAlpha(20);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return cs.primary.withAlpha(12);
+        }
+        return Colors.transparent;
+      }),
       elevation: 0,
       height: 64,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {

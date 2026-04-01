@@ -117,7 +117,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+        padding: EdgeInsets.only(
+          top: 24,
+          bottom: 24 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: Column(
           children: [
             ProfileHeader(user: user),

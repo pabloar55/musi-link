@@ -95,6 +95,8 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
 
         return PopupMenuButton<_UserMenuAction>(
           tooltip: AppLocalizations.of(context)!.menuAccountOptions,
+          splashRadius: 0,
+          style: const ButtonStyle(splashFactory: NoSplash.splashFactory),
           onSelected: _handleUserMenuAction,
           itemBuilder: (context) => [
             PopupMenuItem(
