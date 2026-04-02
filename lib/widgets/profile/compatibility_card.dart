@@ -16,7 +16,7 @@ class CompatibilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return value.when(
       loading: () => const SkeletonShimmer(child: SkeletonCompatibilityCard()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (result) => _CompatibilityCardContent(result: result),
     );
   }

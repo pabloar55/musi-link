@@ -47,7 +47,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final relationship = widget.value.valueOrNull;
+    final relationship = widget.value.asData?.value;
     final isLoading = widget.value.isLoading;
     final hasError = widget.value.hasError;
 

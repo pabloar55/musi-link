@@ -7,7 +7,6 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
-import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/widgets/profile/compatibility_card.dart';
 import 'package:musi_link/widgets/profile/friendship_buttons.dart';
 import 'package:musi_link/widgets/profile/music_taste_section.dart';
