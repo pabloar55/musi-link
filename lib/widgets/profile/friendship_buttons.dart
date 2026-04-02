@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class FriendshipButtons extends StatefulWidget {
-  final Future<RelationshipResult> future;
+  final AsyncValue<RelationshipResult> value;
   final VoidCallback onStartChat;
   final VoidCallback onSendRequest;
   final void Function(String requestId) onAcceptRequest;
@@ -14,7 +15,7 @@ class FriendshipButtons extends StatefulWidget {
 
   const FriendshipButtons({
     super.key,
-    required this.future,
+    required this.value,
     required this.onStartChat,
     required this.onSendRequest,
     required this.onAcceptRequest,
@@ -28,7 +29,7 @@ class FriendshipButtons extends StatefulWidget {
 }
 
 class _FriendshipButtonsState extends State<FriendshipButtons> {
-  /// Estado optimista local. Cuando no es null, se usa en lugar del future
+  /// Estado optimista local. Cuando no es null, se usa en lugar del valor real
   /// para evitar el spinner mientras Firestore confirma la operación.
   RelationshipStatus? _optimisticStatus;
 
@@ -46,111 +47,96 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final relationship = widget.value.valueOrNull;
+    final isLoading = widget.value.isLoading;
+    final hasError = widget.value.hasError;
 
-    return FutureBuilder<RelationshipResult>(
-      future: widget.future,
-      builder: (context, snapshot) {
-        // Mientras el future está cargando y hay un estado optimista,
-        // mostramos el estado optimista en lugar del spinner.
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+    if (isLoading && _optimisticStatus == null) {
+      return const SkeletonShimmer(child: SkeletonFriendshipButtons());
+    }
 
-        if (isLoading && _optimisticStatus == null) {
-          return const SkeletonShimmer(child: SkeletonFriendshipButtons());
-        }
+    if (hasError && relationship == null) return const SizedBox.shrink();
 
-        if (snapshot.hasError) return const SizedBox.shrink();
+    if (!isLoading &&
+        _optimisticStatus != null &&
+        relationship?.status == _optimisticStatus) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => setState(() => _optimisticStatus = null),
+      );
+    }
 
-        // Cuando el future resuelve con datos que confirman la acción optimista,
-        // descartamos el estado optimista y confiamos en el dato real de Firestore.
-        // No lo descartamos si el future aún tiene el estado anterior (ya resuelto
-        // antes de que el usuario pulsara), porque eso provocaría un parpadeo.
-        if (!isLoading &&
-            _optimisticStatus != null &&
-            snapshot.data?.status == _optimisticStatus) {
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => setState(() => _optimisticStatus = null),
-          );
-        }
+    final status = _optimisticStatus ?? relationship?.status ?? RelationshipStatus.none;
+    final requestId = relationship?.requestId;
 
-        final status =
-            _optimisticStatus ??
-            snapshot.data?.status ??
-            RelationshipStatus.none;
-        final requestId = snapshot.data?.requestId;
-
-        switch (status) {
-          case RelationshipStatus.friends:
-            return Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: widget.onStartChat,
-                    icon: const Icon(Icons.chat_bubble_outline),
-                    label: Text(l10n.profileStartChat),
-                  ),
+    switch (status) {
+      case RelationshipStatus.friends:
+        return Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: widget.onStartChat,
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: Text(l10n.profileStartChat),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: widget.onRemoveFriend,
+                icon: Icon(Icons.person_remove, color: cs.error),
+                label: Text(
+                  l10n.friendsRemove,
+                  style: TextStyle(color: cs.error),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: widget.onRemoveFriend,
-                    icon: Icon(Icons.person_remove, color: cs.error),
-                    label: Text(
-                      l10n.friendsRemove,
-                      style: TextStyle(color: cs.error),
-                    ),
-                  ),
-                ),
-              ],
-            );
+              ),
+            ),
+          ],
+        );
 
-          case RelationshipStatus.requestSent:
-            return OutlinedButton.icon(
-              // Durante el estado optimista requestId aún es null; usamos
-              // no-op para que el botón no aparezca deshabilitado (atenuado).
-              onPressed: _optimisticStatus != null
-                  ? () {}
-                  : requestId != null
-                  ? () => _handleCancelRequest(requestId)
-                  : null,
-              icon: const Icon(Icons.hourglass_top),
-              label: Text(l10n.friendsRequestSent),
-            );
+      case RelationshipStatus.requestSent:
+        return OutlinedButton.icon(
+          onPressed: _optimisticStatus != null
+              ? () {}
+              : requestId != null
+              ? () => _handleCancelRequest(requestId)
+              : null,
+          icon: const Icon(Icons.hourglass_top),
+          label: Text(l10n.friendsRequestSent),
+        );
 
-          case RelationshipStatus.requestReceived:
-            return Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: requestId != null
-                        ? () => widget.onAcceptRequest(requestId)
-                        : null,
-                    icon: const Icon(Icons.check),
-                    label: Text(l10n.friendsAccept),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: requestId != null
-                        ? () => widget.onRejectRequest(requestId)
-                        : null,
-                    icon: const Icon(Icons.close),
-                    label: Text(l10n.friendsReject),
-                  ),
-                ),
-              ],
-            );
+      case RelationshipStatus.requestReceived:
+        return Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: requestId != null
+                    ? () => widget.onAcceptRequest(requestId)
+                    : null,
+                icon: const Icon(Icons.check),
+                label: Text(l10n.friendsAccept),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: requestId != null
+                    ? () => widget.onRejectRequest(requestId)
+                    : null,
+                icon: const Icon(Icons.close),
+                label: Text(l10n.friendsReject),
+              ),
+            ),
+          ],
+        );
 
-          case RelationshipStatus.none:
-            return FilledButton.icon(
-              onPressed: _handleSendRequest,
-              icon: const Icon(Icons.person_add),
-              label: Text(l10n.profileAddFriend),
-            );
-        }
-      },
-    );
+      case RelationshipStatus.none:
+        return FilledButton.icon(
+          onPressed: _handleSendRequest,
+          icon: const Icon(Icons.person_add),
+          label: Text(l10n.profileAddFriend),
+        );
+    }
   }
 }

@@ -1,30 +1,23 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class CompatibilityCard extends StatelessWidget {
-  final Future<DiscoveryResult> future;
+  final AsyncValue<DiscoveryResult> value;
 
-  const CompatibilityCard({super.key, required this.future});
+  const CompatibilityCard({super.key, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DiscoveryResult>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SkeletonShimmer(child: SkeletonCompatibilityCard());
-        }
-
-        final result = snapshot.data;
-        if (result == null) return const SizedBox.shrink();
-
-        return _CompatibilityCardContent(result: result);
-      },
+    return value.when(
+      loading: () => const SkeletonShimmer(child: SkeletonCompatibilityCard()),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (result) => _CompatibilityCardContent(result: result),
     );
   }
 }

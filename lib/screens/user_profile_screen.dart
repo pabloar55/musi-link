@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
-import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/widgets/profile/compatibility_card.dart';
 import 'package:musi_link/widgets/profile/friendship_buttons.dart';
@@ -28,32 +28,11 @@ class UserProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
-  late Future<DiscoveryResult> _compatibilityFuture;
-  late Future<RelationshipResult> _relationshipFuture;
-
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string on session loss — _isOwnProfile then evaluates to
   /// false (safe: shows the other-user view, actions are gated by GoRouter).
   String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
   bool get _isOwnProfile => widget.user.uid == _currentUid && _currentUid.isNotEmpty;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_isOwnProfile) {
-      _compatibilityFuture =
-          ref.read(musicProfileServiceProvider).getCompatibilityWith(widget.user);
-      _relationshipFuture =
-          ref.read(friendServiceProvider).getRelationship(widget.user.uid);
-    }
-  }
-
-  void _refreshRelationship() {
-    setState(() {
-      _relationshipFuture =
-          ref.read(friendServiceProvider).getRelationship(widget.user.uid);
-    });
-  }
 
   Future<void> _startChat() async {
     final chat =
@@ -71,25 +50,25 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   Future<void> _sendRequest() async {
     await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
     if (!mounted) return;
-    _refreshRelationship();
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _acceptRequest(String requestId) async {
     await ref.read(friendServiceProvider).acceptRequest(requestId, widget.user.uid);
     if (!mounted) return;
-    _refreshRelationship();
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _rejectRequest(String requestId) async {
     await ref.read(friendServiceProvider).rejectRequest(requestId);
     if (!mounted) return;
-    _refreshRelationship();
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _cancelRequest(String requestId) async {
     await ref.read(friendServiceProvider).cancelRequest(requestId);
     if (!mounted) return;
-    _refreshRelationship();
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _removeFriend() async {
@@ -97,7 +76,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (confirmed == true) {
       await ref.read(friendServiceProvider).removeFriend(widget.user.uid);
       if (!mounted) return;
-      _refreshRelationship();
+      ref.invalidate(relationshipProvider(widget.user.uid));
     }
   }
 
@@ -146,22 +125,34 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
             const SizedBox(height: 4),
 
-            if (!_isOwnProfile) ...[
-              CompatibilityCard(future: _compatibilityFuture),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: FriendshipButtons(
-                  future: _relationshipFuture,
-                  onStartChat: _startChat,
-                  onSendRequest: _sendRequest,
-                  onAcceptRequest: _acceptRequest,
-                  onRejectRequest: _rejectRequest,
-                  onCancelRequest: _cancelRequest,
-                  onRemoveFriend: _removeFriend,
-                ),
+            if (!_isOwnProfile)
+              Builder(
+                builder: (context) {
+                  final compatibilityValue =
+                      ref.watch(compatibilityProvider(widget.user));
+                  final relationshipValue =
+                      ref.watch(relationshipProvider(widget.user.uid));
+
+                  return Column(
+                    children: [
+                      CompatibilityCard(value: compatibilityValue),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: FriendshipButtons(
+                          value: relationshipValue,
+                          onStartChat: _startChat,
+                          onSendRequest: _sendRequest,
+                          onAcceptRequest: _acceptRequest,
+                          onRejectRequest: _rejectRequest,
+                          onCancelRequest: _cancelRequest,
+                          onRemoveFriend: _removeFriend,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
 
             const SizedBox(height: 24),
 
