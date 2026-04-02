@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 
 class DiscoverState {
   const DiscoverState({
@@ -40,7 +41,10 @@ const _sentinel = Object();
 
 class DiscoverNotifier extends Notifier<DiscoverState> {
   @override
-  DiscoverState build() => const DiscoverState();
+  DiscoverState build() {
+    Future.microtask(loadDiscovery);
+    return const DiscoverState();
+  }
 
   Future<void> loadDiscovery({bool forceRefresh = false}) async {
     state = state.copyWith(
@@ -58,7 +62,8 @@ class DiscoverNotifier extends Notifier<DiscoverState> {
         isLoading: false,
         hasMore: service.hasMoreDiscoveryUsers,
       );
-    } catch (e) {
+    } catch (e, stack) {
+      await reportError(e, stack);
       state = state.copyWith(
         isLoading: false,
         error: e,
@@ -81,7 +86,8 @@ class DiscoverNotifier extends Notifier<DiscoverState> {
         isLoadingMore: false,
         hasMore: hasMore,
       );
-    } catch (_) {
+    } catch (e, stack) {
+      await reportError(e, stack);
       state = state.copyWith(isLoadingMore: false);
     }
   }

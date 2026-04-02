@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
@@ -50,25 +51,25 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   Future<void> _sendRequest() async {
     await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
     if (!mounted) return;
-    ref.invalidate(relationshipFutureProvider(widget.user.uid));
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _acceptRequest(String requestId) async {
     await ref.read(friendServiceProvider).acceptRequest(requestId, widget.user.uid);
     if (!mounted) return;
-    ref.invalidate(relationshipFutureProvider(widget.user.uid));
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _rejectRequest(String requestId) async {
     await ref.read(friendServiceProvider).rejectRequest(requestId);
     if (!mounted) return;
-    ref.invalidate(relationshipFutureProvider(widget.user.uid));
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _cancelRequest(String requestId) async {
     await ref.read(friendServiceProvider).cancelRequest(requestId);
     if (!mounted) return;
-    ref.invalidate(relationshipFutureProvider(widget.user.uid));
+    ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
   Future<void> _removeFriend() async {
@@ -76,7 +77,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (confirmed == true) {
       await ref.read(friendServiceProvider).removeFriend(widget.user.uid);
       if (!mounted) return;
-      ref.invalidate(relationshipFutureProvider(widget.user.uid));
+      ref.invalidate(relationshipProvider(widget.user.uid));
     }
   }
 
@@ -87,17 +88,32 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
+  Future<DiscoveryResult> _compatibilityFutureFromAsync() {
+    final compatibilityAsync = ref.watch(compatibilityProvider(widget.user));
+    return compatibilityAsync.when(
+      data: Future<DiscoveryResult>.value,
+      loading: () => ref.read(compatibilityProvider(widget.user).future),
+      error: (_, __) => ref.read(compatibilityProvider(widget.user).future),
+    );
+  }
+
+  Future<RelationshipResult> _relationshipFutureFromAsync() {
+    final relationshipAsync = ref.watch(relationshipProvider(widget.user.uid));
+    return relationshipAsync.when(
+      data: Future<RelationshipResult>.value,
+      loading: () => ref.read(relationshipProvider(widget.user.uid).future),
+      error: (_, __) => ref.read(relationshipProvider(widget.user.uid).future),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final user = widget.user;
     final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
-    final compatibilityFuture = _isOwnProfile
-        ? null
-        : ref.watch(compatibilityFutureProvider(widget.user).future);
-    final relationshipFuture = _isOwnProfile
-        ? null
-        : ref.watch(relationshipFutureProvider(widget.user.uid).future);
+    final compatibilityFuture =
+        _isOwnProfile ? null : _compatibilityFutureFromAsync();
+    final relationshipFuture = _isOwnProfile ? null : _relationshipFutureFromAsync();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -132,12 +148,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             const SizedBox(height: 4),
 
             if (!_isOwnProfile) ...[
-              CompatibilityCard(future: compatibilityFuture!),
+              CompatibilityCard(future: compatibilityFuture),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: FriendshipButtons(
-                  future: relationshipFuture!,
+                  future: relationshipFuture,
                   onStartChat: _startChat,
                   onSendRequest: _sendRequest,
                   onAcceptRequest: _acceptRequest,
