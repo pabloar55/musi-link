@@ -36,6 +36,11 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
     widget.onSendRequest();
   }
 
+  void _handleCancelRequest(String requestId) {
+    setState(() => _optimisticStatus = RelationshipStatus.none);
+    widget.onCancelRequest(requestId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -57,9 +62,13 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
 
         if (snapshot.hasError) return const SizedBox.shrink();
 
-        // Cuando el future resuelve, descartamos el estado optimista
-        // y confiamos en el dato real de Firestore.
-        if (!isLoading && _optimisticStatus != null) {
+        // Cuando el future resuelve con datos que confirman la acción optimista,
+        // descartamos el estado optimista y confiamos en el dato real de Firestore.
+        // No lo descartamos si el future aún tiene el estado anterior (ya resuelto
+        // antes de que el usuario pulsara), porque eso provocaría un parpadeo.
+        if (!isLoading &&
+            _optimisticStatus != null &&
+            snapshot.data?.status == _optimisticStatus) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => setState(() => _optimisticStatus = null),
           );
@@ -94,9 +103,13 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
 
           case RelationshipStatus.requestSent:
             return OutlinedButton.icon(
-              onPressed: requestId != null
-                  ? () => widget.onCancelRequest(requestId)
-                  : null,
+              // Durante el estado optimista requestId aún es null; usamos
+              // no-op para que el botón no aparezca deshabilitado (atenuado).
+              onPressed: _optimisticStatus != null
+                  ? () {}
+                  : requestId != null
+                      ? () => _handleCancelRequest(requestId)
+                      : null,
               icon: const Icon(Icons.hourglass_top),
               label: Text(l10n.friendsRequestSent),
             );
