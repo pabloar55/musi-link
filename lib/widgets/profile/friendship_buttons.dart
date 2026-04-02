@@ -82,20 +82,24 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
         switch (status) {
           case RelationshipStatus.friends:
             return Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
-                FilledButton.icon(
-                  onPressed: widget.onStartChat,
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  label: Text(l10n.profileStartChat),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: widget.onStartChat,
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: Text(l10n.profileStartChat),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: widget.onRemoveFriend,
-                  icon: Icon(Icons.person_remove, color: cs.error),
-                  label: Text(
-                    l10n.friendsRemove,
-                    style: TextStyle(color: cs.error),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: widget.onRemoveFriend,
+                    icon: Icon(Icons.person_remove, color: cs.error),
+                    label: Text(
+                      l10n.friendsRemove,
+                      style: TextStyle(color: cs.error),
+                    ),
                   ),
                 ),
               ],
@@ -116,22 +120,26 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
 
           case RelationshipStatus.requestReceived:
             return Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
-                FilledButton.icon(
-                  onPressed: requestId != null
-                      ? () => widget.onAcceptRequest(requestId)
-                      : null,
-                  icon: const Icon(Icons.check),
-                  label: Text(l10n.friendsAccept),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: requestId != null
+                        ? () => widget.onAcceptRequest(requestId)
+                        : null,
+                    icon: const Icon(Icons.check),
+                    label: Text(l10n.friendsAccept),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: requestId != null
-                      ? () => widget.onRejectRequest(requestId)
-                      : null,
-                  icon: const Icon(Icons.close),
-                  label: Text(l10n.friendsReject),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: requestId != null
+                        ? () => widget.onRejectRequest(requestId)
+                        : null,
+                    icon: const Icon(Icons.close),
+                    label: Text(l10n.friendsReject),
+                  ),
                 ),
               ],
             );
