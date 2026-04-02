@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
-import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
@@ -88,32 +87,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
-  Future<DiscoveryResult> _compatibilityFutureFromAsync() {
-    final compatibilityAsync = ref.watch(compatibilityProvider(widget.user));
-    return compatibilityAsync.when(
-      data: Future<DiscoveryResult>.value,
-      loading: () => ref.read(compatibilityProvider(widget.user).future),
-      error: (_, __) => ref.read(compatibilityProvider(widget.user).future),
-    );
-  }
-
-  Future<RelationshipResult> _relationshipFutureFromAsync() {
-    final relationshipAsync = ref.watch(relationshipProvider(widget.user.uid));
-    return relationshipAsync.when(
-      data: Future<RelationshipResult>.value,
-      loading: () => ref.read(relationshipProvider(widget.user.uid).future),
-      error: (_, __) => ref.read(relationshipProvider(widget.user.uid).future),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final user = widget.user;
     final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
-    final compatibilityFuture =
-        _isOwnProfile ? null : _compatibilityFutureFromAsync();
-    final relationshipFuture = _isOwnProfile ? null : _relationshipFutureFromAsync();
+    final compatibilityValue =
+        _isOwnProfile ? null : ref.watch(compatibilityProvider(widget.user));
+    final relationshipValue =
+        _isOwnProfile ? null : ref.watch(relationshipProvider(widget.user.uid));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -148,12 +130,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             const SizedBox(height: 4),
 
             if (!_isOwnProfile) ...[
-              CompatibilityCard(future: compatibilityFuture),
+              CompatibilityCard(value: compatibilityValue!),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: FriendshipButtons(
-                  future: relationshipFuture,
+                  value: relationshipValue!,
                   onStartChat: _startChat,
                   onSendRequest: _sendRequest,
                   onAcceptRequest: _acceptRequest,

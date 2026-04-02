@@ -41,10 +41,7 @@ const _sentinel = Object();
 
 class DiscoverNotifier extends Notifier<DiscoverState> {
   @override
-  DiscoverState build() {
-    Future.microtask(loadDiscovery);
-    return const DiscoverState();
-  }
+  DiscoverState build() => const DiscoverState();
 
   Future<void> loadDiscovery({bool forceRefresh = false}) async {
     state = state.copyWith(

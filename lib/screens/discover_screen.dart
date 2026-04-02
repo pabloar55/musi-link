@@ -23,6 +23,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    Future.microtask(() => ref.read(discoverProvider.notifier).loadDiscovery());
   }
 
   @override
