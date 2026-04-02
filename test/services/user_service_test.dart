@@ -159,7 +159,14 @@ void main() {
     group('linkSpotifyProfile', () {
       test('actualiza spotifyId y photoUrl', () async {
         final mockDocRef = MockDocumentReference();
+        final mockQuery = MockQuery();
+        final mockQuerySnapshot = MockQuerySnapshot();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
+        when(() => mockUsersRef.where('spotifyId', isEqualTo: 'sp123'))
+            .thenReturn(mockQuery);
+        when(() => mockQuery.limit(1)).thenReturn(mockQuery);
+        when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
+        when(() => mockQuerySnapshot.docs).thenReturn([]);
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
@@ -177,7 +184,14 @@ void main() {
 
       test('no incluye photoUrl si está vacío', () async {
         final mockDocRef = MockDocumentReference();
+        final mockQuery = MockQuery();
+        final mockQuerySnapshot = MockQuerySnapshot();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
+        when(() => mockUsersRef.where('spotifyId', isEqualTo: 'sp123'))
+            .thenReturn(mockQuery);
+        when(() => mockQuery.limit(1)).thenReturn(mockQuery);
+        when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
+        when(() => mockQuerySnapshot.docs).thenReturn([]);
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
