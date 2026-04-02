@@ -8,6 +8,7 @@ import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/services/friend_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../helpers/mocks.dart';
 
 class MockChatService extends Mock implements ChatService {}
@@ -15,6 +16,16 @@ class MockChatService extends Mock implements ChatService {}
 class MockFriendService extends Mock implements FriendService {}
 
 class MockAuthService extends Mock implements AuthService {}
+class MockSharedPreferences extends Mock implements SharedPreferences {}
+
+ProviderContainer _themeContainer({String? savedMode}) {
+  final mockPrefs = MockSharedPreferences();
+  when(() => mockPrefs.getString('theme_mode')).thenReturn(savedMode);
+  when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
+  return ProviderContainer(
+    overrides: [sharedPreferencesProvider.overrideWithValue(mockPrefs)],
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -54,20 +65,19 @@ void main() {
 
   group('ThemeModeNotifier', () {
     test('estado inicial es ThemeMode.system', () {
-      final container = ProviderContainer();
+      final container = _themeContainer();
       addTearDown(container.dispose);
 
       expect(container.read(themeModeProvider), ThemeMode.system);
     });
 
     test('toggleDarkLight alterna entre dark y light', () {
-      final container = ProviderContainer();
+      final container = _themeContainer(savedMode: 'light');
       addTearDown(container.dispose);
 
       final notifier = container.read(themeModeProvider.notifier);
 
-      // system -> isDark es false en tests (platform brightness = light)
-      // Así que toggleDarkLight pone dark
+      // light -> dark
       notifier.toggleDarkLight();
       expect(container.read(themeModeProvider), ThemeMode.dark);
 
@@ -83,27 +93,23 @@ void main() {
 
   group('isDarkProvider', () {
     test('devuelve false en modo system con platform brightness light', () {
-      final container = ProviderContainer();
+      final container = _themeContainer(savedMode: 'system');
       addTearDown(container.dispose);
 
       expect(container.read(isDarkProvider), false);
     });
 
     test('devuelve true cuando el tema es dark', () {
-      final container = ProviderContainer();
+      final container = _themeContainer(savedMode: 'dark');
       addTearDown(container.dispose);
 
-      container.read(themeModeProvider.notifier).toggleDarkLight();
       expect(container.read(isDarkProvider), true);
     });
 
     test('devuelve false cuando el tema es light', () {
-      final container = ProviderContainer();
+      final container = _themeContainer(savedMode: 'light');
       addTearDown(container.dispose);
 
-      // system -> dark -> light
-      container.read(themeModeProvider.notifier).toggleDarkLight();
-      container.read(themeModeProvider.notifier).toggleDarkLight();
       expect(container.read(isDarkProvider), false);
     });
   });
