@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/friend_service.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class FriendshipButtons extends StatefulWidget {
   final Future<RelationshipResult> future;
@@ -54,10 +55,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
         if (isLoading && _optimisticStatus == null) {
-          return const SizedBox(
-            height: 40,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const SkeletonShimmer(child: SkeletonFriendshipButtons());
         }
 
         if (snapshot.hasError) return const SizedBox.shrink();
@@ -74,9 +72,10 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
           );
         }
 
-        final status = _optimisticStatus
-            ?? snapshot.data?.status
-            ?? RelationshipStatus.none;
+        final status =
+            _optimisticStatus ??
+            snapshot.data?.status ??
+            RelationshipStatus.none;
         final requestId = snapshot.data?.requestId;
 
         switch (status) {
@@ -112,8 +111,8 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
               onPressed: _optimisticStatus != null
                   ? () {}
                   : requestId != null
-                      ? () => _handleCancelRequest(requestId)
-                      : null,
+                  ? () => _handleCancelRequest(requestId)
+                  : null,
               icon: const Icon(Icons.hourglass_top),
               label: Text(l10n.friendsRequestSent),
             );

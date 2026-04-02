@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/theme/app_theme.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class CompatibilityCard extends StatelessWidget {
   final Future<DiscoveryResult> future;
@@ -16,10 +17,7 @@ class CompatibilityCard extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(AppTokens.spaceLG),
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const SkeletonShimmer(child: SkeletonCompatibilityCard());
         }
 
         final result = snapshot.data;

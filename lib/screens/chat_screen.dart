@@ -10,6 +10,7 @@ import 'package:musi_link/models/message.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
 import 'package:musi_link/widgets/chat/track_bubble.dart';
 import 'package:musi_link/widgets/chat/track_search_sheet.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla de conversación individual.
@@ -219,7 +220,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildMessageList(ColorScheme colorScheme, AppLocalizations l10n) {
     if (_isInitialLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonShimmer(child: SkeletonChatMessages());
     }
 
     if (_allMessages.isEmpty) {

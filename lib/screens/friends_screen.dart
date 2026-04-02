@@ -9,6 +9,7 @@ import 'package:musi_link/widgets/friends/empty_message.dart';
 import 'package:musi_link/widgets/friends/request_tile.dart';
 import 'package:musi_link/widgets/friends/friend_tile.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla de amigos: solicitudes pendientes + lista de amigos.
@@ -52,9 +53,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           // ─── Solicitudes recibidas ───────────────────
           SectionHeader(title: l10n.friendsReceivedRequests),
           receivedAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+            loading: () => SkeletonShimmer(
+              child: Column(
+                children: List.generate(2, (_) => const SkeletonRequestTile()),
+              ),
             ),
             error: (_, _) => Center(child: Text(l10n.genericError)),
             data: (requests) {
@@ -97,9 +99,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           // ─── Solicitudes enviadas ────────────────────
           SectionHeader(title: l10n.friendsSentRequests),
           sentAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+            loading: () => SkeletonShimmer(
+              child: Column(
+                children: List.generate(2, (_) => const SkeletonRequestTile()),
+              ),
             ),
             error: (_, _) => Center(child: Text(l10n.genericError)),
             data: (requests) {
@@ -128,9 +131,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
           // ─── Lista de amigos ─────────────────────────
           SectionHeader(title: l10n.friendsMyFriends),
           friendsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+            loading: () => SkeletonShimmer(
+              child: Column(
+                children: List.generate(3, (_) => const SkeletonListTile()),
+              ),
             ),
             error: (_, _) => Center(child: Text(l10n.genericError)),
             data: (friendUids) {

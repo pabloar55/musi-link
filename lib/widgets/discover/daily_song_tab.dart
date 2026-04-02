@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -9,6 +8,7 @@ import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/discover/daily_song_card.dart';
 import 'package:musi_link/widgets/discover/daily_song_search_sheet.dart';
 import 'package:musi_link/widgets/discover/friend_daily_song_card.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,7 +28,8 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
 
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string on session loss — _loadData guards against this.
-  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  String get _currentUid =>
+      ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   bool get wantKeepAlive => true;
@@ -53,9 +54,10 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
     List<AppUser> friendsWithSongs = [];
 
     if (friendIds.isNotEmpty) {
-      final friends = await ref.read(userServiceProvider).getUsersByIds(friendIds);
-      friendsWithSongs =
-          friends.where((f) => f.dailySong != null).toList();
+      final friends = await ref
+          .read(userServiceProvider)
+          .getUsersByIds(friendIds);
+      friendsWithSongs = friends.where((f) => f.dailySong != null).toList();
     }
 
     setState(() {
@@ -94,7 +96,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
     final l10n = AppLocalizations.of(context)!;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonShimmer(child: SkeletonDailySongTab());
     }
 
     return RefreshIndicator(

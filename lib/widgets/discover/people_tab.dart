@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:musi_link/widgets/user_discovery_card.dart';
 import 'package:musi_link/models/discovery_result.dart';
 
@@ -56,7 +57,13 @@ class _PeopleTabState extends State<PeopleTab> {
     final l10n = AppLocalizations.of(context)!;
 
     if (widget.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return SkeletonShimmer(
+        child: ListView(
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          children:
+              List.generate(4, (_) => const SkeletonDiscoveryCard()),
+        ),
+      );
     }
 
     if (widget.hasError) {

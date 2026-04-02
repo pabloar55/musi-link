@@ -11,6 +11,7 @@ import 'package:musi_link/utils/user_future_cache.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 /// Pantalla social: lista de conversaciones del usuario.
 class MessagesScreen extends ConsumerStatefulWidget {
@@ -62,7 +63,12 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
     final l10n = AppLocalizations.of(context)!;
 
     return ref.watch(chatsProvider).when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => SkeletonShimmer(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: List.generate(6, (_) => const SkeletonChatListTile()),
+          ),
+        ),
         error: (error, _) {
           reportError(error, StackTrace.current);
           return Center(

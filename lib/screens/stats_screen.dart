@@ -5,6 +5,7 @@ import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/filter_button.dart';
 import 'package:musi_link/widgets/genre_tile.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:musi_link/widgets/track_tile.dart';
 import 'package:musi_link/models/artist.dart';
 import 'package:musi_link/models/genre.dart';
@@ -162,7 +163,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
       future: _dataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return SkeletonShimmer(
+            child: ListView(
+              children:
+                  List.generate(8, (_) => const SkeletonStatsTile()),
+            ),
+          );
         }
         if (snapshot.hasError) {
           return Center(child: Text(AppLocalizations.of(context)!.statsError(snapshot.error.toString())));

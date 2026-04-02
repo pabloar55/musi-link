@@ -220,20 +220,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         height: 48,
                         child: FilledButton(
                           onPressed: _isLoading ? null : _submitEmailForm,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  _isLogin
-                                      ? l10n.authSignIn
-                                      : l10n.authCreateAccount,
-                                ),
+                          child: Text(
+                            _isLogin ? l10n.authSignIn : l10n.authCreateAccount,
+                          ),
                         ),
                       ),
                     ],

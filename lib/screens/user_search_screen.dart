@@ -9,6 +9,7 @@ import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla para buscar usuarios y enviar solicitudes de amistad.
@@ -186,7 +187,12 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
           // Resultados
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? SkeletonShimmer(
+                    child: ListView(
+                      children:
+                          List.generate(5, (_) => const SkeletonListTile()),
+                    ),
+                  )
                 : _hasError
                     ? Center(
                         child: Text(
