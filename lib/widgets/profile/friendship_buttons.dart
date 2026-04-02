@@ -29,7 +29,7 @@ class FriendshipButtons extends StatefulWidget {
 }
 
 class _FriendshipButtonsState extends State<FriendshipButtons> {
-  /// Estado optimista local. Cuando no es null, se usa en lugar del future
+  /// Estado optimista local. Cuando no es null, se usa en lugar del valor real
   /// para evitar el spinner mientras Firestore confirma la operación.
   RelationshipStatus? _optimisticStatus;
 

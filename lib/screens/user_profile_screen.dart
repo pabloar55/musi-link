@@ -92,10 +92,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final l10n = AppLocalizations.of(context)!;
     final user = widget.user;
     final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
-    final compatibilityValue =
-        _isOwnProfile ? null : ref.watch(compatibilityProvider(widget.user));
-    final relationshipValue =
-        _isOwnProfile ? null : ref.watch(relationshipProvider(widget.user.uid));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -129,22 +125,34 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
             const SizedBox(height: 4),
 
-            if (!_isOwnProfile) ...[
-              CompatibilityCard(value: compatibilityValue!),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: FriendshipButtons(
-                  value: relationshipValue!,
-                  onStartChat: _startChat,
-                  onSendRequest: _sendRequest,
-                  onAcceptRequest: _acceptRequest,
-                  onRejectRequest: _rejectRequest,
-                  onCancelRequest: _cancelRequest,
-                  onRemoveFriend: _removeFriend,
-                ),
+            if (!_isOwnProfile)
+              Builder(
+                builder: (context) {
+                  final compatibilityValue =
+                      ref.watch(compatibilityProvider(widget.user));
+                  final relationshipValue =
+                      ref.watch(relationshipProvider(widget.user.uid));
+
+                  return Column(
+                    children: [
+                      CompatibilityCard(value: compatibilityValue),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: FriendshipButtons(
+                          value: relationshipValue,
+                          onStartChat: _startChat,
+                          onSendRequest: _sendRequest,
+                          onAcceptRequest: _acceptRequest,
+                          onRejectRequest: _rejectRequest,
+                          onCancelRequest: _cancelRequest,
+                          onRemoveFriend: _removeFriend,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
 
             const SizedBox(height: 24),
 
