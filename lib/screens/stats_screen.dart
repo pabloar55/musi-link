@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/filter_button.dart';
 import 'package:musi_link/widgets/genre_tile.dart';
@@ -27,6 +28,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   late Future<List<dynamic>> _dataFuture;
   ContentType _selectedContent = ContentType.tracks;
   TimeRange _selectedTimeRange = TimeRange.shortTerm;
+  bool _isFromCache = false;
 
   final Map<String, List<dynamic>> _cache = {};
 
@@ -64,23 +66,21 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
     final api = ref.read(spotifyStatsProvider);
 
+    Future<List<dynamic>> fetch;
     switch (_selectedContent) {
       case ContentType.tracks:
-        _dataFuture = api.getTopTracks(10, timeRange).then((result) {
-          _cache[key] = result;
-          return result;
-        });
+        fetch = api.getTopTracks(10, timeRange);
       case ContentType.artists:
-        _dataFuture = api.getTopArtists(10, timeRange).then((result) {
-          _cache[key] = result;
-          return result;
-        });
+        fetch = api.getTopArtists(10, timeRange);
       case ContentType.genres:
-        _dataFuture = api.getTopGenres(10, timeRange).then((result) {
-          _cache[key] = result;
-          return result;
-        });
+        fetch = api.getTopGenres(10, timeRange);
     }
+
+    _dataFuture = fetch.then((result) {
+      _cache[key] = result;
+      if (mounted) setState(() => _isFromCache = api.lastServedFromCache);
+      return result;
+    });
   }
 
   void _onContentChanged(ContentType type) {
@@ -109,6 +109,23 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             children: [
               _buildContentTypeFilter(),
               _buildTimeRangeFilter(),
+              if (_isFromCache)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_off_rounded,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppLocalizations.of(context)!.statsOfflineCache,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -171,6 +188,28 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           );
         }
         if (snapshot.hasError) {
+          if (snapshot.error is OfflineNoDataException) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 12,
+                children: [
+                  Icon(
+                    Icons.cloud_off_rounded,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  Text(
+                    AppLocalizations.of(context)!.statsOfflineNoData,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }
           return Center(child: Text(AppLocalizations.of(context)!.statsError(snapshot.error.toString())));
         }
 

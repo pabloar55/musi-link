@@ -484,6 +484,18 @@ abstract class AppLocalizations {
   /// **'No data available'**
   String get statsNoData;
 
+  /// No description provided for @statsOfflineCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — showing saved data'**
+  String get statsOfflineCache;
+
+  /// No description provided for @statsOfflineNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection and no saved data yet.\nVisit this tab online first.'**
+  String get statsOfflineNoData;
+
   /// No description provided for @socialNow.
   ///
   /// In en, this message translates to:

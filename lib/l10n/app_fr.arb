@@ -71,6 +71,8 @@
   "statsLongTerm": "1 an",
   "statsError": "Erreur : {error}",
   "statsNoData": "Aucune donnée disponible",
+  "statsOfflineCache": "Hors ligne — données enregistrées affichées",
+  "statsOfflineNoData": "Pas de connexion et aucune donnée enregistrée.\nConsultez cet onglet en ligne d'abord.",
 
   "socialNow": "Maintenant",
   "nowPlaying": "En train d'écouter",

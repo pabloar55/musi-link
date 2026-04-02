@@ -71,6 +71,8 @@
   "statsLongTerm": "1 año",
   "statsError": "Error: {error}",
   "statsNoData": "No hay datos disponibles",
+  "statsOfflineCache": "Sin conexión — mostrando datos guardados",
+  "statsOfflineNoData": "Sin conexión y sin datos guardados.\nVisita esta pestaña con internet primero.",
 
   "socialNow": "Ahora",
   "nowPlaying": "Escuchando ahora",

@@ -213,6 +213,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsNoData => 'Aucune donnée disponible';
 
   @override
+  String get statsOfflineCache => 'Hors ligne — données enregistrées affichées';
+
+  @override
+  String get statsOfflineNoData =>
+      'Pas de connexion et aucune donnée enregistrée.\nConsultez cet onglet en ligne d\'abord.';
+
+  @override
   String get socialNow => 'Maintenant';
 
   @override
