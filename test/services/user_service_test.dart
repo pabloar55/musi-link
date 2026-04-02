@@ -20,6 +20,16 @@ void main() {
     registerFallbackValues();
   });
 
+  void stubSpotifyIdIsAvailable(String spotifyId) {
+    final mockQuery = MockQuery();
+    final mockQuerySnapshot = MockQuerySnapshot();
+    when(() => mockUsersRef.where('spotifyId', isEqualTo: spotifyId))
+        .thenReturn(mockQuery);
+    when(() => mockQuery.limit(1)).thenReturn(mockQuery);
+    when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
+    when(() => mockQuerySnapshot.docs).thenReturn([]);
+  }
+
   group('UserService', () {
     group('createUserProfile', () {
       test('crea perfil correctamente en Firestore', () async {
@@ -159,14 +169,8 @@ void main() {
     group('linkSpotifyProfile', () {
       test('actualiza spotifyId y photoUrl', () async {
         final mockDocRef = MockDocumentReference();
-        final mockQuery = MockQuery();
-        final mockQuerySnapshot = MockQuerySnapshot();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockUsersRef.where('spotifyId', isEqualTo: 'sp123'))
-            .thenReturn(mockQuery);
-        when(() => mockQuery.limit(1)).thenReturn(mockQuery);
-        when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
-        when(() => mockQuerySnapshot.docs).thenReturn([]);
+        stubSpotifyIdIsAvailable('sp123');
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
@@ -184,14 +188,8 @@ void main() {
 
       test('no incluye photoUrl si está vacío', () async {
         final mockDocRef = MockDocumentReference();
-        final mockQuery = MockQuery();
-        final mockQuerySnapshot = MockQuerySnapshot();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockUsersRef.where('spotifyId', isEqualTo: 'sp123'))
-            .thenReturn(mockQuery);
-        when(() => mockQuery.limit(1)).thenReturn(mockQuery);
-        when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
-        when(() => mockQuerySnapshot.docs).thenReturn([]);
+        stubSpotifyIdIsAvailable('sp123');
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
