@@ -62,8 +62,8 @@ void main() {
 
     group('acceptRequest', () {
       test('actualiza status y añade amigos a ambos usuarios', () async {
-        final mockBatch = MockWriteBatch();
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
 
         final mockRequestDoc = MockDocumentReference();
         when(() => mockRequestsRef.doc('req_123')).thenReturn(mockRequestDoc);
@@ -75,25 +75,30 @@ void main() {
         when(() => mockUsersRef.doc('other_uid'))
             .thenReturn(mockOtherUserDoc);
 
-        when(() => mockBatch.update(any(), any())).thenReturn(null);
-        when(() => mockBatch.commit()).thenAnswer((_) async {});
+        final mockRequestSnap = MockDocumentSnapshot();
+        when(() => mockRequestSnap.exists).thenReturn(true);
+        when(() => mockRequestSnap['status']).thenReturn('pending');
+        fakeTransaction.getResult = mockRequestSnap;
 
         await friendService.acceptRequest('req_123', 'other_uid');
 
-        // Verificar que se actualizó el request
-        verify(() => mockBatch.update(mockRequestDoc, any(
-            that: predicate<Map<Object, Object?>>(
-                (m) => m['status'] == 'accepted')))).called(1);
+        expect(fakeTransaction.getCalled, isTrue);
 
-        // Verificar que se añadieron amigos a ambos usuarios
-        verify(() => mockBatch.update(mockCurrentUserDoc, any(
-            that: predicate<Map<Object, Object?>>(
-                (m) => m.containsKey('friends'))))).called(1);
-        verify(() => mockBatch.update(mockOtherUserDoc, any(
-            that: predicate<Map<Object, Object?>>(
-                (m) => m.containsKey('friends'))))).called(1);
-
-        verify(() => mockBatch.commit()).called(1);
+        expect(
+          fakeTransaction.updates.any((e) =>
+              e.key == mockRequestDoc && e.value['status'] == 'accepted'),
+          isTrue,
+        );
+        expect(
+          fakeTransaction.updates.any((e) =>
+              e.key == mockCurrentUserDoc && e.value.containsKey('friends')),
+          isTrue,
+        );
+        expect(
+          fakeTransaction.updates.any((e) =>
+              e.key == mockOtherUserDoc && e.value.containsKey('friends')),
+          isTrue,
+        );
       });
     });
 

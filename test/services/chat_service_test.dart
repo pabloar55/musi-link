@@ -73,18 +73,9 @@ void main() {
 
         // Crear nuevo
         final mockNewDocRef = MockDocumentReference();
-        final mockNewDocSnap = MockDocumentSnapshot();
         when(() => mockChatsRef.add(any()))
             .thenAnswer((_) async => mockNewDocRef);
-        when(() => mockNewDocRef.get())
-            .thenAnswer((_) async => mockNewDocSnap);
-        when(() => mockNewDocSnap.id).thenReturn('new_chat_id');
-        when(() => mockNewDocSnap.data()).thenReturn({
-          'participants': ['current_uid', 'other_uid'],
-          'lastMessage': '',
-          'lastMessageTime': Timestamp.fromDate(DateTime(2025, 1, 1)),
-          'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
-        });
+        when(() => mockNewDocRef.id).thenReturn('new_chat_id');
 
         final chat = await chatService.getOrCreateChat('other_uid');
 
@@ -238,6 +229,7 @@ void main() {
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockQuery1 = MockQuery();
         final mockQuery2 = MockQuery();
+        final mockLimitQuery = MockQuery();
         final mockSnapshot = MockQuerySnapshot();
         final mockBatch = MockWriteBatch();
 
@@ -251,7 +243,8 @@ void main() {
             .thenReturn(mockQuery1);
         when(() => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'))
             .thenReturn(mockQuery2);
-        when(() => mockQuery2.get()).thenAnswer((_) async => mockSnapshot);
+        when(() => mockQuery2.limit(499)).thenReturn(mockLimitQuery);
+        when(() => mockLimitQuery.get()).thenAnswer((_) async => mockSnapshot);
         when(() => mockSnapshot.docs).thenReturn([mockMsgDoc]);
         when(() => mockMsgDoc.reference).thenReturn(mockMsgRef);
 
@@ -271,6 +264,7 @@ void main() {
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockQuery1 = MockQuery();
         final mockQuery2 = MockQuery();
+        final mockLimitQuery = MockQuery();
         final mockSnapshot = MockQuerySnapshot();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
@@ -280,7 +274,8 @@ void main() {
             .thenReturn(mockQuery1);
         when(() => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'))
             .thenReturn(mockQuery2);
-        when(() => mockQuery2.get()).thenAnswer((_) async => mockSnapshot);
+        when(() => mockQuery2.limit(499)).thenReturn(mockLimitQuery);
+        when(() => mockLimitQuery.get()).thenAnswer((_) async => mockSnapshot);
         when(() => mockSnapshot.docs).thenReturn([]);
 
         await chatService.markMessagesAsRead('chat_123');
