@@ -47,7 +47,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       if (ref.read(spotifyServiceProvider).isInitialized) {
         ref.read(spotifyServiceProvider).startPollingNowPlaying();
       }
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       ref.read(spotifyServiceProvider).stopPollingNowPlaying();
     }
   }
