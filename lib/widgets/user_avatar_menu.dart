@@ -10,6 +10,7 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/theme_provider.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
 
 enum _UserMenuAction { profile, darkLightMode, logout }
@@ -61,7 +62,15 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
         } catch (_) {}
         try {
           await ref.read(authServiceProvider).signOut();
-        } catch (_) {}
+        } catch (e, st) {
+          reportError(e, st).ignore();
+          if (!mounted) return;
+          Navigator.of(context).pop(); // cierra SigningOutDialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.genericError)),
+          );
+          return;
+        }
         ref.read(chatServiceProvider).clearCache();
         ref.invalidate(musicProfileServiceProvider);
         if (!mounted) return;
