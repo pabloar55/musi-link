@@ -69,9 +69,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     Future<List<dynamic>> fetch;
     switch (_selectedContent) {
       case ContentType.tracks:
-        fetch = api.getTopTracks(10, timeRange);
+        fetch = api.getTopTracks(20, timeRange);
       case ContentType.artists:
-        fetch = api.getTopArtists(10, timeRange);
+        fetch = api.getTopArtists(20, timeRange);
       case ContentType.genres:
         fetch = api.getTopGenres(10, timeRange);
     }

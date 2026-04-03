@@ -62,7 +62,7 @@ class MusicProfileService {
       }
 
       final artists =
-          await _spotifyGetStats.getTopArtists(20, 'medium_term');
+          await _spotifyGetStats.getTopArtists(15, 'medium_term');
       final genres =
           await _spotifyGetStats.getTopGenres(10, 'medium_term');
 
