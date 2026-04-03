@@ -52,17 +52,32 @@ class SpotifyService {
   app.Track? _lastNowPlayingTrack;
   Future<void>? _syncInProgress;
 
+  // Polling adaptativo: 30 s reproduciendo, 60 s en pausa/nada, hasta 8 min en backoff
+  static const Duration _intervalPlaying = Duration(seconds: 30);
+  static const Duration _intervalIdle = Duration(seconds: 60);
+  static const Duration _maxBackoff = Duration(minutes: 8);
+
+  Duration _currentInterval = _intervalIdle;
+  int _consecutiveErrors = 0;
+
   /// Inicia el polling de la canción actual.
   void startPollingNowPlaying() {
-    stopPollingNowPlaying(); // Asegurarse de no tener multiples timers
+    stopPollingNowPlaying();
+    _consecutiveErrors = 0;
+    _currentInterval = _intervalIdle;
+    // Ejecutar inmediatamente y luego programar el siguiente ciclo
+    _scheduleNextPoll(immediate: true);
+  }
 
-    // Ejecutar inmediatamente la primera vez
-    _fetchAndUpdateNowPlaying();
-
-    // Polling cada 30 segundos
-    _nowPlayingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      _fetchAndUpdateNowPlaying();
-    });
+  void _scheduleNextPoll({bool immediate = false}) {
+    _nowPlayingTimer?.cancel();
+    _nowPlayingTimer = Timer(
+      immediate ? Duration.zero : _currentInterval,
+      () async {
+        await _fetchAndUpdateNowPlaying();
+        if (_nowPlayingTimer != null) _scheduleNextPoll();
+      },
+    );
   }
 
   /// Detiene el polling de la canción actual.
@@ -71,10 +86,36 @@ class SpotifyService {
     _nowPlayingTimer = null;
   }
 
+  static bool _isRateLimitError(Object e) {
+    final msg = e.toString().toLowerCase();
+    return msg.contains('429') ||
+        msg.contains('rate limit') ||
+        msg.contains('too many requests');
+  }
+
+  Duration _backoffForErrors(int errors) {
+    final ms = _intervalIdle.inMilliseconds * (1 << errors.clamp(0, 8));
+    return ms > _maxBackoff.inMilliseconds
+        ? _maxBackoff
+        : Duration(milliseconds: ms);
+  }
+
   Future<void> _fetchAndUpdateNowPlaying() async {
     if (!isInitialized) return;
 
-    final track = await getCurrentlyPlayingTrack();
+    app.Track? track;
+    try {
+      track = await getCurrentlyPlayingTrack();
+    } catch (e) {
+      if (_isRateLimitError(e)) {
+        _consecutiveErrors++;
+        _currentInterval = _backoffForErrors(_consecutiveErrors);
+      }
+      return;
+    }
+
+    _consecutiveErrors = 0;
+    _currentInterval = track != null ? _intervalPlaying : _intervalIdle;
 
     // Evitar actualizaciones innecesarias si es la misma canción
     if (track != null &&
@@ -126,6 +167,7 @@ class SpotifyService {
       return null;
     } catch (e, stack) {
       if (_isNetworkError(e)) return null;
+      if (_isRateLimitError(e)) rethrow; // propagate so _fetchAndUpdateNowPlaying can backoff
       await reportError(e, stack);
       return null;
     }
