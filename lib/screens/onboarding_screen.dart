@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/widgets/onboarding/onboarding_page.dart';
 
 /// Pantalla de bienvenida con slider de 5 páginas explicativas.
@@ -36,7 +36,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     if (!mounted) return;
 
-    context.go('/');
+    ref.read(appRouterNotifierProvider).setOnboardingDone();
   }
 
   void _nextPage() {

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
 import 'package:musi_link/services/user_service.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 
 /// Pantalla para conectar la cuenta de Spotify después de autenticarse
-/// con Firebase. Si el usuario ya tiene token de Spotify válido,
-/// se salta automáticamente a MainScreen (o al onboarding si es la primera vez).
+/// con Firebase. Solo se muestra cuando el splash no pudo restaurar sesión.
 class SpotifyConnectScreen extends ConsumerStatefulWidget {
   const SpotifyConnectScreen({super.key});
 
@@ -20,54 +20,18 @@ class SpotifyConnectScreen extends ConsumerStatefulWidget {
 }
 
 class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkExistingToken();
-  }
-
-  /// Si ya hay credenciales de Spotify guardadas, intenta restaurar la sesión.
-  /// El paquete `spotify` renueva el token automáticamente con el refresh_token.
-  Future<void> _checkExistingToken() async {
-    // Intentar restaurar sesión silenciosamente (refresh automático si expiró)
-    final restored = await ref.read(spotifyServiceProvider).tryRestoreSession();
-
-    // Leer flag de onboarding
-    final prefs = await SharedPreferences.getInstance();
-    final onboardingDone =
-        prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
-
-    if (restored && mounted) {
-      // Sincronizar perfil musical (SpotifyService ya no llama esto)
-      final auth = ref.read(firebaseAuthProvider);
-      final uid = auth.currentUser?.uid;
-      if (uid != null) {
-        ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
-      }
-      if (onboardingDone) {
-        context.go('/');
-      } else {
-        context.go('/onboarding');
-      }
-      return;
-    }
-
-    // No hay credenciales o falló → mostrar botón "Conectar Spotify"
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
+  bool _isLoading = false;
 
   Future<void> _connectSpotify() async {
     setState(() => _isLoading = true);
     try {
-      final result = await ref.read(spotifyServiceProvider).authorizeAndConnect();
+      final result = await ref
+          .read(spotifyServiceProvider)
+          .authorizeAndConnect()
+          .timeout(const Duration(minutes: 2), onTimeout: () => false);
       if (!mounted) return;
 
       if (result) {
-        // Sincronizar perfil musical (SpotifyService ya no llama esto)
         final auth = ref.read(firebaseAuthProvider);
         final uid = auth.currentUser?.uid;
         if (uid != null) {
@@ -79,11 +43,12 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
             prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
         if (!mounted) return;
 
-        if (onboardingDone) {
-          context.go('/');
-        } else {
-          context.go('/onboarding');
-        }
+        // Actualizar el notifier ANTES de navegar para que el router re-evalúe
+        // con spotifyConnected=true. Sin esto, el redirect devuelve al usuario
+        // a /spotify-connect en cuanto GoRouter evalúa la nueva ruta.
+        ref.read(appRouterNotifierProvider).setSpotifyConnected(
+          onboardingDone: onboardingDone,
+        );
       } else {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,6 +73,13 @@ class _SpotifyConnectScreenState extends ConsumerState<SpotifyConnectScreen> {
       );
       if (!mounted) return;
       await ref.read(authServiceProvider).signOut();
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.spotifyConnectError)),
+      );
     }
   }
 

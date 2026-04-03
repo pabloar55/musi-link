@@ -27,7 +27,7 @@ class MusicProfileService {
   int _displayedCount = 0;
   DateTime? _cacheTime;
 
-  static const _cacheTtl = Duration(minutes: 5);
+  static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
   static const _queryLimit = 100;
 

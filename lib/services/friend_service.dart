@@ -116,7 +116,7 @@ class FriendService {
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .handleError(reportError)
+        .handleError((e, st) => reportError(e, st).ignore())
         .map((snapshot) =>
             snapshot.docs.map(FriendRequest.fromFirestore).toList());
   }
@@ -128,7 +128,7 @@ class FriendService {
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .handleError(reportError)
+        .handleError((e, st) => reportError(e, st).ignore())
         .map((snapshot) =>
             snapshot.docs.map(FriendRequest.fromFirestore).toList());
   }

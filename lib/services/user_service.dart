@@ -24,6 +24,9 @@ class UserService {
   Timer? _searchDebounce;
   Completer<List<AppUser>>? _pendingSearch;
 
+  static const _userCacheTtl = Duration(minutes: 10);
+  final Map<String, ({AppUser user, DateTime cachedAt})> _userCache = {};
+
   /// Crea un perfil de usuario nuevo en Firestore.
   Future<void> createUserProfile({
     required String uid,
@@ -47,11 +50,22 @@ class UserService {
   }
 
   /// Obtiene el perfil de un usuario por su UID.
+  /// Resultado cacheado en memoria por [_userCacheTtl] para evitar reads
+  /// repetidas desde discovery, chats y amigos.
   Future<AppUser?> getUser(String uid) async {
+    final cached = _userCache[uid];
+    if (cached != null &&
+        DateTime.now().difference(cached.cachedAt) < _userCacheTtl) {
+      return cached.user;
+    }
     try {
       final doc = await _usersRef.doc(uid).get();
       if (!doc.exists) return null;
-      return AppUser.fromFirestore(doc);
+      final user = AppUser.fromFirestore(doc);
+      if (user != null) {
+        _userCache[uid] = (user: user, cachedAt: DateTime.now());
+      }
+      return user;
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -75,6 +89,7 @@ class UserService {
       await _usersRef.doc(uid).update({
         'lastLogin': Timestamp.fromDate(DateTime.now()),
       });
+      _userCache.remove(uid);
     } catch (e, stack) {
       await reportError(e, stack);
     }
@@ -107,6 +122,7 @@ class UserService {
       }
 
       await _usersRef.doc(uid).update(updates);
+      _userCache.remove(uid);
     } catch (e, stack) {
       if (e is SpotifyAlreadyLinkedException) rethrow;
       await reportError(e, stack);
@@ -128,6 +144,7 @@ class UserService {
       if (photoUrl != null) updates['photoUrl'] = photoUrl;
       if (updates.isNotEmpty) {
         await _usersRef.doc(uid).update(updates);
+        _userCache.remove(uid);
       }
     } catch (e, stack) {
       await reportError(e, stack);

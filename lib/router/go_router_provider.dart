@@ -32,14 +32,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return location == '/splash' ? null : '/splash';
       }
 
-      final isLoggedIn = ref.read(firebaseAuthProvider).currentUser != null;
-
-      if (!isLoggedIn) {
+      if (!notifier.isLoggedIn) {
         return location == '/auth' ? null : '/auth';
       }
 
-      if (location == '/splash' || location == '/auth') {
-        return '/spotify-connect';
+      if (!notifier.spotifyConnected) {
+        return location == '/spotify-connect' ? null : '/spotify-connect';
+      }
+
+      if (!notifier.onboardingDone) {
+        return location == '/onboarding' ? null : '/onboarding';
+      }
+
+      // Usuario listo: evitar que se quede en pantallas de setup
+      if (location == '/splash' ||
+          location == '/auth' ||
+          location == '/spotify-connect' ||
+          location == '/onboarding') {
+        return '/';
       }
 
       return null;

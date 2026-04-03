@@ -17,6 +17,9 @@ class ChatService {
   late final CollectionReference<Map<String, dynamic>> _chatsRef =
       _firestore.collection(FirestoreCollections.chats);
 
+  // Cache por otherUid: evita re-query al abrir el mismo chat varias veces.
+  final Map<String, Chat> _chatByOtherUid = {};
+
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing if the session is lost.
   String get _currentUid {
@@ -29,7 +32,11 @@ class ChatService {
 
   /// Crea un chat entre el usuario actual y [otherUid].
   /// Si ya existe un chat entre ambos, devuelve el existente.
+  /// Resultado cacheado en memoria para evitar re-query al abrir el mismo chat.
   Future<Chat> getOrCreateChat(String otherUid) async {
+    final cached = _chatByOtherUid[otherUid];
+    if (cached != null) return cached;
+
     try {
       // Buscar si ya existe un chat entre los dos usuarios
       final existing = await _chatsRef
@@ -39,7 +46,9 @@ class ChatService {
       for (final doc in existing.docs) {
         final participants = List<String>.from(doc['participants'] ?? []);
         if (participants.contains(otherUid)) {
-          return Chat.fromFirestore(doc);
+          final chat = Chat.fromFirestore(doc);
+          _chatByOtherUid[otherUid] = chat;
+          return chat;
         }
       }
 
@@ -53,8 +62,14 @@ class ChatService {
       );
 
       final docRef = await _chatsRef.add(chat.toFirestore());
-      final newDoc = await docRef.get();
-      return Chat.fromFirestore(newDoc);
+      final newChat = Chat(
+        id: docRef.id,
+        participants: chat.participants,
+        lastMessageTime: chat.lastMessageTime,
+        createdAt: chat.createdAt,
+      );
+      _chatByOtherUid[otherUid] = newChat;
+      return newChat;
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -67,7 +82,7 @@ class ChatService {
         .where('participants', arrayContains: _currentUid)
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
-        .handleError(reportError)
+        .handleError((e, st) => reportError(e, st).ignore())
         .map((snapshot) =>
             snapshot.docs.map(Chat.fromFirestore).toList());
   }
@@ -96,6 +111,7 @@ class ChatService {
       }
 
       await _chatsRef.doc(chatId).delete();
+      _chatByOtherUid.removeWhere((_, chat) => chat.id == chatId);
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -145,7 +161,7 @@ class ChatService {
         .orderBy('timestamp', descending: true)
         .limit(messagesPageSize)
         .snapshots()
-        .handleError(reportError)
+        .handleError((e, st) => reportError(e, st).ignore())
         .map((snapshot) =>
             snapshot.docs.reversed.map(Message.fromFirestore).toList());
   }
@@ -175,20 +191,25 @@ class ChatService {
   /// Marca todos los mensajes no leídos del otro usuario como leídos.
   Future<void> markMessagesAsRead(String chatId) async {
     try {
-      final unread = await _chatsRef
+      final messagesRef = _chatsRef
           .doc(chatId)
           .collection(FirestoreCollections.messages)
           .where('read', isEqualTo: false)
           .where('senderId', isNotEqualTo: _currentUid)
-          .get();
+          .limit(_deleteBatchSize);
 
-      if (unread.docs.isEmpty) return;
+      while (true) {
+        final snapshot = await messagesRef.get();
+        if (snapshot.docs.isEmpty) break;
 
-      final batch = _firestore.batch();
-      for (final doc in unread.docs) {
-        batch.update(doc.reference, {'read': true});
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {'read': true});
+        }
+        await batch.commit();
+
+        if (snapshot.docs.length < _deleteBatchSize) break;
       }
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
     }
@@ -202,7 +223,8 @@ class ChatService {
         .where('read', isEqualTo: false)
         .where('senderId', isNotEqualTo: _currentUid)
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => snapshot.docs.length)
+        .handleError((e, st) => reportError(e, st).ignore());
   }
 
   /// Envía una canción como mensaje en un chat.

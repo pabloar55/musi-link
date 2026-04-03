@@ -3,7 +3,12 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
+import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/utils/error_reporter.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -44,18 +49,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initialize() async {
-    // Start a timer so the splash is shown for at least 1.2s (animation length)
     final minSplash = Future.delayed(const Duration(milliseconds: 1200));
 
     unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
 
-    // Wait for the minimum splash duration to complete
-    await minSplash;
+    try {
+      // Ejecutar checks en paralelo con el tiempo mínimo de splash
+      final spotifyFuture = ref.read(spotifyServiceProvider).tryRestoreSession();
+      final prefsFuture = SharedPreferences.getInstance();
 
-    if (mounted) {
-      // Marca la app como inicializada; el redirect de GoRouter
-      // se encargará de navegar a /auth o /spotify-connect.
-      ref.read(appRouterNotifierProvider).setInitialized();
+      final spotifyConnected = await spotifyFuture;
+      final prefs = await prefsFuture;
+      final onboardingDone =
+          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
+
+      // Si Spotify está conectado, sincronizar perfil musical en background
+      if (spotifyConnected && mounted) {
+        final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
+        if (uid != null) {
+          ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
+        }
+      }
+
+      // Esperar duración mínima de splash si aún no ha pasado
+      await minSplash;
+
+      if (mounted) {
+        ref.read(appRouterNotifierProvider).setInitialized(
+          spotifyConnected: spotifyConnected,
+          onboardingDone: onboardingDone,
+        );
+      }
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      await minSplash;
+      if (mounted) {
+        ref.read(appRouterNotifierProvider).setInitialized(
+          spotifyConnected: false,
+          onboardingDone: false,
+        );
+      }
     }
   }
 

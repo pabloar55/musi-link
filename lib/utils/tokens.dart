@@ -21,10 +21,12 @@ class Tokens {
     required String codeVerifier,
   }) async {
     try {
-      await _storage.write(key: _accessTokenKey, value: accessToken);
-      await _storage.write(key: _refreshTokenKey, value: refreshToken);
-      await _storage.write(key: _expirationKey, value: expiration);
-      await _storage.write(key: _codeVerifierKey, value: codeVerifier);
+      await Future.wait([
+        _storage.write(key: _accessTokenKey, value: accessToken),
+        _storage.write(key: _refreshTokenKey, value: refreshToken),
+        _storage.write(key: _expirationKey, value: expiration),
+        _storage.write(key: _codeVerifierKey, value: codeVerifier),
+      ]);
     } catch (e, stack) {
       await reportError(e, stack);
     }
@@ -34,16 +36,23 @@ class Tokens {
   /// refresh_token (= nunca se autorizó o se hizo logout).
   static Future<Map<String, String?>?> getSavedCredentials() async {
     try {
-      final refreshToken = await _storage.read(key: _refreshTokenKey);
-      if (refreshToken == null || refreshToken.isEmpty) return null;
+      final results = await Future.wait([
+        _storage.read(key: _refreshTokenKey),
+        _storage.read(key: _codeVerifierKey),
+        _storage.read(key: _accessTokenKey),
+        _storage.read(key: _expirationKey),
+      ]);
 
-      final codeVerifier = await _storage.read(key: _codeVerifierKey);
+      final refreshToken = results[0];
+      final codeVerifier = results[1];
+
+      if (refreshToken == null || refreshToken.isEmpty) return null;
       if (codeVerifier == null || codeVerifier.isEmpty) return null;
 
       return {
-        'accessToken': await _storage.read(key: _accessTokenKey),
+        'accessToken': results[2],
         'refreshToken': refreshToken,
-        'expiration': await _storage.read(key: _expirationKey),
+        'expiration': results[3],
         'codeVerifier': codeVerifier,
       };
     } catch (e, stack) {
@@ -55,10 +64,12 @@ class Tokens {
   /// Elimina todas las credenciales de Spotify.
   static Future<void> deleteAll() async {
     try {
-      await _storage.delete(key: _accessTokenKey);
-      await _storage.delete(key: _refreshTokenKey);
-      await _storage.delete(key: _expirationKey);
-      await _storage.delete(key: _codeVerifierKey);
+      await Future.wait([
+        _storage.delete(key: _accessTokenKey),
+        _storage.delete(key: _refreshTokenKey),
+        _storage.delete(key: _expirationKey),
+        _storage.delete(key: _codeVerifierKey),
+      ]);
     } catch (e, stack) {
       await reportError(e, stack);
     }
