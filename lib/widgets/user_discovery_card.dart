@@ -46,9 +46,9 @@ class UserDiscoveryCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nombre + Score badge
+                    // Nombre + Score badge + Chevron
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
@@ -58,8 +58,13 @@ class UserDiscoveryCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: AppTokens.spaceSM),
                         _ScoreBadge(score: score, colorScheme: cs),
+                        const SizedBox(width: AppTokens.spaceXS),
+                        Icon(
+                          LucideIcons.chevronRight,
+                          color: cs.onSurfaceVariant,
+                          size: 20,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppTokens.spaceXS),
@@ -96,13 +101,6 @@ class UserDiscoveryCard extends StatelessWidget {
                     ],
                   ],
                 ),
-              ),
-
-              const SizedBox(width: AppTokens.spaceXS),
-              Icon(
-                LucideIcons.chevronRight,
-                color: cs.onSurfaceVariant,
-                size: 20,
               ),
             ],
           ),
