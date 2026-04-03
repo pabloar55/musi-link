@@ -59,25 +59,31 @@ class FriendService {
 
   /// Acepta una solicitud de amistad.
   /// Actualiza el status y añade ambos UIDs a la lista de amigos de cada uno.
+  /// Usa una transaction para evitar race conditions si dos dispositivos
+  /// aceptan la misma solicitud simultáneamente.
   Future<void> acceptRequest(String requestId, String otherUid) async {
     try {
-      final batch = _firestore.batch();
+      await _firestore.runTransaction((tx) async {
+        final requestDoc = await tx.get(_requestsRef.doc(requestId));
 
-      // Actualizar status del request
-      batch.update(_requestsRef.doc(requestId), {
-        'status': FriendRequestStatus.accepted.name,
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      });
+        if (!requestDoc.exists ||
+            requestDoc['status'] != FriendRequestStatus.pending.name) {
+          return; // ya fue aceptada o rechazada
+        }
 
-      // Añadir a la lista de amigos de ambos usuarios
-      batch.update(_usersRef.doc(_currentUid), {
-        'friends': FieldValue.arrayUnion([otherUid]),
-      });
-      batch.update(_usersRef.doc(otherUid), {
-        'friends': FieldValue.arrayUnion([_currentUid]),
-      });
+        final now = Timestamp.fromDate(DateTime.now());
 
-      await batch.commit();
+        tx.update(_requestsRef.doc(requestId), {
+          'status': FriendRequestStatus.accepted.name,
+          'updatedAt': now,
+        });
+        tx.update(_usersRef.doc(_currentUid), {
+          'friends': FieldValue.arrayUnion([otherUid]),
+        });
+        tx.update(_usersRef.doc(otherUid), {
+          'friends': FieldValue.arrayUnion([_currentUid]),
+        });
+      });
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
