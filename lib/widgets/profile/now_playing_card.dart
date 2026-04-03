@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -82,7 +83,7 @@ class NowPlayingCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppTokens.spaceSM),
-              Icon(Icons.open_in_new_rounded, color: cs.onSurfaceVariant, size: 18),
+              Icon(LucideIcons.externalLink, color: cs.onSurfaceVariant, size: 22),
             ],
           ),
         ),
@@ -95,7 +96,7 @@ class NowPlayingCard extends StatelessWidget {
       width: 52,
       height: 52,
       color: cs.surfaceContainerHighest,
-      child: Icon(Icons.headphones, size: 24, color: cs.primary),
+      child: Icon(LucideIcons.headphones, size: 24, color: cs.primary),
     );
   }
 }

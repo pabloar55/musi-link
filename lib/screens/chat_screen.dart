@@ -2,6 +2,7 @@ import 'dart:async';
 
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
@@ -294,7 +295,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             IconButton(
               onPressed: _showTrackSearch,
-              icon: const Icon(Icons.music_note),
+              icon: const Icon(LucideIcons.music),
               tooltip: l10n.chatShareSong,
             ),
             Expanded(
@@ -320,7 +321,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(width: 8),
             IconButton.filled(
               onPressed: _sendMessage,
-              icon: const Icon(Icons.send),
+              icon: const Icon(LucideIcons.sendHorizontal500),
               style: IconButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
@@ -85,7 +86,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.chat_bubble_outline,
+                    LucideIcons.messageCircle,
                     size: 64,
                     color: colorScheme.onSurface.withAlpha(100),
                   ),

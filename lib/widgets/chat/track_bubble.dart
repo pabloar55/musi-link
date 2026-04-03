@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -100,7 +101,7 @@ class _TrackBubbleState extends State<TrackBubble> {
                         height: 160,
                         color: cs.surfaceContainerHigh,
                         child: Icon(
-                          Icons.music_note_rounded,
+                          LucideIcons.music,
                           size: 56,
                           color: cs.onSurface.withAlpha(AppTokens.alphaDisabled),
                         ),
@@ -165,8 +166,8 @@ class _TrackBubbleState extends State<TrackBubble> {
                             const SizedBox(width: AppTokens.spaceXS),
                             Icon(
                               message.read
-                                  ? Icons.done_all_rounded
-                                  : Icons.done_rounded,
+                                  ? LucideIcons.checkCheck
+                                  : LucideIcons.check,
                               size: 14,
                               // Token semántico del design system
                               color: message.read

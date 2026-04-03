@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/models/track.dart';
@@ -66,7 +67,7 @@ class UserDiscoveryCard extends StatelessWidget {
                     // Artistas compartidos
                     if (result.sharedArtistNames.isNotEmpty)
                       _MetaRow(
-                        icon: Icons.music_note_rounded,
+                        icon: LucideIcons.music,
                         text: result.sharedArtistNames.join(', '),
                         colorScheme: cs,
                         textTheme: tt,
@@ -76,7 +77,7 @@ class UserDiscoveryCard extends StatelessWidget {
                     if (result.sharedGenreNames.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       _MetaRow(
-                        icon: Icons.label_rounded,
+                        icon: LucideIcons.tag,
                         text: result.sharedGenreNames.join(', '),
                         colorScheme: cs,
                         textTheme: tt,
@@ -99,7 +100,7 @@ class UserDiscoveryCard extends StatelessWidget {
 
               const SizedBox(width: AppTokens.spaceXS),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
                 color: cs.onSurfaceVariant,
                 size: 20,
               ),
@@ -128,7 +129,7 @@ class _UserAvatar extends StatelessWidget {
       backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
       child: hasPhoto
           ? null
-          : Icon(Icons.person_rounded, size: 28, color: cs.onSurfaceVariant),
+          : Icon(LucideIcons.user, size: 28, color: cs.onSurfaceVariant),
     );
   }
 }
@@ -272,7 +273,7 @@ class _DailySongRow extends StatelessWidget {
       width: 36,
       height: 36,
       color: Colors.white12,
-      child: const Icon(Icons.music_note, size: 18, color: Colors.white54),
+      child: const Icon(LucideIcons.music, size: 18, color: Colors.white54),
     );
   }
 }

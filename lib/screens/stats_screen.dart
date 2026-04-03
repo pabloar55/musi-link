@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
@@ -113,7 +114,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                 Row(
                   children: [
                     Icon(
-                      Icons.cloud_off_rounded,
+                      LucideIcons.cloudOff,
                       size: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -195,7 +196,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                 spacing: 12,
                 children: [
                   Icon(
-                    Icons.cloud_off_rounded,
+                    LucideIcons.cloudOff,
                     size: 48,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

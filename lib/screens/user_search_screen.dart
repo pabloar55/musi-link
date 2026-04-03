@@ -2,6 +2,7 @@ import 'dart:async';
 
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
@@ -158,9 +159,9 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: l10n.searchHint,
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(LucideIcons.search),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: const Icon(LucideIcons.x),
                   onPressed: () {
                     _debounce?.cancel();
                     _searchController.clear();
@@ -254,16 +255,16 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     AppLocalizations l10n,
   ) {
     if (rel == null) {
-      return Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant);
+      return Icon(LucideIcons.chevronRight, color: colorScheme.onSurfaceVariant);
     }
 
     switch (rel.status) {
       case RelationshipStatus.friends:
-        return Icon(Icons.people, color: colorScheme.primary);
+        return Icon(LucideIcons.users, color: colorScheme.primary);
 
       case RelationshipStatus.requestSent:
         return IconButton(
-          icon: Icon(Icons.hourglass_top, color: colorScheme.onSurfaceVariant),
+          icon: Icon(LucideIcons.hourglass, color: colorScheme.onSurfaceVariant),
           tooltip: l10n.friendsRequestSent,
           onPressed: () {
             if (rel.requestId != null) {
@@ -273,11 +274,11 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
         );
 
       case RelationshipStatus.requestReceived:
-        return Icon(Icons.mail, color: colorScheme.primary);
+        return Icon(LucideIcons.mail, color: colorScheme.primary);
 
       case RelationshipStatus.none:
         return IconButton(
-          icon: Icon(Icons.person_add, color: colorScheme.primary),
+          icon: Icon(LucideIcons.userPlus, color: colorScheme.primary),
           tooltip: l10n.friendsSendRequest,
           onPressed: () => _sendRequest(user.uid),
         );

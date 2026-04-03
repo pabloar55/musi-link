@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -115,7 +116,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
             PopupMenuItem(
               value: _UserMenuAction.profile,
               child: _MenuRow(
-                icon: const Icon(Icons.person_outline_rounded),
+                icon: const Icon(LucideIcons.circleUser),
                 label: AppLocalizations.of(context)!.menuProfile,
               ),
             ),
@@ -124,8 +125,8 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
               value: _UserMenuAction.darkLightMode,
               child: _MenuRow(
                 icon: isDarkMode
-                    ? const Icon(Icons.wb_sunny_outlined)
-                    : const Icon(Icons.dark_mode_outlined),
+                    ? const Icon(LucideIcons.sun)
+                    : const Icon(LucideIcons.moon),
                 label: isDarkMode
                     ? AppLocalizations.of(context)!.menuLightMode
                     : AppLocalizations.of(context)!.menuDarkMode,
@@ -135,7 +136,7 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
             PopupMenuItem(
               value: _UserMenuAction.logout,
               child: _MenuRow(
-                icon: const Icon(Icons.logout_rounded),
+                icon: const Icon(LucideIcons.logOut),
                 label: AppLocalizations.of(context)!.menuSignOut,
               ),
             ),
@@ -162,7 +163,7 @@ class _MenuRow extends StatelessWidget {
     return Row(
       children: [
         IconTheme(
-          data: IconThemeData(size: 20, color: cs.onSurfaceVariant),
+          data: IconThemeData(size: 22, color: cs.onSurfaceVariant),
           child: icon,
         ),
         const SizedBox(width: 12),

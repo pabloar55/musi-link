@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
@@ -128,7 +129,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
             Center(
               child: TextButton.icon(
                 onPressed: _chooseDailySong,
-                icon: const Icon(Icons.edit, size: 18),
+                icon: const Icon(LucideIcons.pencil, size: 18),
                 label: Text(l10n.dailySongChoose),
               ),
             ),
@@ -139,7 +140,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
                 child: Column(
                   children: [
                     Icon(
-                      Icons.music_note,
+                      LucideIcons.music,
                       size: 48,
                       color: colorScheme.onSurfaceVariant.withAlpha(128),
                     ),
@@ -164,7 +165,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
                     const SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: _chooseDailySong,
-                      icon: const Icon(Icons.music_note),
+                      icon: const Icon(LucideIcons.music),
                       label: Text(l10n.dailySongChoose),
                     ),
                   ],

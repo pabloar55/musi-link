@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/widgets/track_tile.dart';
 
@@ -39,7 +40,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.music_note), findsOneWidget);
+      expect(find.byIcon(LucideIcons.music), findsOneWidget);
     });
   });
 }

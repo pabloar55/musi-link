@@ -4,6 +4,10 @@ import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/services/friend_service.dart';
 
+final userStreamProvider = StreamProvider.family<AppUser?, String>((ref, uid) {
+  return ref.read(userServiceProvider).watchUser(uid);
+});
+
 final compatibilityProvider =
     FutureProvider.family<DiscoveryResult, AppUser>((ref, user) {
       return ref.read(musicProfileServiceProvider).getCompatibilityWith(user);

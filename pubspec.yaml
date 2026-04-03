@@ -18,6 +18,7 @@ dependencies:
   spotify: ^0.16.0              # Conexión a Spotify Web API
   flutter_web_auth_2: ^5.0.1   # Para abrir navegador en OAuth
   font_awesome_flutter: ^11.0.0 # Para iconos
+  lucide_icons_flutter: 3.1.12
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
   flutter_riverpod: ^3.3.1

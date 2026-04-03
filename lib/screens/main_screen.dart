@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
@@ -74,10 +75,10 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
 
       bottomNavigationBar: NavigationBar(
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.explore), label: l10n.navDiscover),
-          NavigationDestination(icon: const Icon(Icons.bar_chart), label: l10n.navStats),
-          NavigationDestination(icon: const Icon(Icons.chat_bubble), label: l10n.navMessages),
-          NavigationDestination(icon: const Icon(Icons.people), label: l10n.navFriends),
+          NavigationDestination(icon: const Icon(LucideIcons.compass500), label: l10n.navDiscover),
+          NavigationDestination(icon: const Icon(LucideIcons.chartNoAxesColumn600), label: l10n.navStats),
+          NavigationDestination(icon: const Icon(LucideIcons.messageCircle500), label: l10n.navMessages),
+          NavigationDestination(icon: const Icon(LucideIcons.users500), label: l10n.navFriends),
         ],
         selectedIndex: currentPageIndex,
 

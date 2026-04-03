@@ -49,6 +49,13 @@ class UserService {
     }
   }
 
+  /// Stream en tiempo real del perfil de un usuario.
+  Stream<AppUser?> watchUser(String uid) {
+    return _usersRef.doc(uid).snapshots().map(
+          (doc) => doc.exists ? AppUser.fromFirestore(doc) : null,
+        );
+  }
+
   /// Obtiene el perfil de un usuario por su UID.
   /// Resultado cacheado en memoria por [_userCacheTtl] para evitar reads
   /// repetidas desde discovery, chats y amigos.

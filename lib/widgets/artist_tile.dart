@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/artist.dart';
 import 'package:musi_link/theme/app_theme.dart';
 
@@ -70,7 +71,7 @@ class ArtistTile extends StatelessWidget {
       width: 52,
       height: 52,
       color: cs.surfaceContainerHighest,
-      child: Icon(Icons.person, size: 28, color: cs.onSurfaceVariant),
+      child: Icon(LucideIcons.user, size: 28, color: cs.onSurfaceVariant),
     );
   }
 }

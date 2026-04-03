@@ -89,7 +89,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final user = widget.user;
+    final user = ref.watch(userStreamProvider(widget.user.uid)).asData?.value ?? widget.user;
     final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
 
     return Scaffold(

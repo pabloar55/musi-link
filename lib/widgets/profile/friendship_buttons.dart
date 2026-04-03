@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/services/friend_service.dart';
@@ -76,7 +77,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: widget.onStartChat,
-                icon: const Icon(Icons.chat_bubble_outline),
+                icon: const Icon(LucideIcons.messageCircle),
                 label: Text(l10n.profileStartChat),
               ),
             ),
@@ -84,7 +85,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: widget.onRemoveFriend,
-                icon: Icon(Icons.person_remove, color: cs.error),
+                icon: Icon(LucideIcons.userMinus, color: cs.error),
                 label: Text(
                   l10n.friendsRemove,
                   style: TextStyle(color: cs.error),
@@ -101,7 +102,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
               : requestId != null
               ? () => _handleCancelRequest(requestId)
               : null,
-          icon: const Icon(Icons.hourglass_top),
+          icon: const Icon(LucideIcons.hourglass),
           label: Text(l10n.friendsRequestSent),
         );
 
@@ -114,7 +115,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
                 onPressed: requestId != null
                     ? () => widget.onAcceptRequest(requestId)
                     : null,
-                icon: const Icon(Icons.check),
+                icon: const Icon(LucideIcons.check),
                 label: Text(l10n.friendsAccept),
               ),
             ),
@@ -124,7 +125,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
                 onPressed: requestId != null
                     ? () => widget.onRejectRequest(requestId)
                     : null,
-                icon: const Icon(Icons.close),
+                icon: const Icon(LucideIcons.x),
                 label: Text(l10n.friendsReject),
               ),
             ),
@@ -134,7 +135,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
       case RelationshipStatus.none:
         return FilledButton.icon(
           onPressed: _handleSendRequest,
-          icon: const Icon(Icons.person_add),
+          icon: const Icon(LucideIcons.userPlus),
           label: Text(l10n.profileAddFriend),
         );
     }

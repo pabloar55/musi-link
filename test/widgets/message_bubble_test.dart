@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
 
@@ -57,8 +58,8 @@ void main() {
 
       await tester.pumpWidget(buildBubble(message: message, isMe: true));
 
-      expect(find.byIcon(Icons.done_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.done_all_rounded), findsNothing);
+      expect(find.byIcon(LucideIcons.check), findsOneWidget);
+      expect(find.byIcon(LucideIcons.checkCheck), findsNothing);
     });
 
     testWidgets('muestra icono done_all cuando isMe y leído', (tester) async {
@@ -72,7 +73,7 @@ void main() {
 
       await tester.pumpWidget(buildBubble(message: message, isMe: true));
 
-      expect(find.byIcon(Icons.done_all_rounded), findsOneWidget);
+      expect(find.byIcon(LucideIcons.checkCheck), findsOneWidget);
     });
 
     testWidgets('no muestra iconos de check cuando no es mío', (tester) async {

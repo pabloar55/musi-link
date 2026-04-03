@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/theme/app_theme.dart';
 
@@ -79,7 +80,7 @@ class ProfileHeader extends StatelessWidget {
     return Container(
       color: cs.surfaceContainerHighest,
       child: Icon(
-        Icons.person_rounded,
+        LucideIcons.user,
         size: 44,
         color: cs.onSurfaceVariant,
       ),

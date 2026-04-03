@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/theme/app_theme.dart';
 
@@ -68,7 +69,7 @@ class MessageBubble extends StatelessWidget {
                 if (isMe) ...[
                   const SizedBox(width: AppTokens.spaceXS),
                   Icon(
-                    message.read ? Icons.done_all_rounded : Icons.done_rounded,
+                    message.read ? LucideIcons.checkCheck : LucideIcons.check,
                     size: 14,
                     // Usa el token semántico del design system (no hardcodeado)
                     color: message.read

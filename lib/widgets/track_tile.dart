@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/theme/app_theme.dart';
 
@@ -84,7 +85,7 @@ class TrackTile extends StatelessWidget {
       width: 52,
       height: 52,
       color: cs.surfaceContainerHighest,
-      child: Icon(Icons.music_note, size: 24, color: cs.onSurfaceVariant),
+      child: Icon(LucideIcons.music, size: 24, color: cs.onSurfaceVariant),
     );
   }
 }

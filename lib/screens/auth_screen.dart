@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/providers/service_providers.dart';
 
 /// Pantalla de autenticación con Firebase.
@@ -149,7 +150,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           textCapitalization: TextCapitalization.words,
                           decoration: InputDecoration(
                             labelText: l10n.authName,
-                            prefixIcon: const Icon(Icons.person_outline),
+                            prefixIcon: const Icon(LucideIcons.circleUser),
                           ),
                           validator: (value) {
                             if (!_isLogin &&
@@ -168,7 +169,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         autocorrect: false,
                         decoration: InputDecoration(
                           labelText: l10n.authEmail,
-                          prefixIcon: const Icon(Icons.email_outlined),
+                          prefixIcon: const Icon(LucideIcons.mail),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -188,12 +189,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           labelText: l10n.authPassword,
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          prefixIcon: const Icon(LucideIcons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                                  ? LucideIcons.eyeOff
+                                  : LucideIcons.eye,
                             ),
                             onPressed: () {
                               setState(

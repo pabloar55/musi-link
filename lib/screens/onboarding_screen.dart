@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -55,27 +56,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     final pages = [
       OnboardingPage(
-        icon: Icons.explore,
+        icon: LucideIcons.compass,
         title: l10n.onboardingDiscoverTitle,
         description: l10n.onboardingDiscoverDesc,
       ),
       OnboardingPage(
-        icon: Icons.bar_chart,
+        icon: LucideIcons.chartBar,
         title: l10n.onboardingStatsTitle,
         description: l10n.onboardingStatsDesc,
       ),
       OnboardingPage(
-        icon: Icons.music_note,
+        icon: LucideIcons.music,
         title: l10n.onboardingDailySongTitle,
         description: l10n.onboardingDailySongDesc,
       ),
       OnboardingPage(
-        icon: Icons.chat_bubble,
+        icon: LucideIcons.messageCircle,
         title: l10n.onboardingChatTitle,
         description: l10n.onboardingChatDesc,
       ),
       OnboardingPage(
-        icon: Icons.people,
+        icon: LucideIcons.users,
         title: l10n.onboardingFriendsTitle,
         description: l10n.onboardingFriendsDesc,
       ),

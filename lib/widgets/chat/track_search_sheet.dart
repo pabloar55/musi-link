@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
@@ -80,7 +81,7 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
                 autofocus: true,
                 decoration: InputDecoration(
                   hintText: AppLocalizations.of(context)!.chatSearchSpotify,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(LucideIcons.search),
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
                   border: OutlineInputBorder(
@@ -123,7 +124,7 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
                                         fit: BoxFit.cover,
                                       ),
                                     )
-                                  : const Icon(Icons.music_note, size: 40),
+                                  : const Icon(LucideIcons.music, size: 40),
                               title: Text(
                                 track.title,
                                 maxLines: 1,

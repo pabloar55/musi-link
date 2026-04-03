@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
@@ -92,7 +93,7 @@ class _CompatibilityCardContentState extends State<_CompatibilityCardContent>
               const SizedBox(height: AppTokens.spaceLG),
               _SectionLabel(
                 label: l10n.profileSharedArtists,
-                icon: Icons.music_note_rounded,
+                icon: LucideIcons.music,
               ),
               const SizedBox(height: AppTokens.spaceSM),
               _ChipWrap(
@@ -106,7 +107,7 @@ class _CompatibilityCardContentState extends State<_CompatibilityCardContent>
               const SizedBox(height: AppTokens.spaceLG),
               _SectionLabel(
                 label: l10n.profileSharedGenres,
-                icon: Icons.label_rounded,
+                icon: LucideIcons.tag,
               ),
               const SizedBox(height: AppTokens.spaceSM),
               _ChipWrap(

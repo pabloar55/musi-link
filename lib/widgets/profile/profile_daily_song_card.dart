@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
 
@@ -41,7 +42,7 @@ class ProfileDailySongCard extends StatelessWidget {
                     color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.music_note, size: 28),
+                  child: const Icon(LucideIcons.music, size: 28),
                 ),
               const SizedBox(width: 12),
               Expanded(
@@ -74,7 +75,7 @@ class ProfileDailySongCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.play_circle_fill, color: colorScheme.primary, size: 32),
+              Icon(LucideIcons.externalLink, color: colorScheme.onSurfaceVariant, size: 22),
             ],
           ),
         ),

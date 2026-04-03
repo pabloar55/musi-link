@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/widgets/skeleton_loader.dart';
@@ -83,7 +84,7 @@ class _PeopleTabState extends State<PeopleTab> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.explore_off,
+                LucideIcons.searchX,
                 size: 64,
                 color: colorScheme.onSurfaceVariant.withAlpha(128),
               ),

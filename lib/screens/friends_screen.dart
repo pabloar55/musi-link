@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
@@ -72,7 +73,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.check_circle,
+                          icon: Icon(LucideIcons.circleCheck,
                               color: colorScheme.primary),
                           tooltip: l10n.friendsAccept,
                           onPressed: () => ref
@@ -80,7 +81,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
                               .acceptRequest(request.id, request.senderId),
                         ),
                         IconButton(
-                          icon: Icon(Icons.cancel, color: colorScheme.error),
+                          icon: Icon(LucideIcons.circleX, color: colorScheme.error),
                           tooltip: l10n.friendsReject,
                           onPressed: () => ref
                               .read(friendServiceProvider)
@@ -180,7 +181,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         onPressed: () => context.push('/search'),
-        child: const Icon(Icons.person_search),
+        child: const Icon(LucideIcons.userSearch),
       ),
     );
   }
