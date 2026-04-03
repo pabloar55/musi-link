@@ -18,7 +18,7 @@ void main() {
         const genre = Genre(name: 'pop', count: 5, percentage: 33.3);
 
         final map = genre.toMap();
-        expect(map, {'name': 'pop', 'percentage': 33.3});
+        expect(map, {'name': 'pop', 'count': 5, 'percentage': 33.3});
       });
 
       test('fromMap restaura name y percentage', () {
@@ -56,6 +56,7 @@ void main() {
         final restored = Genre.fromMap(map);
 
         expect(restored.name, original.name);
+        expect(restored.count, original.count);
         expect(restored.percentage, original.percentage);
       });
     });

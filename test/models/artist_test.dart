@@ -72,25 +72,37 @@ void main() {
         expect(map, {
           'name': 'Queen',
           'imageUrl': 'https://example.com/queen.jpg',
+          'genres': ['rock'],
         });
       });
 
-      test('fromMap restaura name e imageUrl', () {
+      test('fromMap restaura name, imageUrl y genres', () {
+        final artist = Artist.fromMap({
+          'name': 'Queen',
+          'imageUrl': 'https://example.com/queen.jpg',
+          'genres': ['rock', 'classic rock'],
+        });
+
+        expect(artist.name, 'Queen');
+        expect(artist.imageUrl, 'https://example.com/queen.jpg');
+        expect(artist.genres, ['rock', 'classic rock']);
+      });
+
+      test('fromMap sin genres devuelve lista vacía', () {
         final artist = Artist.fromMap({
           'name': 'Queen',
           'imageUrl': 'https://example.com/queen.jpg',
         });
 
-        expect(artist.name, 'Queen');
-        expect(artist.imageUrl, 'https://example.com/queen.jpg');
         expect(artist.genres, isEmpty);
       });
 
-      test('fromMap con valores nulos devuelve strings vacíos', () {
+      test('fromMap con valores nulos devuelve strings vacíos y genres vacío', () {
         final artist = Artist.fromMap(<String, dynamic>{});
 
         expect(artist.name, '');
         expect(artist.imageUrl, '');
+        expect(artist.genres, isEmpty);
       });
     });
   });
