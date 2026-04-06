@@ -891,6 +891,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete account'**
   String get settingsDeleteAccount;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: 6 April 2026'**
+  String get privacyLastUpdated;
+
+  /// No description provided for @privacyS1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Data Controller'**
+  String get privacyS1Title;
+
+  /// No description provided for @privacyS1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).'**
+  String get privacyS1Body;
+
+  /// No description provided for @privacyS2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Data We Collect'**
+  String get privacyS2Title;
+
+  /// No description provided for @privacyS2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify\'s API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.'**
+  String get privacyS2Body;
+
+  /// No description provided for @privacyS3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. How We Use Your Data'**
+  String get privacyS3Title;
+
+  /// No description provided for @privacyS3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).'**
+  String get privacyS3Body;
+
+  /// No description provided for @privacyS4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Third-Party Services'**
+  String get privacyS4Title;
+
+  /// No description provided for @privacyS4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.'**
+  String get privacyS4Body;
+
+  /// No description provided for @privacyS5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Data Retention & Deletion'**
+  String get privacyS5Title;
+
+  /// No description provided for @privacyS5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google\'s own retention policies.'**
+  String get privacyS5Body;
+
+  /// No description provided for @privacyS6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'6. Your Rights'**
+  String get privacyS6Title;
+
+  /// No description provided for @privacyS6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Under GDPR, you have the following rights:\n\n• Access: request a copy of data we hold about you.\n• Rectification: correct inaccurate or incomplete data.\n• Erasure: delete your account and all data via the \'Delete account\' button in Settings.\n• Restriction: request we limit processing of your data.\n• Portability: receive your data in a structured, machine-readable format.\n• Objection: object to processing based on legitimate interest.\n\nTo exercise these rights, contact armasp80@gmail.com. You may also file a complaint with the Spanish Data Protection Authority (AEPD) at www.aepd.es.'**
+  String get privacyS6Body;
+
+  /// No description provided for @privacyS7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'7. Minimum Age'**
+  String get privacyS7Title;
+
+  /// No description provided for @privacyS7Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.'**
+  String get privacyS7Body;
+
+  /// No description provided for @privacyS8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'8. Security'**
+  String get privacyS8Title;
+
+  /// No description provided for @privacyS8Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss, or alteration. Data is stored in Google Firebase, which applies industry-standard security controls.'**
+  String get privacyS8Body;
+
+  /// No description provided for @privacyS9Title.
+  ///
+  /// In en, this message translates to:
+  /// **'9. Contact'**
+  String get privacyS9Title;
+
+  /// No description provided for @privacyS9Body.
+  ///
+  /// In en, this message translates to:
+  /// **'For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com'**
+  String get privacyS9Body;
 }
 
 class _AppLocalizationsDelegate

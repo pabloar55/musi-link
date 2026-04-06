@@ -434,4 +434,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDeleteAccount => 'Delete account';
+
+  @override
+  String get privacyTitle => 'Privacy Policy';
+
+  @override
+  String get privacyLastUpdated => 'Last updated: 6 April 2026';
+
+  @override
+  String get privacyS1Title => '1. Data Controller';
+
+  @override
+  String get privacyS1Body =>
+      'Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).';
+
+  @override
+  String get privacyS2Title => '2. Data We Collect';
+
+  @override
+  String get privacyS2Body =>
+      'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify\'s API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.';
+
+  @override
+  String get privacyS3Title => '3. How We Use Your Data';
+
+  @override
+  String get privacyS3Body =>
+      'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).';
+
+  @override
+  String get privacyS4Title => '4. Third-Party Services';
+
+  @override
+  String get privacyS4Body =>
+      'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.';
+
+  @override
+  String get privacyS5Title => '5. Data Retention & Deletion';
+
+  @override
+  String get privacyS5Body =>
+      'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google\'s own retention policies.';
+
+  @override
+  String get privacyS6Title => '6. Your Rights';
+
+  @override
+  String get privacyS6Body =>
+      'Under GDPR, you have the following rights:\n\n• Access: request a copy of data we hold about you.\n• Rectification: correct inaccurate or incomplete data.\n• Erasure: delete your account and all data via the \'Delete account\' button in Settings.\n• Restriction: request we limit processing of your data.\n• Portability: receive your data in a structured, machine-readable format.\n• Objection: object to processing based on legitimate interest.\n\nTo exercise these rights, contact armasp80@gmail.com. You may also file a complaint with the Spanish Data Protection Authority (AEPD) at www.aepd.es.';
+
+  @override
+  String get privacyS7Title => '7. Minimum Age';
+
+  @override
+  String get privacyS7Body =>
+      'Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.';
+
+  @override
+  String get privacyS8Title => '8. Security';
+
+  @override
+  String get privacyS8Body =>
+      'We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss, or alteration. Data is stored in Google Firebase, which applies industry-standard security controls.';
+
+  @override
+  String get privacyS9Title => '9. Contact';
+
+  @override
+  String get privacyS9Body =>
+      'For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com';
 }

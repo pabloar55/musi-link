@@ -153,5 +153,26 @@
   "settingsAppearance": "Apparence",
   "settingsLegal": "Informations légales",
   "settingsPrivacyPolicy": "Politique de confidentialité",
-  "settingsDeleteAccount": "Supprimer le compte"
+  "settingsDeleteAccount": "Supprimer le compte",
+
+  "privacyTitle": "Politique de confidentialité",
+  "privacyLastUpdated": "Dernière mise à jour : 6 avril 2026",
+  "privacyS1Title": "1. Responsable du traitement",
+  "privacyS1Body": "Musi Link est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).",
+  "privacyS2Title": "2. Données collectées",
+  "privacyS2Body": "Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données Spotify : identifiant utilisateur Spotify, photo de profil, artistes, genres et titres les plus écoutés, et titre en cours de lecture — synchronisés via l'API Spotify avec votre autorisation explicite.\n\n• Données sociales : messages, chansons partagées, chanson du jour, demandes d'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.",
+  "privacyS3Title": "3. Utilisation de vos données",
+  "privacyS3Body": "Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d'un contrat (art. 6.1.b RGPD).\n\n• Intégration Spotify : affichage et comparaison de votre profil musical. Base légale : exécution d'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Analyses : comprendre l'utilisation de l'application pour l'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).",
+  "privacyS4Title": "4. Services tiers",
+  "privacyS4Body": "Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Les données peuvent être transférées aux États-Unis dans le cadre de clauses contractuelles types.\n\n• Spotify — Spotify AB. Utilisé uniquement pour lire vos données musicales avec votre autorisation.",
+  "privacyS5Title": "5. Conservation et suppression des données",
+  "privacyS5Body": "Nous ne conservons pas vos données au-delà de la durée d'utilisation de l'application. Lorsque vous supprimez votre compte via le bouton « Supprimer le compte » dans les Paramètres, toutes vos données personnelles sont définitivement et immédiatement effacées de nos systèmes. Les rapports de plantage et données analytiques conservés par Google sont soumis aux politiques de conservation de Google.",
+  "privacyS6Title": "6. Vos droits",
+  "privacyS6Body": "En vertu du RGPD, vous disposez des droits suivants :\n\n• Accès : demander une copie des données que nous détenons à votre sujet.\n• Rectification : corriger des données inexactes ou incomplètes.\n• Effacement : supprimer votre compte et toutes les données associées via le bouton « Supprimer le compte » dans les Paramètres.\n• Limitation : demander que nous limitions le traitement de vos données.\n• Portabilité : recevoir vos données dans un format structuré et lisible par machine.\n• Opposition : vous opposer au traitement fondé sur l'intérêt légitime.\n\nPour exercer ces droits, contactez armasp80@gmail.com. Vous pouvez également introduire une réclamation auprès de l'Agence Espagnole de Protection des Données (AEPD) à l'adresse www.aepd.es.",
+  "privacyS7Title": "7. Âge minimum",
+  "privacyS7Body": "Musi Link est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.",
+  "privacyS8Title": "8. Sécurité",
+  "privacyS8Body": "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données personnelles contre tout accès non autorisé, perte ou altération. Les données sont stockées sur Google Firebase, qui applique des contrôles de sécurité conformes aux normes du secteur.",
+  "privacyS9Title": "9. Contact",
+  "privacyS9Body": "Pour toute question concernant cette Politique de Confidentialité ou le traitement de vos données personnelles, contactez-nous à :\n\nPablo Armas\narmasp80@gmail.com"
 }

@@ -114,9 +114,7 @@ class _AccountSettingsScreenState
                   _ChevronTile(
                     icon: LucideIcons.shieldCheck,
                     label: l10n.settingsPrivacyPolicy,
-                    onTap: () {
-                      // TODO: open privacy policy URL
-                    },
+                    onTap: () => context.push('/privacy-policy'),
                   ),
                 ],
               ),

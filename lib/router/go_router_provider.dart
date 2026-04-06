@@ -5,6 +5,7 @@ import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/router/app_router.dart';
 import 'package:musi_link/screens/account_settings_screen.dart';
 import 'package:musi_link/screens/auth_screen.dart';
+import 'package:musi_link/screens/privacy_policy_screen.dart';
 import 'package:musi_link/screens/chat_screen.dart';
 import 'package:musi_link/screens/main_screen.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
@@ -112,6 +113,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const AccountSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
     ],
   );
