@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:musi_link/utils/error_reporter.dart';
 
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
@@ -92,6 +93,9 @@ class SpotifyService {
         msg.contains('rate limit') ||
         msg.contains('too many requests');
   }
+
+  @visibleForTesting
+  Duration backoffForErrors(int errors) => _backoffForErrors(errors);
 
   Duration _backoffForErrors(int errors) {
     final ms = _intervalIdle.inMilliseconds * (1 << errors.clamp(0, 8));
