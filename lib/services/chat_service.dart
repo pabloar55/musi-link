@@ -23,6 +23,7 @@ class ChatService {
   /// Limpia la caché en memoria. Llamar al hacer logout.
   void clearCache() => _chatByOtherUid.clear();
 
+
   /// Returns the UID of the currently authenticated user.
   /// Throws [StateError] instead of crashing if the session is lost.
   String get _currentUid {

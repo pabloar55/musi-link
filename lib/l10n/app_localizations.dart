@@ -892,6 +892,42 @@ abstract class AppLocalizations {
   /// **'Delete account'**
   String get settingsDeleteAccount;
 
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deletingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting account...'**
+  String get deletingAccount;
+
+  /// No description provided for @reauthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your identity'**
+  String get reauthTitle;
+
+  /// No description provided for @reauthBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To delete your account, re-enter your password.'**
+  String get reauthBody;
+
+  /// No description provided for @reauthConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get reauthConfirm;
+
   /// No description provided for @privacyTitle.
   ///
   /// In en, this message translates to:

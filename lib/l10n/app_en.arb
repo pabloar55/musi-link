@@ -189,6 +189,12 @@
   "settingsLegal": "Legal",
   "settingsPrivacyPolicy": "Privacy policy",
   "settingsDeleteAccount": "Delete account",
+  "deleteAccountBody": "This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.",
+  "deleteAccountConfirm": "Delete",
+  "deletingAccount": "Deleting account...",
+  "reauthTitle": "Confirm your identity",
+  "reauthBody": "To delete your account, re-enter your password.",
+  "reauthConfirm": "Confirm",
 
   "privacyTitle": "Privacy Policy",
   "privacyLastUpdated": "Last updated: 6 April 2026",

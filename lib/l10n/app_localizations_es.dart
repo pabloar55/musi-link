@@ -438,6 +438,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsDeleteAccount => 'Eliminar cuenta';
 
   @override
+  String get deleteAccountBody =>
+      'Esta acción eliminará permanentemente tu cuenta, todos tus mensajes, datos de Spotify e información de perfil. Esta acción no se puede deshacer.';
+
+  @override
+  String get deleteAccountConfirm => 'Eliminar';
+
+  @override
+  String get deletingAccount => 'Eliminando cuenta...';
+
+  @override
+  String get reauthTitle => 'Confirma tu identidad';
+
+  @override
+  String get reauthBody =>
+      'Para eliminar tu cuenta, vuelve a introducir tu contraseña.';
+
+  @override
+  String get reauthConfirm => 'Confirmar';
+
+  @override
   String get privacyTitle => 'Política de privacidad';
 
   @override

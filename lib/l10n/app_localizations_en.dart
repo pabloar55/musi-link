@@ -436,6 +436,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeleteAccount => 'Delete account';
 
   @override
+  String get deleteAccountBody =>
+      'This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.';
+
+  @override
+  String get deleteAccountConfirm => 'Delete';
+
+  @override
+  String get deletingAccount => 'Deleting account...';
+
+  @override
+  String get reauthTitle => 'Confirm your identity';
+
+  @override
+  String get reauthBody => 'To delete your account, re-enter your password.';
+
+  @override
+  String get reauthConfirm => 'Confirm';
+
+  @override
   String get privacyTitle => 'Privacy Policy';
 
   @override

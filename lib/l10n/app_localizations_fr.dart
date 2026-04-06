@@ -445,6 +445,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsDeleteAccount => 'Supprimer le compte';
 
   @override
+  String get deleteAccountBody =>
+      'Cette action supprimera définitivement votre compte, tous vos messages, vos données Spotify et vos informations de profil. Cette action est irréversible.';
+
+  @override
+  String get deleteAccountConfirm => 'Supprimer';
+
+  @override
+  String get deletingAccount => 'Suppression du compte...';
+
+  @override
+  String get reauthTitle => 'Confirmez votre identité';
+
+  @override
+  String get reauthBody =>
+      'Pour supprimer votre compte, saisissez à nouveau votre mot de passe.';
+
+  @override
+  String get reauthConfirm => 'Confirmer';
+
+  @override
   String get privacyTitle => 'Politique de confidentialité';
 
   @override

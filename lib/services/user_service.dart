@@ -228,6 +228,34 @@ class UserService {
     }
   }
 
+  /// Anonimiza el perfil de [uid] eliminando todos los datos personales.
+  /// El documento se mantiene para que los mensajes existentes sigan teniendo
+  /// un autor reconocible ("Deleted user") en lugar de romperse.
+  Future<void> anonymizeUser(String uid) async {
+    try {
+      await _usersRef.doc(uid).update({
+        'displayName': 'Deleted user',
+        'displayNameLower': 'deleted user',
+        'photoUrl': '',
+        'email': '',
+        'spotifyId': FieldValue.delete(),
+        'topArtists': FieldValue.delete(),
+        'topGenres': FieldValue.delete(),
+        'topArtistNames': FieldValue.delete(),
+        'topGenreNames': FieldValue.delete(),
+        'friends': [],
+        'dailySong': FieldValue.delete(),
+        'dailySongUpdatedAt': FieldValue.delete(),
+        'nowPlaying': FieldValue.delete(),
+        'nowPlayingUpdatedAt': FieldValue.delete(),
+      });
+      _userCache.remove(uid);
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
   /// Obtiene los usuarios correspondientes a una lista de UIDs.
   Future<List<AppUser>> getUsersByIds(List<String> uids) async {
     if (uids.isEmpty) return [];

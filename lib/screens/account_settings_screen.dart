@@ -12,6 +12,9 @@ import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/widgets/delete_account_dialog.dart';
+import 'package:musi_link/widgets/deleting_account_dialog.dart';
+import 'package:musi_link/widgets/reauth_password_dialog.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
@@ -28,6 +31,93 @@ class _AccountSettingsScreenState
     final appUser = ref.read(currentUserProvider).asData?.value;
     if (appUser != null && mounted) {
       unawaited(context.push('/profile', extra: appUser));
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    // 1. Confirmación
+    final confirm = await showDeleteAccountDialog(context);
+    if (confirm != true || !mounted) return;
+
+    final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
+    if (firebaseUser == null) return;
+
+    final isGoogle =
+        firebaseUser.providerData.any((p) => p.providerId == 'google.com');
+
+    // 2. Re-autenticación antes de tocar nada
+    if (isGoogle) {
+      bool success;
+      try {
+        success =
+            await ref.read(authServiceProvider).reauthenticateWithGoogle();
+      } catch (e, st) {
+        reportError(e, st).ignore();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.genericError)),
+        );
+        return;
+      }
+      if (!success || !mounted) return; // usuario canceló
+    } else {
+      final password = await showReauthPasswordDialog(context);
+      if (password == null || !mounted) return; // usuario canceló
+      try {
+        await ref
+            .read(authServiceProvider)
+            .reauthenticateWithPassword(firebaseUser.email ?? '', password);
+      } on Exception catch (e) {
+        if (!mounted) return;
+        final msg = e.toString().contains('wrong-password') ||
+                e.toString().contains('invalid-credential')
+            ? l10n.authErrorWrongPassword
+            : l10n.genericError;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    // 3. Progreso — a partir de aquí no hay marcha atrás
+    DeletingAccountDialog.show(context);
+
+    final uid = firebaseUser.uid;
+
+    try {
+      // 4. Datos de Firestore (user aún autenticado → reglas OK)
+      await ref.read(friendServiceProvider).deleteAllUserFriendData(uid);
+      await ref.read(userServiceProvider).anonymizeUser(uid);
+
+      // 5. Spotify (best effort)
+      try {
+        await ref.read(spotifyServiceProvider).disconnect();
+      } catch (_) {}
+
+      // 6. Borrar cuenta Firebase Auth (recién re-autenticado → no falla)
+      await firebaseUser.delete();
+
+      // 7. Limpiar sesión Google + cachés
+      try {
+        await ref.read(authServiceProvider).signOut();
+      } catch (_) {}
+      ref.read(chatServiceProvider).clearCache();
+      ref.invalidate(musicProfileServiceProvider);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      context.go('/auth');
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError)),
+      );
     }
   }
 
@@ -136,9 +226,7 @@ class _AccountSettingsScreenState
               // ── Delete account ─────────────────────────────────────
               Center(
                 child: TextButton.icon(
-                  onPressed: () {
-                    // TODO: implement delete account flow
-                  },
+                  onPressed: _deleteAccount,
                   icon: Icon(LucideIcons.trash2, size: 16, color: cs.error),
                   label: Text(
                     l10n.settingsDeleteAccount,

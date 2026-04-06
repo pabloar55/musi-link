@@ -126,4 +126,48 @@ class AuthService {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
+
+  /// Re-autentica con Google. Devuelve `false` si el usuario cancela
+  /// o selecciona una cuenta diferente a la actualmente registrada.
+  Future<bool> reauthenticateWithGoogle() async {
+    await _ensureGoogleInitialized();
+    try {
+      final googleUser = _googleSignIn.supportsAuthenticate()
+          ? await _googleSignIn.authenticate()
+          : await _googleSignIn.attemptLightweightAuthentication();
+      if (googleUser == null) return false;
+
+      // Verificar que la cuenta seleccionada coincide con la actual
+      // ANTES de llamar a Firebase para evitar registrar una cuenta distinta.
+      if (googleUser.email != _auth.currentUser?.email) {
+        // Limpiar el estado de Google Sign-In (quedó apuntando a la cuenta
+        // incorrecta) sin afectar la sesión de Firebase Auth del usuario real.
+        try { await _googleSignIn.signOut(); } catch (_) {}
+        return false;
+      }
+
+      final googleAuth = googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+      await _auth.currentUser!.reauthenticateWithCredential(credential);
+      return true;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false;
+      await reportError(e, StackTrace.current);
+      rethrow;
+    } on FirebaseAuthException catch (e, st) {
+      await reportError(e, st);
+      rethrow;
+    }
+  }
+
+  /// Re-autentica con email y contraseña.
+  /// Lanza [FirebaseAuthException] si las credenciales son incorrectas.
+  Future<void> reauthenticateWithPassword(
+      String email, String password) async {
+    final credential =
+        EmailAuthProvider.credential(email: email, password: password);
+    await _auth.currentUser!.reauthenticateWithCredential(credential);
+  }
 }

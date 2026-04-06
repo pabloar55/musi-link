@@ -154,6 +154,12 @@
   "settingsLegal": "Legal",
   "settingsPrivacyPolicy": "Política de privacidad",
   "settingsDeleteAccount": "Eliminar cuenta",
+  "deleteAccountBody": "Esta acción eliminará permanentemente tu cuenta, todos tus mensajes, datos de Spotify e información de perfil. Esta acción no se puede deshacer.",
+  "deleteAccountConfirm": "Eliminar",
+  "deletingAccount": "Eliminando cuenta...",
+  "reauthTitle": "Confirma tu identidad",
+  "reauthBody": "Para eliminar tu cuenta, vuelve a introducir tu contraseña.",
+  "reauthConfirm": "Confirmar",
 
   "privacyTitle": "Política de privacidad",
   "privacyLastUpdated": "Última actualización: 6 de abril de 2026",
