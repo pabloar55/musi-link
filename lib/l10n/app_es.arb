@@ -147,5 +147,11 @@
   "onboardingGetStarted": "Empezar",
   "onboardingSkip": "Saltar",
 
-  "genericError": "Algo salió mal. Inténtalo de nuevo."
+  "genericError": "Algo salió mal. Inténtalo de nuevo.",
+
+  "settingsTitle": "Ajustes",
+  "settingsAppearance": "Apariencia",
+  "settingsLegal": "Legal",
+  "settingsPrivacyPolicy": "Política de privacidad",
+  "settingsDeleteAccount": "Eliminar cuenta"
 }

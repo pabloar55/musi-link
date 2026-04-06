@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/router/app_router.dart';
+import 'package:musi_link/screens/account_settings_screen.dart';
 import 'package:musi_link/screens/auth_screen.dart';
 import 'package:musi_link/screens/chat_screen.dart';
 import 'package:musi_link/screens/main_screen.dart';
@@ -107,6 +108,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/search',
         builder: (context, state) => const UserSearchScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const AccountSettingsScreen(),
       ),
     ],
   );

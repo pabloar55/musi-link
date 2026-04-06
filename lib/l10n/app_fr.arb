@@ -147,5 +147,11 @@
   "onboardingGetStarted": "Commencer",
   "onboardingSkip": "Passer",
 
-  "genericError": "Une erreur s'est produite. Veuillez réessayer."
+  "genericError": "Une erreur s'est produite. Veuillez réessayer.",
+
+  "settingsTitle": "Paramètres",
+  "settingsAppearance": "Apparence",
+  "settingsLegal": "Informations légales",
+  "settingsPrivacyPolicy": "Politique de confidentialité",
+  "settingsDeleteAccount": "Supprimer le compte"
 }

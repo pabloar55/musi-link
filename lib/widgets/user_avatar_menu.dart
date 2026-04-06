@@ -1,20 +1,12 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
-import 'package:musi_link/providers/theme_provider.dart';
-import 'package:musi_link/utils/error_reporter.dart';
-import 'package:musi_link/widgets/signing_out_dialog.dart';
-
-enum _UserMenuAction { profile, darkLightMode, logout }
+import 'package:musi_link/theme/app_theme.dart';
 
 class UserAvatarMenu extends ConsumerStatefulWidget {
   const UserAvatarMenu({super.key});
@@ -38,62 +30,9 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
     return ref.read(userServiceProvider).getUser(firebaseUser.uid);
   }
 
-  Future<void> _handleUserMenuAction(_UserMenuAction action) async {
-    switch (action) {
-      case _UserMenuAction.profile:
-        final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-        if (firebaseUser == null) return;
-        final appUser =
-            await ref.read(userServiceProvider).getUser(firebaseUser.uid);
-        if (appUser != null && mounted) {
-          unawaited(context.push('/profile', extra: appUser));
-        }
-        break;
-
-      case _UserMenuAction.darkLightMode:
-        if (!mounted) return;
-        ref.read(themeModeProvider.notifier).toggleDarkLight();
-        break;
-
-      case _UserMenuAction.logout:
-        if (!mounted) return;
-        SigningOutDialog.show(context);
-        try {
-          await ref.read(spotifyServiceProvider).disconnect();
-        } catch (_) {}
-        try {
-          await ref.read(authServiceProvider).signOut();
-        } catch (e, st) {
-          reportError(e, st).ignore();
-          if (!mounted) return;
-          Navigator.of(context).pop(); // cierra SigningOutDialog
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.genericError)),
-          );
-          return;
-        }
-        ref.read(chatServiceProvider).clearCache();
-        ref.invalidate(musicProfileServiceProvider);
-        if (!mounted) return;
-        context.go('/auth');
-        break;
-    }
-  }
-
-  Widget _buildUserAvatar(String imageUrl) {
-    return CircleAvatar(
-      radius: 16,
-      backgroundImage: imageUrl.trim().isNotEmpty
-          ? CachedNetworkImageProvider(imageUrl)
-          : null,
-      
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = ref.watch(isDarkProvider);
-
+    final l10n = AppLocalizations.of(context)!;
     return FutureBuilder<AppUser?>(
       future: _userFuture,
       builder: (context, snapshot) {
@@ -103,72 +42,23 @@ class _UserAvatarMenuState extends ConsumerState<UserAvatarMenu> {
             ? appUser!.photoUrl
             : (firebaseUser?.photoURL ?? '');
 
-        return PopupMenuButton<_UserMenuAction>(
-          tooltip: AppLocalizations.of(context)!.menuAccountOptions,
-          splashRadius: 0,
-          style: const ButtonStyle(splashFactory: NoSplash.splashFactory),
-          popUpAnimationStyle: const AnimationStyle(
-            duration: Duration(milliseconds: 150),
-            curve: Curves.easeInOut,
-          ),
-          onSelected: _handleUserMenuAction,
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: _UserMenuAction.profile,
-              child: _MenuRow(
-                icon: const Icon(LucideIcons.circleUser),
-                label: AppLocalizations.of(context)!.menuProfile,
+        return Tooltip(
+          message: l10n.menuAccountOptions,
+          child: InkWell(
+            onTap: () => context.push('/settings'),
+            borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundImage: imageUrl.trim().isNotEmpty
+                    ? CachedNetworkImageProvider(imageUrl)
+                    : null,
               ),
             ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: _UserMenuAction.darkLightMode,
-              child: _MenuRow(
-                icon: isDarkMode
-                    ? const Icon(LucideIcons.sun)
-                    : const Icon(LucideIcons.moon),
-                label: isDarkMode
-                    ? AppLocalizations.of(context)!.menuLightMode
-                    : AppLocalizations.of(context)!.menuDarkMode,
-              ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: _UserMenuAction.logout,
-              child: _MenuRow(
-                icon: const Icon(LucideIcons.logOut),
-                label: AppLocalizations.of(context)!.menuSignOut,
-              ),
-            ),
-          ],
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: _buildUserAvatar(imageUrl),
           ),
         );
       },
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final Widget icon;
-  final String label;
-
-  const _MenuRow({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        IconTheme(
-          data: IconThemeData(size: 22, color: cs.onSurfaceVariant),
-          child: icon,
-        ),
-        const SizedBox(width: 12),
-        Text(label),
-      ],
     );
   }
 }

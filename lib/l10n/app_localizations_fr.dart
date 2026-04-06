@@ -428,4 +428,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get genericError => 'Une erreur s\'est produite. Veuillez réessayer.';
+
+  @override
+  String get settingsTitle => 'Paramètres';
+
+  @override
+  String get settingsAppearance => 'Apparence';
+
+  @override
+  String get settingsLegal => 'Informations légales';
+
+  @override
+  String get settingsPrivacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get settingsDeleteAccount => 'Supprimer le compte';
 }

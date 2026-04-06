@@ -421,4 +421,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get genericError => 'Algo salió mal. Inténtalo de nuevo.';
+
+  @override
+  String get settingsTitle => 'Ajustes';
+
+  @override
+  String get settingsAppearance => 'Apariencia';
+
+  @override
+  String get settingsLegal => 'Legal';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get settingsDeleteAccount => 'Eliminar cuenta';
 }

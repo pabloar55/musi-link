@@ -182,5 +182,11 @@
   "onboardingGetStarted": "Get started",
   "onboardingSkip": "Skip",
 
-  "genericError": "Something went wrong. Please try again."
+  "genericError": "Something went wrong. Please try again.",
+
+  "settingsTitle": "Settings",
+  "settingsAppearance": "Appearance",
+  "settingsLegal": "Legal",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsDeleteAccount": "Delete account"
 }
