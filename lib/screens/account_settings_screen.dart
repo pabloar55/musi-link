@@ -12,6 +12,7 @@ import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/widgets/delete_account_dialog.dart';
 import 'package:musi_link/widgets/deleting_account_dialog.dart';
 import 'package:musi_link/widgets/reauth_password_dialog.dart';
@@ -53,6 +54,12 @@ class _AccountSettingsScreenState
       try {
         success =
             await ref.read(authServiceProvider).reauthenticateWithGoogle();
+      } on GoogleAccountMismatchException {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reauthWrongAccount)),
+        );
+        return;
       } catch (e, st) {
         reportError(e, st).ignore();
         if (!mounted) return;

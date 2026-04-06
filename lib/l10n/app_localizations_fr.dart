@@ -465,6 +465,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reauthConfirm => 'Confirmer';
 
   @override
+  String get reauthWrongAccount =>
+      'Le compte sélectionné n\'est pas lié à cette application. Veuillez choisir le bon compte.';
+
+  @override
   String get privacyTitle => 'Politique de confidentialité';
 
   @override

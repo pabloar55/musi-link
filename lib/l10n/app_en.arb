@@ -195,6 +195,7 @@
   "reauthTitle": "Confirm your identity",
   "reauthBody": "To delete your account, re-enter your password.",
   "reauthConfirm": "Confirm",
+  "reauthWrongAccount": "The selected account is not linked to this app. Please choose the correct account.",
 
   "privacyTitle": "Privacy Policy",
   "privacyLastUpdated": "Last updated: 6 April 2026",

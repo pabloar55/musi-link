@@ -455,6 +455,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reauthConfirm => 'Confirm';
 
   @override
+  String get reauthWrongAccount =>
+      'The selected account is not linked to this app. Please choose the correct account.';
+
+  @override
   String get privacyTitle => 'Privacy Policy';
 
   @override

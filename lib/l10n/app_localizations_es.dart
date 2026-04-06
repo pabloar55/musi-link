@@ -458,6 +458,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reauthConfirm => 'Confirmar';
 
   @override
+  String get reauthWrongAccount =>
+      'La cuenta seleccionada no está vinculada a esta app. Por favor, elige la cuenta correcta.';
+
+  @override
   String get privacyTitle => 'Política de privacidad';
 
   @override

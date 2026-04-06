@@ -3,6 +3,12 @@ import 'package:musi_link/utils/error_reporter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:musi_link/services/user_service.dart';
 
+/// Excepción lanzada cuando el usuario selecciona una cuenta de Google
+/// distinta a la vinculada con su sesión actual.
+class GoogleAccountMismatchException implements Exception {
+  const GoogleAccountMismatchException();
+}
+
 /// Servicio de autenticación con Firebase Auth.
 /// Soporta email+contraseña y Google Sign-In.
 class AuthService {
@@ -143,7 +149,7 @@ class AuthService {
         // Limpiar el estado de Google Sign-In (quedó apuntando a la cuenta
         // incorrecta) sin afectar la sesión de Firebase Auth del usuario real.
         try { await _googleSignIn.signOut(); } catch (_) {}
-        return false;
+        throw const GoogleAccountMismatchException();
       }
 
       final googleAuth = googleUser.authentication;

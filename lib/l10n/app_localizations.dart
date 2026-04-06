@@ -928,6 +928,12 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get reauthConfirm;
 
+  /// No description provided for @reauthWrongAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected account is not linked to this app. Please choose the correct account.'**
+  String get reauthWrongAccount;
+
   /// No description provided for @privacyTitle.
   ///
   /// In en, this message translates to:

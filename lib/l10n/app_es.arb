@@ -160,6 +160,7 @@
   "reauthTitle": "Confirma tu identidad",
   "reauthBody": "Para eliminar tu cuenta, vuelve a introducir tu contraseña.",
   "reauthConfirm": "Confirmar",
+  "reauthWrongAccount": "La cuenta seleccionada no está vinculada a esta app. Por favor, elige la cuenta correcta.",
 
   "privacyTitle": "Política de privacidad",
   "privacyLastUpdated": "Última actualización: 6 de abril de 2026",

@@ -160,6 +160,7 @@
   "reauthTitle": "Confirmez votre identité",
   "reauthBody": "Pour supprimer votre compte, saisissez à nouveau votre mot de passe.",
   "reauthConfirm": "Confirmer",
+  "reauthWrongAccount": "Le compte sélectionné n'est pas lié à cette application. Veuillez choisir le bon compte.",
 
   "privacyTitle": "Politique de confidentialité",
   "privacyLastUpdated": "Dernière mise à jour : 6 avril 2026",
