@@ -538,12 +538,6 @@ abstract class AppLocalizations {
   /// **'Error loading conversations'**
   String get socialErrorLoading;
 
-  /// No description provided for @socialLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading...'**
-  String get socialLoading;
-
   /// No description provided for @socialUser.
   ///
   /// In en, this message translates to:

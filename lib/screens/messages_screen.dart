@@ -126,13 +126,15 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
               return FutureBuilder<AppUser?>(
                 future: getUserFuture(otherUid),
                 builder: (context, userSnap) {
-                  final otherUser = userSnap.data;
                   final isLoading =
                       userSnap.connectionState == ConnectionState.waiting &&
                       !userSnap.hasData;
-                  final name =
-                      otherUser?.displayName ??
-                      (isLoading ? l10n.socialLoading : l10n.socialUser);
+                  if (isLoading) {
+                    return const SkeletonShimmer(child: SkeletonChatListTile());
+                  }
+
+                  final otherUser = userSnap.data;
+                  final name = otherUser?.displayName ?? l10n.socialUser;
                   final photoUrl = otherUser?.photoUrl ?? '';
 
                   return ListTile(

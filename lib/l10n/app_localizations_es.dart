@@ -243,9 +243,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get socialErrorLoading => 'Error al cargar conversaciones';
 
   @override
-  String get socialLoading => 'Cargando...';
-
-  @override
   String get socialUser => 'Usuario';
 
   @override

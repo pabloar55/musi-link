@@ -247,9 +247,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Erreur lors du chargement des conversations';
 
   @override
-  String get socialLoading => 'Chargement...';
-
-  @override
   String get socialUser => 'Utilisateur';
 
   @override

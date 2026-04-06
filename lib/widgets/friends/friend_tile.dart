@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 import 'package:musi_link/widgets/user_circle_avatar.dart';
 
 class FriendTile extends StatelessWidget {
@@ -22,13 +23,14 @@ class FriendTile extends StatelessWidget {
     return FutureBuilder<AppUser?>(
       future: getUserFuture(uid),
       builder: (context, snapshot) {
-        final user = snapshot.data;
         final isLoading = snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData;
-        final name = user?.displayName ??
-            (isLoading
-                ? AppLocalizations.of(context)!.socialLoading
-                : AppLocalizations.of(context)!.socialUser);
+        if (isLoading) {
+          return const SkeletonShimmer(child: SkeletonListTile());
+        }
+
+        final user = snapshot.data;
+        final name = user?.displayName ?? AppLocalizations.of(context)!.socialUser;
         final photoUrl = user?.photoUrl ?? '';
 
         return ListTile(
