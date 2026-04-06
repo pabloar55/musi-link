@@ -359,6 +359,34 @@ void main() {
         expect(result, isEmpty);
       });
 
+      test('hace una sola consulta con exactamente 10 UIDs (límite whereIn)',
+          () async {
+        final uids = List.generate(10, (i) => 'uid_$i');
+
+        final mockQuery = MockQuery();
+        final mockSnapshot = MockQuerySnapshot();
+
+        when(() => mockUsersRef.where(FieldPath.documentId,
+            whereIn: uids)).thenReturn(mockQuery);
+        when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
+
+        final mockDoc = MockQueryDocumentSnapshot();
+        when(() => mockDoc.id).thenReturn('uid_0');
+        when(() => mockDoc.data()).thenReturn({
+          'email': 'u0@test.com',
+          'displayName': 'User 0',
+          'photoUrl': '',
+          'createdAt': Timestamp.fromDate(DateTime(2025)),
+          'lastLogin': Timestamp.fromDate(DateTime(2025)),
+        });
+        when(() => mockSnapshot.docs).thenReturn([mockDoc]);
+
+        final result = await userService.getUsersByIds(uids);
+
+        expect(result, hasLength(1));
+        verify(() => mockQuery.get()).called(1);
+      });
+
       test('hace chunks de 10 para consultas whereIn', () async {
         // Generar 15 UIDs para forzar 2 chunks
         final uids = List.generate(15, (i) => 'uid_$i');
