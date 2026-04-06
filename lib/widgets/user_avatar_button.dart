@@ -1,0 +1,43 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/user_profile_provider.dart';
+import 'package:musi_link/theme/app_theme.dart';
+
+class UserAvatarButton extends ConsumerWidget {
+  const UserAvatarButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final appUser = ref.watch(currentUserProvider).asData?.value;
+    final imageUrl = appUser?.photoUrl ?? '';
+    final uid = appUser?.uid ?? '';
+
+    return Tooltip(
+      message: l10n.menuAccountOptions,
+      child: InkWell(
+        onTap: () => context.push('/settings'),
+        borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Hero(
+            tag: 'user-avatar-$uid',
+            child: CircleAvatar(
+              radius: 16,
+              backgroundImage: imageUrl.trim().isNotEmpty
+                  ? CachedNetworkImageProvider(imageUrl)
+                  : null,
+              child: imageUrl.trim().isEmpty
+                  ? const Icon(LucideIcons.user, size: 18)
+                  : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -222,9 +222,12 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                               final rel = _relationships[user.uid];
 
                               return ListTile(
-                                leading: UserCircleAvatar(
-                                  photoUrl: photoUrl,
-                                  name: user.displayName,
+                                leading: Hero(
+                                  tag: 'user-avatar-${user.uid}',
+                                  child: UserCircleAvatar(
+                                    photoUrl: photoUrl,
+                                    name: user.displayName,
+                                  ),
                                 ),
                                 title: Text(user.displayName),
                                 subtitle: user.spotifyId != null

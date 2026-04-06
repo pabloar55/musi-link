@@ -38,7 +38,7 @@ class UserDiscoveryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar
-              _UserAvatar(photoUrl: user.photoUrl),
+              _UserAvatar(photoUrl: user.photoUrl, uid: user.uid),
               const SizedBox(width: AppTokens.spaceMD),
 
               // Info principal
@@ -114,20 +114,24 @@ class UserDiscoveryCard extends StatelessWidget {
 
 class _UserAvatar extends StatelessWidget {
   final String photoUrl;
-  const _UserAvatar({required this.photoUrl});
+  final String uid;
+  const _UserAvatar({required this.photoUrl, required this.uid});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasPhoto = photoUrl.isNotEmpty;
 
-    return CircleAvatar(
-      radius: 26,
-      backgroundColor: cs.surfaceContainerHighest,
-      backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
-      child: hasPhoto
-          ? null
-          : Icon(LucideIcons.user, size: 28, color: cs.onSurfaceVariant),
+    return Hero(
+      tag: 'user-avatar-$uid',
+      child: CircleAvatar(
+        radius: 26,
+        backgroundColor: cs.surfaceContainerHighest,
+        backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
+        child: hasPhoto
+            ? null
+            : Icon(LucideIcons.user, size: 28, color: cs.onSurfaceVariant),
+      ),
     );
   }
 }

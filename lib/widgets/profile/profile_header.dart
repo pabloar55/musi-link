@@ -46,18 +46,21 @@ class ProfileHeader extends StatelessWidget {
                 color: cs.surface,
               ),
             ),
-            ClipOval(
-              child: SizedBox(
-                width: 90,
-                height: 90,
-                child: user.photoUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: user.photoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (ctx, url) => _avatarPlaceholder(cs),
-                        errorWidget: (ctx, url, err) => _avatarPlaceholder(cs),
-                      )
-                    : _avatarPlaceholder(cs),
+            Hero(
+              tag: 'user-avatar-${user.uid}',
+              child: ClipOval(
+                child: SizedBox(
+                  width: 90,
+                  height: 90,
+                  child: user.photoUrl.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: user.photoUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (ctx, url) => _avatarPlaceholder(cs),
+                          errorWidget: (ctx, url, err) => _avatarPlaceholder(cs),
+                        )
+                      : _avatarPlaceholder(cs),
+                ),
               ),
             ),
           ],

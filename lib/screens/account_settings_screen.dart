@@ -6,10 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
-import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/theme_provider.dart';
+import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
@@ -24,25 +24,8 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 
 class _AccountSettingsScreenState
     extends ConsumerState<AccountSettingsScreen> {
-  Future<AppUser?>? _userFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _userFuture = _getCurrentAppUser();
-  }
-
-  Future<AppUser?> _getCurrentAppUser() async {
-    final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-    if (firebaseUser == null) return null;
-    return ref.read(userServiceProvider).getUser(firebaseUser.uid);
-  }
-
   Future<void> _goToProfile() async {
-    final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-    if (firebaseUser == null) return;
-    final appUser =
-        await ref.read(userServiceProvider).getUser(firebaseUser.uid);
+    final appUser = ref.read(currentUserProvider).asData?.value;
     if (appUser != null && mounted) {
       unawaited(context.push('/profile', extra: appUser));
     }
@@ -81,17 +64,12 @@ class _AccountSettingsScreenState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: FutureBuilder<AppUser?>(
-        future: _userFuture,
-        builder: (context, snapshot) {
+      body: Builder(
+        builder: (context) {
+          final appUser = ref.watch(currentUserProvider).asData?.value;
           final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
-          final appUser = snapshot.data;
-          final imageUrl = appUser?.photoUrl.isNotEmpty == true
-              ? appUser!.photoUrl
-              : (firebaseUser?.photoURL ?? '');
-          final displayName = appUser?.displayName ??
-              firebaseUser?.displayName ??
-              l10n.socialUser;
+          final imageUrl = appUser?.photoUrl ?? '';
+          final displayName = appUser?.displayName ?? l10n.socialUser;
           final email = firebaseUser?.email ?? '';
 
           return ListView(
@@ -105,6 +83,7 @@ class _AccountSettingsScreenState
                 imageUrl: imageUrl,
                 displayName: displayName,
                 email: email,
+                uid: appUser?.uid ?? firebaseUser?.uid ?? '',
                 onTap: _goToProfile,
               ),
 
@@ -183,12 +162,14 @@ class _ProfileCard extends StatelessWidget {
   final String imageUrl;
   final String displayName;
   final String email;
+  final String uid;
   final VoidCallback onTap;
 
   const _ProfileCard({
     required this.imageUrl,
     required this.displayName,
     required this.email,
+    required this.uid,
     required this.onTap,
   });
 
@@ -204,15 +185,18 @@ class _ProfileCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppTokens.spaceLG),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundImage: imageUrl.trim().isNotEmpty
-                    ? CachedNetworkImageProvider(imageUrl)
-                    : null,
-                backgroundColor: cs.surfaceContainerHighest,
-                child: imageUrl.trim().isEmpty
-                    ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
-                    : null,
+              Hero(
+                tag: 'user-avatar-$uid',
+                child: CircleAvatar(
+                  radius: 28,
+                  backgroundImage: imageUrl.trim().isNotEmpty
+                      ? CachedNetworkImageProvider(imageUrl)
+                      : null,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  child: imageUrl.trim().isEmpty
+                      ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
+                      : null,
+                ),
               ),
               const SizedBox(width: AppTokens.spaceLG),
               Expanded(

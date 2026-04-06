@@ -3,7 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
-import 'package:musi_link/widgets/user_avatar_menu.dart';
+import 'package:musi_link/widgets/user_avatar_button.dart';
 import 'package:musi_link/screens/discover_screen.dart';
 import 'package:musi_link/screens/messages_screen.dart';
 import 'package:musi_link/screens/stats_screen.dart';
@@ -60,7 +60,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: Image.asset('assets/images/logo.png', width: 150),
-        actions: const [UserAvatarMenu()],
+        actions: const [UserAvatarButton()],
       ),
 
       body: PageView(
