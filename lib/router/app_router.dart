@@ -60,3 +60,28 @@ class AppRouterNotifier extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Lógica de redirect centralizada y testeable de forma independiente.
+/// Devuelve la ruta destino o null si no hay que redirigir.
+String? appRedirect(AppRouterNotifier notifier, String location) {
+  if (!notifier.isInitialized) {
+    return location == '/splash' ? null : '/splash';
+  }
+  if (!notifier.isLoggedIn) {
+    return location == '/auth' ? null : '/auth';
+  }
+  if (!notifier.spotifyConnected) {
+    return location == '/spotify-connect' ? null : '/spotify-connect';
+  }
+  if (!notifier.onboardingDone) {
+    return location == '/onboarding' ? null : '/onboarding';
+  }
+  // Usuario listo: evitar que se quede en pantallas de setup
+  if (location == '/splash' ||
+      location == '/auth' ||
+      location == '/spotify-connect' ||
+      location == '/onboarding') {
+    return '/';
+  }
+  return null;
+}

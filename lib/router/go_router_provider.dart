@@ -27,35 +27,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: notifier,
-    redirect: (context, state) {
-      final location = state.matchedLocation;
-
-      if (!notifier.isInitialized) {
-        return location == '/splash' ? null : '/splash';
-      }
-
-      if (!notifier.isLoggedIn) {
-        return location == '/auth' ? null : '/auth';
-      }
-
-      if (!notifier.spotifyConnected) {
-        return location == '/spotify-connect' ? null : '/spotify-connect';
-      }
-
-      if (!notifier.onboardingDone) {
-        return location == '/onboarding' ? null : '/onboarding';
-      }
-
-      // Usuario listo: evitar que se quede en pantallas de setup
-      if (location == '/splash' ||
-          location == '/auth' ||
-          location == '/spotify-connect' ||
-          location == '/onboarding') {
-        return '/';
-      }
-
-      return null;
-    },
+    redirect: (context, state) =>
+        appRedirect(notifier, state.matchedLocation),
     routes: [
       GoRoute(
         path: '/splash',
