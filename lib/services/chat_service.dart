@@ -34,46 +34,53 @@ class ChatService {
 
   // ─── Chats ────────────────────────────────────────────────
 
+  /// Returns a deterministic, content-addressed document ID for a chat between
+  /// two users: the two UIDs joined by "_", sorted lexicographically so that
+  /// _chatId(a, b) == _chatId(b, a) for any pair.
+  static String _chatId(String a, String b) {
+    final sorted = [a, b]..sort();
+    return '${sorted[0]}_${sorted[1]}';
+  }
+
   /// Crea un chat entre el usuario actual y [otherUid].
   /// Si ya existe un chat entre ambos, devuelve el existente.
-  /// Resultado cacheado en memoria para evitar re-query al abrir el mismo chat.
+  ///
+  /// Usa un ID determinista (UIDs ordenados) y una transacción Firestore para
+  /// garantizar idempotencia: si dos clientes llaman a este método al mismo
+  /// tiempo, la transacción del segundo verá el documento ya creado y no
+  /// generará un duplicado.
   Future<Chat> getOrCreateChat(String otherUid) async {
     final cached = _chatByOtherUid[otherUid];
     if (cached != null) return cached;
 
     try {
-      // Buscar si ya existe un chat entre los dos usuarios
-      final existing = await _chatsRef
-          .where('participants', arrayContains: _currentUid)
-          .get();
+      final currentUid = _currentUid;
+      final docRef = _chatsRef.doc(_chatId(currentUid, otherUid));
 
-      for (final doc in existing.docs) {
-        final participants = List<String>.from(doc['participants'] ?? []);
-        if (participants.contains(otherUid)) {
-          final chat = Chat.fromFirestore(doc);
-          _chatByOtherUid[otherUid] = chat;
-          return chat;
+      late Chat chat;
+      await _firestore.runTransaction((tx) async {
+        final snap = await tx.get(docRef);
+        if (snap.exists) {
+          chat = Chat.fromFirestore(snap);
+        } else {
+          final now = DateTime.now();
+          tx.set(docRef, {
+            'participants': [currentUid, otherUid],
+            'lastMessage': '',
+            'lastMessageTime': Timestamp.fromDate(now),
+            'createdAt': Timestamp.fromDate(now),
+          });
+          chat = Chat(
+            id: docRef.id,
+            participants: [currentUid, otherUid],
+            lastMessageTime: now,
+            createdAt: now,
+          );
         }
-      }
+      });
 
-      // Crear un chat nuevo
-      final now = DateTime.now();
-      final chat = Chat(
-        id: '',
-        participants: [_currentUid, otherUid],
-        lastMessageTime: now,
-        createdAt: now,
-      );
-
-      final docRef = await _chatsRef.add(chat.toFirestore());
-      final newChat = Chat(
-        id: docRef.id,
-        participants: chat.participants,
-        lastMessageTime: chat.lastMessageTime,
-        createdAt: chat.createdAt,
-      );
-      _chatByOtherUid[otherUid] = newChat;
-      return newChat;
+      _chatByOtherUid[otherUid] = chat;
+      return chat;
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;

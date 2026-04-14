@@ -69,11 +69,18 @@ service cloud.firestore {
       allow read: if request.auth != null
         && request.auth.uid in resource.data.participants;
 
-      // Cualquier usuario autenticado puede crear un chat
-      // (siempre que se incluya a sí mismo como participante)
+      // Solo se puede crear un chat con un ID determinista: los dos UIDs de los
+      // participantes ordenados lexicográficamente y unidos por "_".
+      // Esto evita que dos clientes concurrentes creen documentos duplicados
+      // para el mismo par de usuarios, ya que cualquier ID aleatorio será
+      // rechazado por esta regla.
       allow create: if request.auth != null
         && request.auth.uid in request.resource.data.participants
-        && request.resource.data.participants.size() == 2;
+        && request.resource.data.participants.size() == 2
+        && (
+          chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1]
+          || chatId == request.resource.data.participants[1] + '_' + request.resource.data.participants[0]
+        );
 
       // Solo los participantes pueden actualizar (ej: lastMessage)
       allow update: if request.auth != null
