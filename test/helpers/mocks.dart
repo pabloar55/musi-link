@@ -62,6 +62,8 @@ class FakeTransaction extends Fake implements Transaction {
   DocumentSnapshot<Map<String, dynamic>>? getResult;
   final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>>
       updates = [];
+  final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>>
+      sets = [];
   bool getCalled = false;
 
   @override
@@ -76,6 +78,19 @@ class FakeTransaction extends Fake implements Transaction {
       DocumentReference<Object?> documentReference,
       Map<Object, Object?> data) {
     updates.add(MapEntry(documentReference, Map<String, dynamic>.from(data)));
+    return this;
+  }
+
+  @override
+  Transaction set<T>(
+      DocumentReference<T> documentReference,
+      T data, [
+      SetOptions? options,
+  ]) {
+    sets.add(MapEntry(
+      documentReference as DocumentReference<Object?>,
+      Map<String, dynamic>.from(data as Map),
+    ));
     return this;
   }
 }

@@ -35,18 +35,19 @@ void main() {
   group('ChatService', () {
     group('getOrCreateChat', () {
       test('devuelve chat existente si ya hay uno entre ambos', () async {
-        final mockQuery = MockQuery();
-        final mockSnapshot = MockQuerySnapshot();
-        final mockDoc = MockQueryDocumentSnapshot();
+        // ID determinista: UIDs ordenados lexicográficamente
+        const chatId = 'current_uid_other_uid';
+        final mockDocRef = MockDocumentReference();
+        final mockChatSnap = MockDocumentSnapshot();
+        final fakeTransaction = FakeTransaction();
 
-        when(() => mockChatsRef.where('participants',
-            arrayContains: 'current_uid')).thenReturn(mockQuery);
-        when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-        when(() => mockSnapshot.docs).thenReturn([mockDoc]);
-        when(() => mockDoc.id).thenReturn('chat_123');
-        when(() => mockDoc['participants'])
-            .thenReturn(['current_uid', 'other_uid']);
-        when(() => mockDoc.data()).thenReturn({
+        mockFirestore.fakeTransaction = fakeTransaction;
+        fakeTransaction.getResult = mockChatSnap;
+
+        when(() => mockChatsRef.doc(chatId)).thenReturn(mockDocRef);
+        when(() => mockChatSnap.exists).thenReturn(true);
+        when(() => mockChatSnap.id).thenReturn(chatId);
+        when(() => mockChatSnap.data()).thenReturn({
           'participants': ['current_uid', 'other_uid'],
           'lastMessage': 'hello',
           'lastMessageTime': Timestamp.fromDate(DateTime(2025, 1, 1)),
@@ -55,35 +56,33 @@ void main() {
 
         final chat = await chatService.getOrCreateChat('other_uid');
 
-        expect(chat.id, 'chat_123');
+        expect(chat.id, chatId);
         expect(chat.participants, contains('other_uid'));
-        // No se debería haber creado uno nuevo
-        verifyNever(() => mockChatsRef.add(any()));
+        // No debería haberse llamado a set (el chat ya existía)
+        expect(fakeTransaction.sets, isEmpty);
       });
 
       test('crea chat nuevo si no existe uno entre ambos', () async {
-        final mockQuery = MockQuery();
-        final mockSnapshot = MockQuerySnapshot();
+        const chatId = 'current_uid_other_uid';
+        final mockDocRef = MockDocumentReference();
+        final mockChatSnap = MockDocumentSnapshot();
+        final fakeTransaction = FakeTransaction();
 
-        // No hay chats existentes
-        when(() => mockChatsRef.where('participants',
-            arrayContains: 'current_uid')).thenReturn(mockQuery);
-        when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
-        when(() => mockSnapshot.docs).thenReturn([]);
+        mockFirestore.fakeTransaction = fakeTransaction;
+        fakeTransaction.getResult = mockChatSnap;
 
-        // Crear nuevo
-        final mockNewDocRef = MockDocumentReference();
-        when(() => mockChatsRef.add(any()))
-            .thenAnswer((_) async => mockNewDocRef);
-        when(() => mockNewDocRef.id).thenReturn('new_chat_id');
+        when(() => mockChatsRef.doc(chatId)).thenReturn(mockDocRef);
+        when(() => mockDocRef.id).thenReturn(chatId);
+        when(() => mockChatSnap.exists).thenReturn(false);
 
         final chat = await chatService.getOrCreateChat('other_uid');
 
-        expect(chat.id, 'new_chat_id');
-        final captured =
-            verify(() => mockChatsRef.add(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['participants'], ['current_uid', 'other_uid']);
+        expect(chat.id, chatId);
+        expect(chat.participants, containsAll(['current_uid', 'other_uid']));
+        // tx.set debe haberse llamado con los participantes correctos
+        expect(fakeTransaction.sets, hasLength(1));
+        expect(fakeTransaction.sets.first.value['participants'],
+            ['current_uid', 'other_uid']);
       });
     });
 
