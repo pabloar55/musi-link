@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/utils/notification_navigation.dart';
 import 'package:musi_link/widgets/user_avatar_button.dart';
 import 'package:musi_link/screens/discover_screen.dart';
 import 'package:musi_link/screens/messages_screen.dart';
@@ -33,6 +35,13 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     if (ref.read(spotifyServiceProvider).isInitialized) {
       ref.read(spotifyServiceProvider).startPollingNowPlaying();
     }
+    // Initialize FCM: permisos, token, canal Android, listeners
+    ref.read(notificationServiceProvider).initialize();
+    // FCM: app abierta desde notificación en background
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      if (!mounted) return;
+      handleNotificationNavigation(message.data, context);
+    });
   }
 
   @override
@@ -56,6 +65,15 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // FCM: tap en local notification (foreground) o cold-start
+    ref.listen<Map<String, dynamic>?>(pendingNotificationProvider, (_, data) {
+      if (data != null) {
+        handleNotificationNavigation(data, context);
+        ref.read(pendingNotificationProvider.notifier).setValue(null);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,

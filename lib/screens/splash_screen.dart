@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,6 +55,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
 
     try {
+      // Cold-start: capturar notificación que abrió la app
+      final initialMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null) {
+        ref
+            .read(pendingNotificationProvider.notifier)
+            .setValue(initialMessage.data);
+      }
+
       // Ejecutar checks en paralelo con el tiempo mínimo de splash
       final spotifyFuture = ref.read(spotifyServiceProvider).tryRestoreSession();
       final prefsFuture = SharedPreferences.getInstance();

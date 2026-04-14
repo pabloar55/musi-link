@@ -1,0 +1,139 @@
+import * as admin from 'firebase-admin';
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+} from 'firebase-functions/v2/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
+
+admin.initializeApp();
+
+const db = admin.firestore();
+const messaging = admin.messaging();
+
+// ── Helper ────────────────────────────────────────────────────────────────────
+
+async function sendNotification(
+  recipientUid: string,
+  token: string,
+  notification: { title: string; body: string },
+  data: Record<string, string>,
+): Promise<void> {
+  try {
+    await messaging.send({
+      token,
+      notification,
+      data,
+      android: { priority: 'high' },
+      apns: { payload: { aps: { sound: 'default' } } },
+    });
+  } catch (error: unknown) {
+    const fcmError = error as { code?: string };
+    if (fcmError.code === 'messaging/registration-token-not-registered') {
+      await db.doc(`users/${recipientUid}`).update({ fcmToken: FieldValue.delete() });
+    }
+  }
+}
+
+// ── Función 1 — Nuevo mensaje ─────────────────────────────────────────────────
+
+export const onNewMessage = onDocumentCreated(
+  { document: 'chats/{chatId}/messages/{messageId}', region: 'europe-southwest1' },
+  async (event) => {
+    const message = event.data?.data();
+    if (!message) return;
+
+    const chatId = event.params.chatId;
+    const senderId = message.senderId as string;
+
+    const chatSnap = await db.doc(`chats/${chatId}`).get();
+    const chatData = chatSnap.data();
+    if (!chatData) return;
+
+    const participants = chatData.participants as string[];
+    const recipientId = participants.find((p) => p !== senderId);
+    if (!recipientId) return;
+
+    const [recipientSnap, senderSnap] = await Promise.all([
+      db.doc(`users/${recipientId}`).get(),
+      db.doc(`users/${senderId}`).get(),
+    ]);
+
+    const fcmToken = recipientSnap.data()?.fcmToken as string | undefined;
+    const senderName = senderSnap.data()?.displayName as string | undefined;
+    if (!fcmToken || !senderName) return;
+
+    await sendNotification(
+      recipientId,
+      fcmToken,
+      { title: senderName, body: (message.text as string | undefined) ?? '📎' },
+      {
+        type: 'new_message',
+        chatId,
+        otherUserId: senderId,
+        otherUserName: senderName,
+      },
+    );
+  },
+);
+
+// ── Función 2 — Nueva solicitud de amistad ────────────────────────────────────
+
+export const onFriendRequest = onDocumentCreated(
+  { document: 'friend_requests/{requestId}', region: 'europe-southwest1' },
+  async (event) => {
+    const request = event.data?.data();
+    if (!request) return;
+
+    const senderId = request.senderId as string;
+    const receiverId = request.receiverId as string;
+
+    const [receiverSnap, senderSnap] = await Promise.all([
+      db.doc(`users/${receiverId}`).get(),
+      db.doc(`users/${senderId}`).get(),
+    ]);
+
+    const fcmToken = receiverSnap.data()?.fcmToken as string | undefined;
+    const senderName = senderSnap.data()?.displayName as string | undefined;
+    if (!fcmToken || !senderName) return;
+
+    await sendNotification(
+      receiverId,
+      fcmToken,
+      { title: 'musi link', body: `${senderName} sent you a friend request` },
+      { type: 'friend_request', senderId },
+    );
+  },
+);
+
+// ── Función 3 — Solicitud de amistad aceptada ─────────────────────────────────
+
+export const onFriendRequestAccepted = onDocumentUpdated(
+  { document: 'friend_requests/{requestId}', region: 'europe-southwest1' },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+    if (before.status !== 'pending' || after.status !== 'accepted') return;
+
+    const senderId = after.senderId as string;
+    const receiverId = after.receiverId as string;
+
+    const [senderSnap, receiverSnap] = await Promise.all([
+      db.doc(`users/${senderId}`).get(),
+      db.doc(`users/${receiverId}`).get(),
+    ]);
+
+    const fcmToken = senderSnap.data()?.fcmToken as string | undefined;
+    const accepterName = receiverSnap.data()?.displayName as string | undefined;
+    if (!fcmToken || !accepterName) return;
+
+    await sendNotification(
+      senderId,
+      fcmToken,
+      { title: 'musi link', body: `${accepterName} accepted your friend request` },
+      { type: 'friend_request_accepted', accepterId: receiverId },
+    );
+
+    await db.doc(event.document).delete();
+  },
+);

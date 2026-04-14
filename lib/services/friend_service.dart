@@ -71,11 +71,8 @@ class FriendService {
           return; // ya fue aceptada o rechazada
         }
 
-        final now = Timestamp.fromDate(DateTime.now());
-
         tx.update(_requestsRef.doc(requestId), {
           'status': FriendRequestStatus.accepted.name,
-          'updatedAt': now,
         });
         tx.update(_usersRef.doc(_currentUid), {
           'friends': FieldValue.arrayUnion([otherUid]),
@@ -93,10 +90,7 @@ class FriendService {
   /// Rechaza una solicitud de amistad.
   Future<void> rejectRequest(String requestId) async {
     try {
-      await _requestsRef.doc(requestId).update({
-        'status': FriendRequestStatus.rejected.name,
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      });
+      await _requestsRef.doc(requestId).delete();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;

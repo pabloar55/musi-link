@@ -105,15 +105,17 @@ class _AccountSettingsScreenState
         await ref.read(spotifyServiceProvider).disconnect();
       } catch (_) {}
 
-      // 6. Borrar cuenta Firebase Auth (recién re-autenticado → no falla)
+      // 6. Capturar servicios antes de borrar (delete() desmonta el widget)
+      final authService = ref.read(authServiceProvider);
+      final chatService = ref.read(chatServiceProvider);
+
       await firebaseUser.delete();
 
       // 7. Limpiar sesión Google + cachés
       try {
-        await ref.read(authServiceProvider).signOut();
+        await authService.signOut();
       } catch (_) {}
-      ref.read(chatServiceProvider).clearCache();
-      ref.invalidate(musicProfileServiceProvider);
+      chatService.clearCache();
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -134,8 +136,10 @@ class _AccountSettingsScreenState
     try {
       await ref.read(spotifyServiceProvider).disconnect();
     } catch (_) {}
+    final authService = ref.read(authServiceProvider);
+    final chatService = ref.read(chatServiceProvider);
     try {
-      await ref.read(authServiceProvider).signOut();
+      await authService.signOut();
     } catch (e, st) {
       reportError(e, st).ignore();
       if (!mounted) return;
@@ -147,8 +151,7 @@ class _AccountSettingsScreenState
       );
       return;
     }
-    ref.read(chatServiceProvider).clearCache();
-    ref.invalidate(musicProfileServiceProvider);
+    chatService.clearCache();
     if (!mounted) return;
     context.go('/auth');
   }

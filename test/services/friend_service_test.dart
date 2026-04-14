@@ -103,18 +103,14 @@ void main() {
     });
 
     group('rejectRequest', () {
-      test('actualiza status a rejected', () async {
+      test('elimina el documento del request', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockRequestsRef.doc('req_123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
+        when(() => mockDocRef.delete()).thenAnswer((_) async {});
 
         await friendService.rejectRequest('req_123');
 
-        final captured = Map<String, dynamic>.from(
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map);
-        expect(captured['status'], 'rejected');
-        expect(captured['updatedAt'], isA<Timestamp>());
+        verify(() => mockDocRef.delete()).called(1);
       });
     });
 

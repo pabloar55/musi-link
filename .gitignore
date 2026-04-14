@@ -52,3 +52,6 @@ app.*.map.json
 contexto_proyecto.md
 contexto.md
 pending.txt
+
+# Cloud functions
+/functions/node_modules/

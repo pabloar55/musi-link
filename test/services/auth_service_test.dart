@@ -12,6 +12,7 @@ void main() {
   late MockFirebaseAuth mockAuth;
   late MockGoogleSignIn mockGoogleSignIn;
   late MockUserService mockUserService;
+  late MockNotificationService mockNotificationService;
   late AuthService authService;
 
   setUpAll(() {
@@ -22,10 +23,12 @@ void main() {
     mockAuth = MockFirebaseAuth();
     mockGoogleSignIn = MockGoogleSignIn();
     mockUserService = MockUserService();
+    mockNotificationService = MockNotificationService();
     authService = AuthService(
       mockUserService,
       auth: mockAuth,
       googleSignIn: mockGoogleSignIn,
+      notificationService: mockNotificationService,
     );
   });
 
@@ -296,13 +299,16 @@ void main() {
     });
 
     group('signOut', () {
-      test('cierra sesión en Google y Firebase', () async {
+      test('cierra sesión en Google y Firebase, limpia FCM token', () async {
         when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
         when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async {});
         when(() => mockAuth.signOut()).thenAnswer((_) async {});
+        when(() => mockNotificationService.clearToken())
+            .thenAnswer((_) async {});
 
         await authService.signOut();
 
+        verify(() => mockNotificationService.clearToken()).called(1);
         verify(() => mockGoogleSignIn.signOut()).called(1);
         verify(() => mockAuth.signOut()).called(1);
       });

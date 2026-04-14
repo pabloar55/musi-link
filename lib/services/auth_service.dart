@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
 /// Excepción lanzada cuando el usuario selecciona una cuenta de Google
@@ -12,13 +13,19 @@ class GoogleAccountMismatchException implements Exception {
 /// Servicio de autenticación con Firebase Auth.
 /// Soporta email+contraseña y Google Sign-In.
 class AuthService {
-  AuthService(this._userService, {required FirebaseAuth auth, required GoogleSignIn googleSignIn})
-      : _auth = auth,
-        _googleSignIn = googleSignIn;
+  AuthService(
+    this._userService, {
+    required FirebaseAuth auth,
+    required GoogleSignIn googleSignIn,
+    required NotificationService notificationService,
+  })  : _auth = auth,
+        _googleSignIn = googleSignIn,
+        _notificationService = notificationService;
 
   final UserService _userService;
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
+  final NotificationService _notificationService;
   bool _googleInitialized = false;
 
   Future<void> _ensureGoogleInitialized() async {
@@ -126,9 +133,13 @@ class AuthService {
     }
   }
 
-  /// Cierra sesión de Firebase y Google
+  /// Cierra sesión de Firebase y Google.
+  /// Limpia el FCM token antes de cerrar sesión.
   Future<void> signOut() async {
     await _ensureGoogleInitialized();
+    try {
+      await _notificationService.clearToken();
+    } catch (_) {}
     await _googleSignIn.signOut();
     await _auth.signOut();
   }

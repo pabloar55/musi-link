@@ -6,9 +6,24 @@ import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/services/music_profile_service.dart';
+import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/user_service.dart';
+
+// ── Notificación pendiente (cold-start o tap en local notification) ─
+
+class PendingNotificationNotifier extends Notifier<Map<String, dynamic>?> {
+  @override
+  Map<String, dynamic>? build() => null;
+
+  void setValue(Map<String, dynamic>? data) {
+    state = data;
+  }
+}
+
+final pendingNotificationProvider = NotifierProvider<PendingNotificationNotifier,
+    Map<String, dynamic>?>(PendingNotificationNotifier.new);
 
 // ── Servicios sin dependencias ──────────────────────────────────
 
@@ -32,11 +47,22 @@ final friendServiceProvider = Provider<FriendService>((ref) {
 
 // ── Servicios con dependencias ──────────────────────────────────
 
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService(
+    messaging: ref.read(firebaseMessagingProvider),
+    firestore: ref.read(firebaseFirestoreProvider),
+    auth: ref.read(firebaseAuthProvider),
+    onNotificationTapped: (data) =>
+        ref.read(pendingNotificationProvider.notifier).setValue(data),
+  );
+});
+
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService(
     ref.watch(userServiceProvider),
     auth: ref.watch(firebaseAuthProvider),
     googleSignIn: ref.watch(googleSignInProvider),
+    notificationService: ref.watch(notificationServiceProvider),
   );
 });
 

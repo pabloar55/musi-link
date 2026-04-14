@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
 // ── Firebase Auth ────────────────────────────────────────────
@@ -81,6 +82,8 @@ class FakeTransaction extends Fake implements Transaction {
 
 // ── Services ─────────────────────────────────────────────────
 class MockUserService extends Mock implements UserService {}
+
+class MockNotificationService extends Mock implements NotificationService {}
 
 // ── Fakes para fallback values ───────────────────────────────
 class FakeDocumentReference extends Fake

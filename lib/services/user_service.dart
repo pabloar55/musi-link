@@ -248,6 +248,7 @@ class UserService {
         'dailySongUpdatedAt': FieldValue.delete(),
         'nowPlaying': FieldValue.delete(),
         'nowPlayingUpdatedAt': FieldValue.delete(),
+        'fcmToken': FieldValue.delete(),
       });
       _userCache.remove(uid);
     } catch (e, stack) {
