@@ -132,7 +132,12 @@ class ChatService {
   //  Mensajes
 
   /// Envía un mensaje de texto en un chat.
+  static const int maxMessageLength = 2000;
+
   Future<void> sendMessage(String chatId, String text) async {
+    if (text.trim().isEmpty || text.length > maxMessageLength) {
+      throw ArgumentError('Invalid message');
+    }
     try {
       final now = DateTime.now();
       final message = Message(

@@ -99,7 +99,9 @@ service cloud.firestore {
         // Solo un participante puede crear un mensaje, y debe ser el remitente
         allow create: if request.auth != null
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
-          && request.resource.data.senderId == request.auth.uid;
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000;
 
         // Solo se permite actualizar 'read' o 'reactions'
         allow update: if request.auth != null
