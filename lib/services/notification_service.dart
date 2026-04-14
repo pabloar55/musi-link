@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   NotificationService({
@@ -28,6 +29,7 @@ class NotificationService {
 
   static const _channelId = 'musilink_high';
   static const _channelName = 'musi link Notifications';
+  static const _pendingClearUidKey = 'pending_fcm_clear_uid';
 
   Future<void> initialize() async {
     // 1. iOS foreground presentation options
@@ -58,13 +60,16 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onLocalNotificationTapped,
     );
 
-    // 4. Request permission and save token
+    // 4. Retry any FCM token clear that failed during a previous sign-out.
+    await _retryPendingTokenClear();
+
+    // 5. Request permission and save token
     await _requestPermissionAndSaveToken();
 
-    // 5. Auto-refresh token
+    // 6. Auto-refresh token
     _messaging.onTokenRefresh.listen((_) => _saveToken());
 
-    // 6. Foreground message handler
+    // 7. Foreground message handler
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
   }
 
@@ -94,14 +99,47 @@ class NotificationService {
   Future<void> clearToken() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
+
+    // Best-effort: revoke token from FCM. Even if this fails the token
+    // will eventually expire; the Firestore cleanup below is what stops
+    // immediate notification delivery to a signed-out user.
     try {
       await _messaging.deleteToken();
+    } catch (e, stack) {
+      await reportError(e, stack);
+    }
+
+    await _clearFcmTokenFromFirestore(uid);
+  }
+
+  Future<void> _clearFcmTokenFromFirestore(String uid) async {
+    try {
       await _firestore
           .collection('users')
           .doc(uid)
           .update({'fcmToken': FieldValue.delete()});
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_pendingClearUidKey);
     } catch (e, stack) {
       await reportError(e, stack);
+      // Queue so initialize() retries on the next app launch.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_pendingClearUidKey, uid);
+      } catch (_) {
+        // SharedPreferences failure is non-critical; error already reported.
+      }
+    }
+  }
+
+  Future<void> _retryPendingTokenClear() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = prefs.getString(_pendingClearUidKey);
+      if (uid == null) return;
+      await _clearFcmTokenFromFirestore(uid);
+    } catch (_) {
+      // Non-critical; will retry on next launch.
     }
   }
 

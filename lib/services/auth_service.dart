@@ -139,7 +139,9 @@ class AuthService {
     await _ensureGoogleInitialized();
     try {
       await _notificationService.clearToken();
-    } catch (_) {}
+    } catch (e, st) {
+      await reportError(e, st);
+    }
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
