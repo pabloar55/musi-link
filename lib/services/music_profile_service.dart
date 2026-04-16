@@ -78,6 +78,44 @@ class MusicProfileService {
     }
   }
 
+  /// Intenta obtener resultados desde la caché local de Firestore (sin red).
+  /// Devuelve null si la caché está vacía (primera ejecución o datos purgados).
+  Future<List<DiscoveryResult>?> getDiscoveryUsersFromCache() async {
+    if (_isCacheValid) {
+      return List<DiscoveryResult>.unmodifiable(
+        _cachedResults!.take(_displayedCount),
+      );
+    }
+
+    try {
+      const opts = GetOptions(source: Source.cache);
+
+      final myDoc = await _usersRef.doc(_currentUid).get(opts);
+      if (!myDoc.exists) return null;
+
+      final myUser = AppUser.fromFirestore(myDoc);
+      if (myUser == null) return null;
+      if (myUser.topArtistNames.isEmpty && myUser.topGenreNames.isEmpty) {
+        return null;
+      }
+
+      final results = await _fetchRelevantUsers(myUser, options: opts);
+      if (results == null) return null;
+
+      _cachedResults = results;
+      _cacheTime = DateTime.now();
+      _displayedCount = results.length.clamp(0, _pageSize);
+      return List<DiscoveryResult>.unmodifiable(results.take(_displayedCount));
+    } on FirebaseException catch (e) {
+      // 'unavailable' es el código esperado cuando la caché local está vacía.
+      if (e.code == 'unavailable') return null;
+      await reportError(e, StackTrace.current);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Obtiene la primera página de usuarios para el feed de descubrimiento.
   /// Usa caché con TTL de 30 minutos. Pasa [forceRefresh] para invalidarlo.
   Future<List<DiscoveryResult>> getDiscoveryUsers({
@@ -104,7 +142,7 @@ class MusicProfileService {
         return [];
       }
 
-      final results = await _fetchRelevantUsers(myUser);
+      final results = await _fetchRelevantUsers(myUser) ?? [];
       _cachedResults = results;
       _cacheTime = DateTime.now();
       _displayedCount = results.length.clamp(0, _pageSize);
@@ -134,55 +172,65 @@ class MusicProfileService {
   /// Lanza dos queries en paralelo usando arrayContainsAny para traer
   /// solo usuarios que comparten al menos un artista o género.
   /// Máximo ~200 reads (100 por query) en vez de escanear toda la colección.
-  Future<List<DiscoveryResult>> _fetchRelevantUsers(AppUser myUser) async {
+  /// [options] null → servidor (por defecto); Source.cache → caché local.
+  /// Devuelve null solo cuando [options] apunta a caché y ésta está vacía.
+  Future<List<DiscoveryResult>?> _fetchRelevantUsers(
+    AppUser myUser, {
+    GetOptions? options,
+  }) async {
     final artistNames = myUser.topArtistNames.take(10).toList();
     final genreNames = myUser.topGenreNames.take(10).toList();
 
-    // Lanzar ambas queries en paralelo
-    final artistFuture = artistNames.isNotEmpty
-        ? _usersRef
-            .where('topArtistNames', arrayContainsAny: artistNames)
-            .limit(_queryLimit)
-            .get()
-        : null;
+    try {
+      // Lanzar ambas queries en paralelo
+      final artistFuture = artistNames.isNotEmpty
+          ? _usersRef
+              .where('topArtistNames', arrayContainsAny: artistNames)
+              .limit(_queryLimit)
+              .get(options)
+          : null;
 
-    final genreFuture = genreNames.isNotEmpty
-        ? _usersRef
-            .where('topGenreNames', arrayContainsAny: genreNames)
-            .limit(_queryLimit)
-            .get()
-        : null;
+      final genreFuture = genreNames.isNotEmpty
+          ? _usersRef
+              .where('topGenreNames', arrayContainsAny: genreNames)
+              .limit(_queryLimit)
+              .get(options)
+          : null;
 
-    final seen = <String>{_currentUid};
-    final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      final seen = <String>{_currentUid};
+      final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
 
-    if (artistFuture != null) {
-      for (final doc in (await artistFuture).docs) {
-        if (seen.add(doc.id)) allDocs.add(doc);
+      if (artistFuture != null) {
+        for (final doc in (await artistFuture).docs) {
+          if (seen.add(doc.id)) allDocs.add(doc);
+        }
       }
-    }
 
-    if (genreFuture != null) {
-      for (final doc in (await genreFuture).docs) {
-        if (seen.add(doc.id)) allDocs.add(doc);
+      if (genreFuture != null) {
+        for (final doc in (await genreFuture).docs) {
+          if (seen.add(doc.id)) allDocs.add(doc);
+        }
       }
+
+      final results = <DiscoveryResult>[];
+      for (final doc in allDocs) {
+        final user = AppUser.fromFirestore(doc);
+        if (user == null) continue;
+        if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
+
+        results.add(calculateCompatibility(
+          myArtistNames: myUser.topArtistNames,
+          myGenreNames: myUser.topGenreNames,
+          otherUser: user,
+        ));
+      }
+
+      results.sort((a, b) => b.score.compareTo(a.score));
+      return results;
+    } on FirebaseException catch (e) {
+      if (options?.source == Source.cache && e.code == 'unavailable') return null;
+      rethrow;
     }
-
-    final results = <DiscoveryResult>[];
-    for (final doc in allDocs) {
-      final user = AppUser.fromFirestore(doc);
-      if (user == null) continue;
-      if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
-
-      results.add(calculateCompatibility(
-        myArtistNames: myUser.topArtistNames,
-        myGenreNames: myUser.topGenreNames,
-        otherUser: user,
-      ));
-    }
-
-    results.sort((a, b) => b.score.compareTo(a.score));
-    return results;
   }
 
   /// Calcula la compatibilidad entre el usuario actual y otro usuario.

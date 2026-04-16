@@ -12,6 +12,7 @@ class PeopleTab extends StatefulWidget {
   final bool isLoadingMore;
   final bool hasMore;
   final bool hasError;
+  final bool isStale;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onLoadMore;
 
@@ -22,6 +23,7 @@ class PeopleTab extends StatefulWidget {
     required this.isLoadingMore,
     required this.hasMore,
     required this.hasError,
+    this.isStale = false,
     required this.onRefresh,
     required this.onLoadMore,
   });

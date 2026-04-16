@@ -63,6 +63,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen>
                 isLoadingMore: discoverState.isLoadingMore,
                 hasMore: discoverState.hasMore,
                 hasError: discoverState.hasError,
+                isStale: discoverState.isStale,
                 onRefresh: discoverNotifier.refresh,
                 onLoadMore: discoverNotifier.loadMore,
               ),
