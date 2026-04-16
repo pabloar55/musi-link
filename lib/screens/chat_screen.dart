@@ -155,7 +155,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
 
     _messageController.clear();
-    await ref.read(chatServiceProvider).sendMessage(widget.chatId, text);
+    await ref.read(chatServiceProvider).sendMessage(
+      widget.chatId,
+      text,
+      otherUid: widget.otherUserId,
+    );
 
     // Scroll al final tras enviar
     _scrollToBottom();
@@ -181,7 +185,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (_) => TrackSearchSheet(
         onTrackSelected: (track) async {
           Navigator.of(context).pop();
-          await ref.read(chatServiceProvider).sendTrackMessage(widget.chatId, track);
+          await ref.read(chatServiceProvider).sendTrackMessage(
+            widget.chatId,
+            track,
+            otherUid: widget.otherUserId,
+          );
           _scrollToBottom();
         },
       ),

@@ -103,7 +103,7 @@ void main() {
         when(() => mockBatch.update(any(), any())).thenReturn(null);
         when(() => mockBatch.commit()).thenAnswer((_) async {});
 
-        await chatService.sendMessage('chat_123', 'Hello!');
+        await chatService.sendMessage('chat_123', 'Hello!', otherUid: 'other_uid');
 
         // Verificar que se creó el mensaje y se actualizó el chat
         final setCall = verify(() => mockBatch.set<Map<String, dynamic>>(
@@ -144,7 +144,7 @@ void main() {
           spotifyUrl: 'https://spotify.url',
         );
 
-        await chatService.sendTrackMessage('chat_123', track);
+        await chatService.sendTrackMessage('chat_123', track, otherUid: 'other_uid');
 
         // Verificar mensaje tipo track
         final setCall = verify(() => mockBatch.set<Map<String, dynamic>>(
@@ -223,7 +223,7 @@ void main() {
     });
 
     group('markMessagesAsRead', () {
-      test('marca mensajes no leídos del otro usuario como leídos', () async {
+      test('resetea el contador y marca mensajes como leídos', () async {
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockQuery1 = MockQuery();
@@ -236,6 +236,7 @@ void main() {
         final mockMsgRef = MockDocumentReference();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
+        when(() => mockChatDocRef.update(any())).thenAnswer((_) async {});
         when(() => mockChatDocRef.collection('messages'))
             .thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.where('read', isEqualTo: false))
@@ -253,12 +254,18 @@ void main() {
 
         await chatService.markMessagesAsRead('chat_123');
 
+        // Debe resetear el contador desnormalizado en el doc del chat
+        final updateCall = verify(() => mockChatDocRef.update(captureAny()))
+            .captured.single as Map;
+        expect(updateCall['unreadCounts.current_uid'], 0);
+
+        // Y marcar los mensajes individuales como leídos
         verify(() =>
             mockBatch.update(mockMsgRef, {'read': true})).called(1);
         verify(() => mockBatch.commit()).called(1);
       });
 
-      test('no hace nada si no hay mensajes sin leer', () async {
+      test('resetea el contador aunque no haya mensajes sin leer', () async {
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockQuery1 = MockQuery();
@@ -267,6 +274,7 @@ void main() {
         final mockSnapshot = MockQuerySnapshot();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
+        when(() => mockChatDocRef.update(any())).thenAnswer((_) async {});
         when(() => mockChatDocRef.collection('messages'))
             .thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.where('read', isEqualTo: false))
@@ -279,6 +287,8 @@ void main() {
 
         await chatService.markMessagesAsRead('chat_123');
 
+        // El contador se resetea incluso sin mensajes que marcar
+        verify(() => mockChatDocRef.update(any())).called(1);
         verifyNever(() => mockFirestore.batch());
       });
     });

@@ -60,7 +60,7 @@ Compatibility score (0–100):
 - **70%** from up to 5 shared artists (14 pts each)
 - **30%** from up to 5 shared genres (6 pts each)
 
-Results are paginated (20/page) and cached for 5 minutes in `MusicProfileService`.
+Results are paginated (20/page) and cached for 30 minutes in `MusicProfileService`.
 
 ### Firestore collections
 

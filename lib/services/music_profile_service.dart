@@ -79,7 +79,7 @@ class MusicProfileService {
   }
 
   /// Obtiene la primera página de usuarios para el feed de descubrimiento.
-  /// Usa caché con TTL de 5 minutos. Pasa [forceRefresh] para invalidarlo.
+  /// Usa caché con TTL de 30 minutos. Pasa [forceRefresh] para invalidarlo.
   Future<List<DiscoveryResult>> getDiscoveryUsers({
     bool forceRefresh = false,
   }) async {

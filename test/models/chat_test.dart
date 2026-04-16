@@ -13,6 +13,7 @@ void main() {
           lastMessage: 'Hola!',
           lastMessageTime: now,
           createdAt: now,
+          unreadCounts: {'user1': 3, 'user2': 0},
         );
 
         expect(chat.id, 'chat1');
@@ -20,6 +21,8 @@ void main() {
         expect(chat.lastMessage, 'Hola!');
         expect(chat.lastMessageTime, now);
         expect(chat.createdAt, now);
+        expect(chat.unreadCounts['user1'], 3);
+        expect(chat.unreadCounts['user2'], 0);
       });
 
       test('lastMessage tiene valor por defecto vacío', () {
@@ -32,6 +35,17 @@ void main() {
 
         expect(chat.lastMessage, '');
       });
+
+      test('unreadCounts tiene valor por defecto vacío', () {
+        final chat = Chat(
+          id: 'chat1',
+          participants: ['user1', 'user2'],
+          lastMessageTime: now,
+          createdAt: now,
+        );
+
+        expect(chat.unreadCounts, isEmpty);
+      });
     });
 
     group('toFirestore', () {
@@ -42,12 +56,14 @@ void main() {
           lastMessage: 'Hola!',
           lastMessageTime: now,
           createdAt: now,
+          unreadCounts: {'user1': 2, 'user2': 0},
         );
 
         final map = chat.toFirestore();
 
         expect(map['participants'], ['user1', 'user2']);
         expect(map['lastMessage'], 'Hola!');
+        expect(map['unreadCounts'], {'user1': 2, 'user2': 0});
         expect(map.containsKey('id'), false);
       });
     });
@@ -60,6 +76,7 @@ void main() {
           lastMessage: 'Hola!',
           lastMessageTime: now,
           createdAt: now,
+          unreadCounts: {'user1': 1},
         );
 
         final newTime = DateTime(2025, 6, 15, 12, 0);
@@ -73,6 +90,7 @@ void main() {
         expect(updated.id, original.id);
         expect(updated.participants, original.participants);
         expect(updated.createdAt, original.createdAt);
+        expect(updated.unreadCounts, original.unreadCounts);
       });
 
       test('mantiene valores si no se pasan parámetros', () {

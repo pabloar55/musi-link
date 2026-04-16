@@ -69,6 +69,7 @@ class ChatService {
             'lastMessage': '',
             'lastMessageTime': Timestamp.fromDate(now),
             'createdAt': Timestamp.fromDate(now),
+            'unreadCounts': {currentUid: 0, otherUid: 0},
           });
           chat = Chat(
             id: docRef.id,
@@ -134,7 +135,11 @@ class ChatService {
   /// Envía un mensaje de texto en un chat.
   static const int maxMessageLength = 2000;
 
-  Future<void> sendMessage(String chatId, String text) async {
+  Future<void> sendMessage(
+    String chatId,
+    String text, {
+    required String otherUid,
+  }) async {
     if (text.trim().isEmpty || text.length > maxMessageLength) {
       throw ArgumentError('Invalid message');
     }
@@ -153,10 +158,11 @@ class ChatService {
       final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
       batch.set(msgRef, message.toFirestore());
 
-      // Actualizar último mensaje en el documento del chat
+      // Actualizar último mensaje e incrementar el contador del destinatario
       batch.update(_chatsRef.doc(chatId), {
         'lastMessage': text,
         'lastMessageTime': Timestamp.fromDate(now),
+        'unreadCounts.$otherUid': FieldValue.increment(1),
       });
 
       await batch.commit();
@@ -204,14 +210,22 @@ class ChatService {
     }
   }
 
-  /// Marca todos los mensajes no leídos del otro usuario como leídos.
+  /// Marca todos los mensajes no leídos del otro usuario como leídos y
+  /// resetea el contador desnormalizado del usuario actual en el documento
+  /// del chat.
   Future<void> markMessagesAsRead(String chatId) async {
     try {
+      final currentUid = _currentUid;
+
+      // Resetear el contador desnormalizado: una sola escritura, sin listeners.
+      await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
+
+      // Marcar mensajes individuales como leídos (impulsa los ticks de lectura).
       final messagesRef = _chatsRef
           .doc(chatId)
           .collection(FirestoreCollections.messages)
           .where('read', isEqualTo: false)
-          .where('senderId', isNotEqualTo: _currentUid)
+          .where('senderId', isNotEqualTo: currentUid)
           .limit(_deleteBatchSize);
 
       while (true) {
@@ -231,20 +245,12 @@ class ChatService {
     }
   }
 
-  /// Cuenta los mensajes no leídos del usuario actual en un chat.
-  Stream<int> getUnreadCount(String chatId) {
-    return _chatsRef
-        .doc(chatId)
-        .collection(FirestoreCollections.messages)
-        .where('read', isEqualTo: false)
-        .where('senderId', isNotEqualTo: _currentUid)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length)
-        .handleError((e, st) => reportError(e, st).ignore());
-  }
-
   /// Envía una canción como mensaje en un chat.
-  Future<void> sendTrackMessage(String chatId, Track track) async {
+  Future<void> sendTrackMessage(
+    String chatId,
+    Track track, {
+    required String otherUid,
+  }) async {
     try {
       final now = DateTime.now();
       final message = Message(
@@ -264,6 +270,7 @@ class ChatService {
       batch.update(_chatsRef.doc(chatId), {
         'lastMessage': '🎵 ${track.title}',
         'lastMessageTime': Timestamp.fromDate(now),
+        'unreadCounts.$otherUid': FieldValue.increment(1),
       });
 
       await batch.commit();

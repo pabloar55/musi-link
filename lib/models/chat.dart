@@ -8,16 +8,23 @@ class Chat {
   final DateTime lastMessageTime;
   final DateTime createdAt;
 
+  /// Mensajes no leídos por UID. Clave = UID del destinatario, valor = contador.
+  /// Se mantiene desnormalizado en el documento del chat para evitar listeners
+  /// por chat en la lista de conversaciones.
+  final Map<String, int> unreadCounts;
+
   const Chat({
     required this.id,
     required this.participants,
     this.lastMessage = '',
     required this.lastMessageTime,
     required this.createdAt,
+    this.unreadCounts = const {},
   });
 
   factory Chat.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data()! as Map<String, dynamic>;
+    final rawCounts = data['unreadCounts'] as Map<String, dynamic>? ?? {};
     return Chat(
       id: doc.id,
       participants: List<String>.from(data['participants'] ?? []),
@@ -26,6 +33,7 @@ class Chat {
           (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
       createdAt:
           (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      unreadCounts: rawCounts.map((k, v) => MapEntry(k, (v as num).toInt())),
     );
   }
 
@@ -35,6 +43,7 @@ class Chat {
       'lastMessage': lastMessage,
       'lastMessageTime': Timestamp.fromDate(lastMessageTime),
       'createdAt': Timestamp.fromDate(createdAt),
+      'unreadCounts': unreadCounts,
     };
   }
 
@@ -48,6 +57,7 @@ class Chat {
       lastMessage: lastMessage ?? this.lastMessage,
       lastMessageTime: lastMessageTime ?? this.lastMessageTime,
       createdAt: createdAt,
+      unreadCounts: unreadCounts,
     );
   }
 }

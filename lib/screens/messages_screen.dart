@@ -137,6 +137,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
                   final name = otherUser?.displayName ?? l10n.socialUser;
                   final photoUrl = otherUser?.photoUrl ?? '';
 
+                  final unread = chat.unreadCounts[_currentUid] ?? 0;
                   return ListTile(
                     leading: UserCircleAvatar(
                       photoUrl: photoUrl,
@@ -145,22 +146,63 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
                     ),
                     title: Text(
                       name,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontWeight: unread > 0
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                      ),
                     ),
                     subtitle: Text(
                       chat.lastMessage,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: colorScheme.onSurface.withAlpha(150),
+                        color: colorScheme.onSurface.withAlpha(
+                          unread > 0 ? 200 : 150,
+                        ),
+                        fontWeight: unread > 0
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
-                    trailing: Text(
-                      _formatTime(chat.lastMessageTime, l10n),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withAlpha(120),
-                      ),
+                    trailing: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatTime(chat.lastMessageTime, l10n),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: unread > 0
+                                ? colorScheme.primary
+                                : colorScheme.onSurface.withAlpha(120),
+                            fontWeight: unread > 0
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        if (unread > 0) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              unread > 99 ? '99+' : '$unread',
+                              style: TextStyle(
+                                color: colorScheme.onPrimary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     onTap: () {
                       context.push(
