@@ -436,6 +436,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsAppearance => 'Apparence';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsVibration => 'Vibration';
+
+  @override
   String get settingsLegal => 'Informations légales';
 
   @override

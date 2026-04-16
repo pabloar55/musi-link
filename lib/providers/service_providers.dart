@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/services/friend_service.dart';
@@ -52,6 +53,7 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
     messaging: ref.read(firebaseMessagingProvider),
     firestore: ref.read(firebaseFirestoreProvider),
     auth: ref.read(firebaseAuthProvider),
+    prefs: ref.read(sharedPreferencesProvider),
     onNotificationTapped: (data) =>
         ref.read(pendingNotificationProvider.notifier).setValue(data),
   );

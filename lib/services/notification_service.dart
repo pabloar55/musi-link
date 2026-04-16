@@ -13,15 +13,18 @@ class NotificationService {
     required FirebaseMessaging messaging,
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
+    required SharedPreferences prefs,
     required void Function(Map<String, dynamic>) onNotificationTapped,
   })  : _messaging = messaging,
         _firestore = firestore,
         _auth = auth,
+        _prefs = prefs,
         _onNotificationTapped = onNotificationTapped;
 
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final SharedPreferences _prefs;
   final void Function(Map<String, dynamic>) _onNotificationTapped;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -29,7 +32,10 @@ class NotificationService {
 
   static const _channelId = 'musilink_high';
   static const _channelName = 'musi link Notifications';
+  static const _channelNoVibrationId = 'musilink_high_no_vibration';
+  static const _channelNoVibrationName = 'musi link Notifications (no vibration)';
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
+  static const kVibrationKey = 'notification_vibration';
 
   Future<void> initialize() async {
     // 1. iOS foreground presentation options
@@ -39,17 +45,30 @@ class NotificationService {
       sound: true,
     );
 
-    // 2. Create Android notification channel
-    const channel = AndroidNotificationChannel(
-      _channelId,
-      _channelName,
-      importance: Importance.high,
-      playSound: true,
-    );
-    await _localNotifications
+    // 2. Create Android notification channels.
+    // On Android 8+ vibration is channel-scoped, so we need two channels:
+    // one with vibration and one without.
+    final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelNoVibrationId,
+        _channelNoVibrationName,
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: false,
+      ),
+    );
 
     // 3. Initialize local notifications plugin
     await _localNotifications.initialize(
@@ -146,19 +165,27 @@ class NotificationService {
   void _onForegroundMessage(RemoteMessage message) {
     final n = message.notification;
     if (n == null) return;
+    final vibrate = _prefs.getBool(kVibrationKey) ?? true;
+    final channelId = vibrate ? _channelId : _channelNoVibrationId;
+    final channelName = vibrate ? _channelName : _channelNoVibrationName;
+    final chatId = message.data['chatId'] as String?;
+    // Messages from the same chat share a stable ID so they replace each
+    // other in the notification drawer instead of stacking indefinitely.
+    final notifId = chatId != null ? chatId.hashCode : n.hashCode;
     _localNotifications.show(
-      id: n.hashCode,
+      id: notifId,
       title: n.title,
       body: n.body,
-      notificationDetails: const NotificationDetails(
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
+          channelId,
+          channelName,
           importance: Importance.high,
           priority: Priority.high,
           icon: '@drawable/ic_notification',
+          groupKey: chatId, // groups all notifications from the same chat
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: DarwinNotificationDetails(threadIdentifier: chatId),
       ),
       payload: jsonEncode(message.data),
     );

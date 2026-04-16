@@ -427,6 +427,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppearance => 'Appearance';
 
   @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsVibration => 'Vibration';
+
+  @override
   String get settingsLegal => 'Legal';
 
   @override

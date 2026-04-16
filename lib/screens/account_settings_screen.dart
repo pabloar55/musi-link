@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -160,6 +161,7 @@ class _AccountSettingsScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDarkMode = ref.watch(isDarkProvider);
+    final vibrationEnabled = ref.watch(vibrationEnabledProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -200,6 +202,23 @@ class _AccountSettingsScreenState
                     value: isDarkMode,
                     onChanged: (_) =>
                         ref.read(themeModeProvider.notifier).toggleDarkLight(),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppTokens.spaceLG),
+
+              // ── Notifications ──────────────────────────────────────
+              _SectionHeader(label: l10n.settingsNotifications),
+              const SizedBox(height: AppTokens.spaceSM),
+              _SettingsCard(
+                children: [
+                  _SwitchTile(
+                    icon: LucideIcons.vibrate,
+                    label: l10n.settingsVibration,
+                    value: vibrationEnabled,
+                    onChanged: (_) =>
+                        ref.read(vibrationEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),

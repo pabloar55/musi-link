@@ -151,6 +151,8 @@
 
   "settingsTitle": "Ajustes",
   "settingsAppearance": "Apariencia",
+  "settingsNotifications": "Notificaciones",
+  "settingsVibration": "Vibración",
   "settingsLegal": "Legal",
   "settingsPrivacyPolicy": "Política de privacidad",
   "settingsDeleteAccount": "Eliminar cuenta",

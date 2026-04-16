@@ -17,13 +17,19 @@ async function sendNotification(
   token: string,
   notification: { title: string; body: string },
   data: Record<string, string>,
+  // Notifications with the same tag replace each other in the drawer,
+  // keeping one entry per conversation instead of an unbounded stack.
+  tag?: string,
 ): Promise<void> {
   try {
     await messaging.send({
       token,
       notification,
       data,
-      android: { priority: 'high' },
+      android: {
+        priority: 'high',
+        ...(tag ? { notification: { tag } } : {}),
+      },
       apns: { payload: { aps: { sound: 'default' } } },
     });
   } catch (error: unknown) {
@@ -72,6 +78,7 @@ export const onNewMessage = onDocumentCreated(
         otherUserId: senderId,
         otherUserName: senderName,
       },
+      chatId,
     );
   },
 );

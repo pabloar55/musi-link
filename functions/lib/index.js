@@ -8,13 +8,16 @@ admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
 // ── Helper ────────────────────────────────────────────────────────────────────
-async function sendNotification(recipientUid, token, notification, data) {
+async function sendNotification(recipientUid, token, notification, data, 
+// Notifications with the same tag replace each other in the drawer,
+// keeping one entry per conversation instead of an unbounded stack.
+tag) {
     try {
         await messaging.send({
             token,
             notification,
             data,
-            android: { priority: 'high' },
+            android: Object.assign({ priority: 'high' }, (tag ? { notification: { tag } } : {})),
             apns: { payload: { aps: { sound: 'default' } } },
         });
     }
@@ -54,7 +57,7 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
         chatId,
         otherUserId: senderId,
         otherUserName: senderName,
-    });
+    }, chatId);
 });
 // ── Función 2 — Nueva solicitud de amistad ────────────────────────────────────
 exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend_requests/{requestId}', region: 'europe-southwest1' }, async (event) => {

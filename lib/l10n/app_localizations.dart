@@ -874,6 +874,18 @@ abstract class AppLocalizations {
   /// **'Appearance'**
   String get settingsAppearance;
 
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsVibration.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibration'**
+  String get settingsVibration;
+
   /// No description provided for @settingsLegal.
   ///
   /// In en, this message translates to:
