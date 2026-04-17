@@ -48,9 +48,12 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (request.auth.uid == resource.data.senderId
             || request.auth.uid == resource.data.receiverId);
-      // Solo el remitente puede crear (y debe ser él mismo)
+      // Solo el remitente puede crear, con ID determinista senderId_receiverId.
+      // El ID determinista hace que un segundo intento sea tratado como update
+      // (rechazado por la regla de update), previniendo solicitudes duplicadas.
       allow create: if request.auth != null
-        && request.resource.data.senderId == request.auth.uid;
+        && request.resource.data.senderId == request.auth.uid
+        && requestId == request.resource.data.senderId + '_' + request.resource.data.receiverId;
       // El destinatario puede aceptar/rechazar; el remitente puede actualizar para cancelar.
       // Solo se permiten cambios en 'status' y 'updatedAt'; los campos de identidad son inmutables.
       allow update: if request.auth != null

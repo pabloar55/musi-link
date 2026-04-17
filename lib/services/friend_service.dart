@@ -41,16 +41,25 @@ class FriendService {
   /// Envía una solicitud de amistad a [receiverUid].
   Future<void> sendRequest(String receiverUid) async {
     try {
+      final existing = await _requestsRef
+          .where('senderId', isEqualTo: _currentUid)
+          .where('receiverId', isEqualTo: receiverUid)
+          .where('status', isEqualTo: FriendRequestStatus.pending.name)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty) return;
+
       final now = DateTime.now();
+      final docId = '${_currentUid}_$receiverUid';
       final request = FriendRequest(
-        id: '',
+        id: docId,
         senderId: _currentUid,
         receiverId: receiverUid,
         status: FriendRequestStatus.pending,
         createdAt: now,
         updatedAt: now,
       );
-      await _requestsRef.add(request.toFirestore());
+      await _requestsRef.doc(docId).set(request.toFirestore());
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;

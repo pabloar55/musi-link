@@ -50,7 +50,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initialize() async {
-    final minSplash = Future.delayed(const Duration(milliseconds: 1200));
+    final minSplash = Future.delayed(const Duration(milliseconds: 500));
 
     unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
 
