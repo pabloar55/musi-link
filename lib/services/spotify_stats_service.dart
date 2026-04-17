@@ -29,6 +29,17 @@ class SpotifyGetStats {
   bool get lastServedFromCache => _lastServedFromCache;
 
   static const _cachePrefix = 'stats_cache_';
+  static const _cacheTsPrefix = 'stats_cache_ts_';
+  static const _staleDuration = Duration(hours: 48);
+
+  DateTime? _lastCacheTimestamp;
+
+  /// `true` when cached data is older than 48 hours (online or offline).
+  bool get cacheIsStale {
+    final ts = _lastCacheTimestamp;
+    if (ts == null) return false;
+    return DateTime.now().difference(ts) > _staleDuration;
+  }
 
   static const _timeRangeMap = {
     'short_term': TimeRange.shortTerm,
@@ -38,11 +49,14 @@ class SpotifyGetStats {
 
   Future<void> _saveCache(String key, List<Map<String, dynamic>> data) async {
     await _prefs.setString('$_cachePrefix$key', jsonEncode(data));
+    await _prefs.setString('$_cacheTsPrefix$key', DateTime.now().toIso8601String());
   }
 
   Future<List<Map<String, dynamic>>?> _loadCache(String key) async {
     final raw = _prefs.getString('$_cachePrefix$key');
     if (raw == null) return null;
+    final tsRaw = _prefs.getString('$_cacheTsPrefix$key');
+    _lastCacheTimestamp = tsRaw != null ? DateTime.tryParse(tsRaw) : null;
     return (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
   }
 
@@ -134,6 +148,26 @@ class SpotifyGetStats {
       await reportError(e, stack);
       rethrow;
     }
+  }
+
+  List<Genre> getTopGenresFromArtists(List<app.Artist> artists, int limit) {
+    final genreCount = <String, int>{};
+    for (final artist in artists) {
+      for (final genre in artist.genres) {
+        genreCount[genre] = (genreCount[genre] ?? 0) + 1;
+      }
+    }
+    if (genreCount.isEmpty) return [];
+    final sorted = genreCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final totalMentions = sorted.fold<int>(0, (sum, e) => sum + e.value);
+    return sorted.take(limit).map((entry) {
+      return Genre(
+        name: entry.key,
+        count: entry.value,
+        percentage: (entry.value / totalMentions) * 100,
+      );
+    }).toList();
   }
 
   Future<List<Genre>> getTopGenres(int limit, String timeRange) async {

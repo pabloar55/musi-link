@@ -30,6 +30,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   ContentType _selectedContent = ContentType.tracks;
   TimeRange _selectedTimeRange = TimeRange.shortTerm;
   bool _isFromCache = false;
+  bool _cacheIsStale = false;
 
   final Map<String, List<dynamic>> _cache = {};
 
@@ -79,7 +80,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
     _dataFuture = fetch.then((result) {
       _cache[key] = result;
-      if (mounted) setState(() => _isFromCache = api.lastServedFromCache);
+      if (mounted) {
+        setState(() {
+          _isFromCache = api.lastServedFromCache;
+          _cacheIsStale = api.cacheIsStale;
+        });
+      }
       return result;
     });
   }
@@ -110,17 +116,19 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             children: [
               _buildContentTypeFilter(),
               _buildTimeRangeFilter(),
-              if (_isFromCache)
+              if (_isFromCache || _cacheIsStale)
                 Row(
                   children: [
                     Icon(
-                      LucideIcons.cloudOff,
+                      _isFromCache ? LucideIcons.cloudOff : LucideIcons.clock,
                       size: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      AppLocalizations.of(context)!.statsOfflineCache,
+                      _isFromCache
+                          ? AppLocalizations.of(context)!.statsOfflineCache
+                          : AppLocalizations.of(context)!.statsStaleCache,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),

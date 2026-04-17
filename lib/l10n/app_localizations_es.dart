@@ -214,6 +214,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statsOfflineCache => 'Sin conexión — mostrando datos guardados';
 
   @override
+  String get statsStaleCache => 'Mostrando datos de hace más de 48 horas';
+
+  @override
   String get statsOfflineNoData =>
       'Sin conexión y sin datos guardados.\nVisita esta pestaña con internet primero.';
 

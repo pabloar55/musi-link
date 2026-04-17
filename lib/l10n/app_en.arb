@@ -82,6 +82,7 @@
   },
   "statsNoData": "No data available",
   "statsOfflineCache": "Offline — showing saved data",
+  "statsStaleCache": "Showing data from over 48 hours ago",
   "statsOfflineNoData": "No connection and no saved data yet.\nVisit this tab online first.",
 
   "socialNow": "Now",

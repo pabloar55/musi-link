@@ -216,6 +216,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statsOfflineCache => 'Hors ligne — données enregistrées affichées';
 
   @override
+  String get statsStaleCache => 'Données de plus de 48 heures affichées';
+
+  @override
   String get statsOfflineNoData =>
       'Pas de connexion et aucune donnée enregistrée.\nConsultez cet onglet en ligne d\'abord.';
 

@@ -490,6 +490,12 @@ abstract class AppLocalizations {
   /// **'Offline — showing saved data'**
   String get statsOfflineCache;
 
+  /// No description provided for @statsStaleCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing data from over 48 hours ago'**
+  String get statsStaleCache;
+
   /// No description provided for @statsOfflineNoData.
   ///
   /// In en, this message translates to:

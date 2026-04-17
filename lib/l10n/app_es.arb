@@ -72,6 +72,7 @@
   "statsError": "Error: {error}",
   "statsNoData": "No hay datos disponibles",
   "statsOfflineCache": "Sin conexión — mostrando datos guardados",
+  "statsStaleCache": "Mostrando datos de hace más de 48 horas",
   "statsOfflineNoData": "Sin conexión y sin datos guardados.\nVisita esta pestaña con internet primero.",
 
   "socialNow": "Ahora",

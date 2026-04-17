@@ -67,10 +67,11 @@ class MusicProfileService {
         return;
       }
 
-      final artists =
-          await _spotifyGetStats.getTopArtists(15, 'medium_term');
+      final allArtists =
+          await _spotifyGetStats.getTopArtists(50, 'medium_term');
+      final artists = allArtists.take(15).toList();
       final genres =
-          await _spotifyGetStats.getTopGenres(10, 'medium_term');
+          _spotifyGetStats.getTopGenresFromArtists(allArtists, 10);
 
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),

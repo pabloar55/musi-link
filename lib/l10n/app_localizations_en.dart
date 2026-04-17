@@ -212,6 +212,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsOfflineCache => 'Offline — showing saved data';
 
   @override
+  String get statsStaleCache => 'Showing data from over 48 hours ago';
+
+  @override
   String get statsOfflineNoData =>
       'No connection and no saved data yet.\nVisit this tab online first.';
 
