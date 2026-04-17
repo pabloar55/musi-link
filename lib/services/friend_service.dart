@@ -227,9 +227,11 @@ class FriendService {
       final friends = List<String>.from(
         userDoc.data()?['friends'] as List? ?? [],
       );
-      if (friends.isNotEmpty) {
+      const batchSize = 400;
+      for (var i = 0; i < friends.length; i += batchSize) {
+        final chunk = friends.sublist(i, (i + batchSize).clamp(0, friends.length));
         final batch = _firestore.batch();
-        for (final friendUid in friends) {
+        for (final friendUid in chunk) {
           batch.update(_usersRef.doc(friendUid), {
             'friends': FieldValue.arrayRemove([uid]),
           });
