@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
@@ -15,52 +16,45 @@ class RelationshipResult {
 }
 
 /// Servicio para gestionar solicitudes de amistad y amigos en Firestore.
-class FriendService {
+class FriendService with AuthenticatedService {
   FriendService({required FirebaseFirestore firestore, required FirebaseAuth auth})
       : _firestore = firestore,
         _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+
+  @override
+  FirebaseAuth get auth => _auth;
   late final CollectionReference<Map<String, dynamic>> _requestsRef =
       _firestore.collection(FirestoreCollections.friendRequests);
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection(FirestoreCollections.users);
 
-  /// Returns the UID of the currently authenticated user.
-  /// Throws [StateError] instead of crashing with a null-dereference if the
-  /// session has been lost (race condition during deep-link / session restore).
-  String get _currentUid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('FriendService: no authenticated user.');
-    return uid;
-  }
-
   // ─── Solicitudes ────────────────────────────────────────
 
   /// Envía una solicitud de amistad a [receiverUid].
   Future<void> sendRequest(String receiverUid) async {
-    if (receiverUid == _currentUid) return;
+    if (receiverUid == currentUid) return;
+    final now = DateTime.now();
+    final docId = '${currentUid}_$receiverUid';
+    final request = FriendRequest(
+      id: docId,
+      senderId: currentUid,
+      receiverId: receiverUid,
+      status: FriendRequestStatus.pending,
+      createdAt: now,
+      updatedAt: now,
+    );
     try {
-      final existing = await _requestsRef
-          .where('senderId', isEqualTo: _currentUid)
-          .where('receiverId', isEqualTo: receiverUid)
-          .where('status', isEqualTo: FriendRequestStatus.pending.name)
-          .limit(1)
-          .get();
-      if (existing.docs.isNotEmpty) return;
-
-      final now = DateTime.now();
-      final docId = '${_currentUid}_$receiverUid';
-      final request = FriendRequest(
-        id: docId,
-        senderId: _currentUid,
-        receiverId: receiverUid,
-        status: FriendRequestStatus.pending,
-        createdAt: now,
-        updatedAt: now,
-      );
-      await _requestsRef.doc(docId).set(request.toFirestore());
+      // Atomic read-then-write on the deterministic doc ID eliminates the
+      // check-then-act race without a collection query.
+      final docRef = _requestsRef.doc(docId);
+      await _firestore.runTransaction((tx) async {
+        final snapshot = await tx.get(docRef);
+        if (snapshot.exists) return;
+        tx.set(docRef, request.toFirestore());
+      });
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -84,11 +78,11 @@ class FriendService {
         tx.update(_requestsRef.doc(requestId), {
           'status': FriendRequestStatus.accepted.name,
         });
-        tx.update(_usersRef.doc(_currentUid), {
+        tx.update(_usersRef.doc(currentUid), {
           'friends': FieldValue.arrayUnion([otherUid]),
         });
         tx.update(_usersRef.doc(otherUid), {
-          'friends': FieldValue.arrayUnion([_currentUid]),
+          'friends': FieldValue.arrayUnion([currentUid]),
         });
       });
     } catch (e, stack) {
@@ -122,7 +116,7 @@ class FriendService {
   /// Stream de solicitudes de amistad recibidas pendientes.
   Stream<List<FriendRequest>> getReceivedRequests() {
     return _requestsRef
-        .where('receiverId', isEqualTo: _currentUid)
+        .where('receiverId', isEqualTo: currentUid)
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -134,7 +128,7 @@ class FriendService {
   /// Stream de solicitudes de amistad enviadas pendientes.
   Stream<List<FriendRequest>> getSentRequests() {
     return _requestsRef
-        .where('senderId', isEqualTo: _currentUid)
+        .where('senderId', isEqualTo: currentUid)
         .where('status', isEqualTo: FriendRequestStatus.pending.name)
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -148,7 +142,7 @@ class FriendService {
   /// (e.g. nowPlaying updates every ~30 s) when the friends list is unchanged.
   Stream<List<String>> getFriendsStream() {
     return _usersRef
-        .doc(_currentUid)
+        .doc(currentUid)
         .snapshots()
         .map((doc) {
           if (!doc.exists) return <String>[];
@@ -165,7 +159,7 @@ class FriendService {
   /// Comprueba si el usuario actual es amigo de [otherUid].
   Future<bool> areFriends(String otherUid) async {
     try {
-      final doc = await _usersRef.doc(_currentUid).get();
+      final doc = await _usersRef.doc(currentUid).get();
       if (!doc.exists) return false;
       final friends = List<String>.from(doc.data()?['friends'] as List? ?? []);
       return friends.contains(otherUid);
@@ -179,16 +173,16 @@ class FriendService {
   Future<RelationshipResult> getRelationship(String otherUid) async {
     try {
       final results = await Future.wait([
-        _usersRef.doc(_currentUid).get(),
+        _usersRef.doc(currentUid).get(),
         _requestsRef
-            .where('senderId', isEqualTo: _currentUid)
+            .where('senderId', isEqualTo: currentUid)
             .where('receiverId', isEqualTo: otherUid)
             .where('status', isEqualTo: FriendRequestStatus.pending.name)
             .limit(1)
             .get(),
         _requestsRef
             .where('senderId', isEqualTo: otherUid)
-            .where('receiverId', isEqualTo: _currentUid)
+            .where('receiverId', isEqualTo: currentUid)
             .where('status', isEqualTo: FriendRequestStatus.pending.name)
             .limit(1)
             .get(),
@@ -271,11 +265,11 @@ class FriendService {
   Future<void> removeFriend(String otherUid) async {
     try {
       final batch = _firestore.batch();
-      batch.update(_usersRef.doc(_currentUid), {
+      batch.update(_usersRef.doc(currentUid), {
         'friends': FieldValue.arrayRemove([otherUid]),
       });
       batch.update(_usersRef.doc(otherUid), {
-        'friends': FieldValue.arrayRemove([_currentUid]),
+        'friends': FieldValue.arrayRemove([currentUid]),
       });
       await batch.commit();
     } catch (e, stack) {

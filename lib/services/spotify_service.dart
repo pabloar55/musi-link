@@ -129,13 +129,6 @@ class SpotifyService {
     }
   }
 
-  static bool _isNetworkError(Object e) {
-    final msg = e.toString().toLowerCase();
-    return msg.contains('socketexception') ||
-        msg.contains('failed host lookup') ||
-        msg.contains('network is unreachable') ||
-        msg.contains('clientexception');
-  }
 
   /// Método para obtener la pista que se está reproduciendo actualmente
   Future<app.Track?> getCurrentlyPlayingTrack() async {
@@ -163,7 +156,7 @@ class SpotifyService {
       }
       return null;
     } catch (e, stack) {
-      if (_isNetworkError(e)) return null;
+      if (isNetworkError(e)) return null;
       if (_isRateLimitError(e)) rethrow; // propagate so _fetchAndUpdateNowPlaying can backoff
       await reportError(e, stack);
       return null;
@@ -248,7 +241,7 @@ class SpotifyService {
 
       return true;
     } catch (e, stack) {
-      if (_isNetworkError(e)) return false;
+      if (isNetworkError(e)) return false;
       await reportError(e, stack);
       return false;
     }

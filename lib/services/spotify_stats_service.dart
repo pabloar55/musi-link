@@ -60,13 +60,6 @@ class SpotifyGetStats {
     return (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
   }
 
-  static bool _isNetworkError(Object e) {
-    final msg = e.toString().toLowerCase();
-    return msg.contains('socketexception') ||
-        msg.contains('failed host lookup') ||
-        msg.contains('network is unreachable') ||
-        msg.contains('clientexception');
-  }
 
   Future<List<app.Track>> getTopTracks(int limit, String timeRange) async {
     final cacheKey = 'tracks_${timeRange}_$limit';
@@ -99,7 +92,7 @@ class SpotifyGetStats {
       await _saveCache(cacheKey, result.map((t) => t.toMap()).toList());
       return result;
     } catch (e, stack) {
-      if (_isNetworkError(e)) {
+      if (isNetworkError(e)) {
         final cached = await _loadCache(cacheKey);
         if (cached != null) {
           _lastServedFromCache = true;
@@ -137,7 +130,7 @@ class SpotifyGetStats {
       await _saveCache(cacheKey, result.map((a) => a.toMap()).toList());
       return result;
     } catch (e, stack) {
-      if (_isNetworkError(e)) {
+      if (isNetworkError(e)) {
         final cached = await _loadCache(cacheKey);
         if (cached != null) {
           _lastServedFromCache = true;
@@ -207,7 +200,7 @@ class SpotifyGetStats {
       }
       return result;
     } catch (e, stack) {
-      if (e is OfflineNoDataException || _isNetworkError(e)) {
+      if (e is OfflineNoDataException || isNetworkError(e)) {
         final cached = await _loadCache(cacheKey);
         if (cached != null) {
           _lastServedFromCache = true;

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/message.dart';
@@ -8,13 +9,16 @@ import 'package:musi_link/models/track.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
-class ChatService {
+class ChatService with AuthenticatedService {
   ChatService({required FirebaseFirestore firestore, required FirebaseAuth auth})
       : _firestore = firestore,
         _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+
+  @override
+  FirebaseAuth get auth => _auth;
   late final CollectionReference<Map<String, dynamic>> _chatsRef =
       _firestore.collection(FirestoreCollections.chats);
 
@@ -24,14 +28,6 @@ class ChatService {
   /// Limpia la caché en memoria. Llamar al hacer logout.
   void clearCache() => _chatByOtherUid.clear();
 
-
-  /// Returns the UID of the currently authenticated user.
-  /// Throws [StateError] instead of crashing if the session is lost.
-  String get _currentUid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('ChatService: no authenticated user.');
-    return uid;
-  }
 
   // ─── Chats ────────────────────────────────────────────────
 
@@ -55,7 +51,6 @@ class ChatService {
     if (cached != null) return cached;
 
     try {
-      final currentUid = _currentUid;
       final docRef = _chatsRef.doc(_chatId(currentUid, otherUid));
 
       late Chat chat;
@@ -92,7 +87,7 @@ class ChatService {
   /// Stream de los chats del usuario actual, ordenados por último mensaje.
   Stream<List<Chat>> getChats() {
     return _chatsRef
-        .where('participants', arrayContains: _currentUid)
+        .where('participants', arrayContains: currentUid)
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
@@ -149,7 +144,7 @@ class ChatService {
       final now = DateTime.now();
       final message = Message(
         id: '',
-        senderId: _currentUid,
+        senderId: currentUid,
         text: trimmed,
         timestamp: now,
       );
@@ -222,8 +217,6 @@ class ChatService {
   /// del chat.
   Future<void> markMessagesAsRead(String chatId) async {
     try {
-      final currentUid = _currentUid;
-
       // Resetear el contador desnormalizado: una sola escritura, sin listeners.
       await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
 
@@ -262,7 +255,7 @@ class ChatService {
       final now = DateTime.now();
       final message = Message(
         id: '',
-        senderId: _currentUid,
+        senderId: currentUid,
         text: '${track.title} - ${track.artist}',
         timestamp: now,
         type: MessageType.track,
@@ -308,7 +301,7 @@ class ChatService {
         for (final key in reactions.keys.toList()) {
           if (key != emoji) {
             final list = List<String>.from(reactions[key] as List? ?? []);
-            if (list.remove(_currentUid)) {
+            if (list.remove(currentUid)) {
               if (list.isEmpty) {
                 reactions.remove(key);
               } else {
@@ -320,10 +313,10 @@ class ChatService {
 
         final users = List<String>.from(reactions[emoji] as List? ?? []);
 
-        if (users.contains(_currentUid)) {
-          users.remove(_currentUid);
+        if (users.contains(currentUid)) {
+          users.remove(currentUid);
         } else {
-          users.add(_currentUid);
+          users.add(currentUid);
         }
 
         if (users.isEmpty) {

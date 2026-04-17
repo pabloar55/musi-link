@@ -102,6 +102,8 @@ class AppUser {
     };
   }
 
+  static const _unset = Object();
+
   AppUser copyWith({
     String? displayName,
     String? photoUrl,
@@ -113,9 +115,9 @@ class AppUser {
     List<String>? topGenreNames,
     DateTime? musicDataUpdatedAt,
     List<String>? friends,
-    Track? dailySong,
+    Object? dailySong = _unset,
     DateTime? dailySongUpdatedAt,
-    Track? nowPlaying,
+    Object? nowPlaying = _unset,
     DateTime? nowPlayingUpdatedAt,
   }) {
     return AppUser(
@@ -132,9 +134,9 @@ class AppUser {
       topGenreNames: topGenreNames ?? this.topGenreNames,
       musicDataUpdatedAt: musicDataUpdatedAt ?? this.musicDataUpdatedAt,
       friends: friends ?? this.friends,
-      dailySong: dailySong ?? this.dailySong,
+      dailySong: identical(dailySong, _unset) ? this.dailySong : dailySong as Track?,
       dailySongUpdatedAt: dailySongUpdatedAt ?? this.dailySongUpdatedAt,
-      nowPlaying: nowPlaying ?? this.nowPlaying,
+      nowPlaying: identical(nowPlaying, _unset) ? this.nowPlaying : nowPlaying as Track?,
       nowPlayingUpdatedAt: nowPlayingUpdatedAt ?? this.nowPlayingUpdatedAt,
     );
   }

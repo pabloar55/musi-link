@@ -3,11 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/discovery_result.dart';
+import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
-class MusicProfileService {
+class MusicProfileService with AuthenticatedService {
   MusicProfileService(
     this._spotifyGetStats, {
     required FirebaseFirestore firestore,
@@ -18,6 +19,9 @@ class MusicProfileService {
   final SpotifyGetStats _spotifyGetStats;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+
+  @override
+  FirebaseAuth get auth => _auth;
 
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection(FirestoreCollections.users);
@@ -44,14 +48,6 @@ class MusicProfileService {
       _cachedResults != null &&
       _cacheTime != null &&
       DateTime.now().difference(_cacheTime!) < _cacheTtl;
-
-  /// Returns the UID of the currently authenticated user.
-  /// Throws [StateError] instead of crashing if the session is lost.
-  String get _currentUid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('MusicProfileService: no authenticated user.');
-    return uid;
-  }
 
   /// Sincroniza los datos musicales del usuario desde Spotify a Firestore.
   /// Aplica un cooldown de 24h para evitar llamadas innecesarias.
@@ -97,7 +93,7 @@ class MusicProfileService {
     try {
       const opts = GetOptions(source: Source.cache);
 
-      final myDoc = await _usersRef.doc(_currentUid).get(opts);
+      final myDoc = await _usersRef.doc(currentUid).get(opts);
       if (!myDoc.exists) return null;
 
       final myUser = AppUser.fromFirestore(myDoc);
@@ -138,7 +134,7 @@ class MusicProfileService {
       _cachedResults = null;
       _displayedCount = 0;
 
-      final myDoc = await _usersRef.doc(_currentUid).get();
+      final myDoc = await _usersRef.doc(currentUid).get();
       if (!myDoc.exists) {
         return [];
       }
@@ -204,7 +200,7 @@ class MusicProfileService {
               .get(options)
           : null;
 
-      final seen = <String>{_currentUid};
+      final seen = <String>{currentUid};
       final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
 
       if (artistFuture != null) {
