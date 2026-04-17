@@ -261,16 +261,15 @@ class UserService {
   Future<List<AppUser>> getUsersByIds(List<String> uids) async {
     if (uids.isEmpty) return [];
     try {
-      final List<AppUser> users = [];
-      // Firestore whereIn soporta máximo 10 elementos por consulta
+      final futures = <Future<QuerySnapshot<Map<String, dynamic>>>>[];
       for (var i = 0; i < uids.length; i += 10) {
-        final chunk = uids.sublist(i, i + 10 > uids.length ? uids.length : i + 10);
-        final snapshot = await _usersRef
-            .where(FieldPath.documentId, whereIn: chunk)
-            .get();
-        users.addAll(snapshot.docs.map(AppUser.fromFirestore).whereType<AppUser>());
+        final chunk = uids.sublist(i, (i + 10).clamp(0, uids.length));
+        futures.add(_usersRef.where(FieldPath.documentId, whereIn: chunk).get());
       }
-      return users;
+      final snapshots = await Future.wait(futures);
+      return snapshots
+          .expand((s) => s.docs.map(AppUser.fromFirestore).whereType<AppUser>())
+          .toList();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
