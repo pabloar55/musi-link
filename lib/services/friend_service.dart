@@ -177,33 +177,35 @@ class FriendService {
   /// Obtiene el estado de la relación con [otherUid].
   Future<RelationshipResult> getRelationship(String otherUid) async {
     try {
-      // ¿Son amigos?
-      final userDoc = await _usersRef.doc(_currentUid).get();
+      final results = await Future.wait([
+        _usersRef.doc(_currentUid).get(),
+        _requestsRef
+            .where('senderId', isEqualTo: _currentUid)
+            .where('receiverId', isEqualTo: otherUid)
+            .where('status', isEqualTo: FriendRequestStatus.pending.name)
+            .limit(1)
+            .get(),
+        _requestsRef
+            .where('senderId', isEqualTo: otherUid)
+            .where('receiverId', isEqualTo: _currentUid)
+            .where('status', isEqualTo: FriendRequestStatus.pending.name)
+            .limit(1)
+            .get(),
+      ]);
+
+      final userDoc = results[0] as DocumentSnapshot<Map<String, dynamic>>;
+      final sent = results[1] as QuerySnapshot<Map<String, dynamic>>;
+      final received = results[2] as QuerySnapshot<Map<String, dynamic>>;
+
       final friends =
           List<String>.from(userDoc.data()?['friends'] as List? ?? []);
       if (friends.contains(otherUid)) {
         return const RelationshipResult(RelationshipStatus.friends);
       }
-
-      // ¿Solicitud enviada pendiente?
-      final sent = await _requestsRef
-          .where('senderId', isEqualTo: _currentUid)
-          .where('receiverId', isEqualTo: otherUid)
-          .where('status', isEqualTo: FriendRequestStatus.pending.name)
-          .limit(1)
-          .get();
       if (sent.docs.isNotEmpty) {
         return RelationshipResult(
             RelationshipStatus.requestSent, sent.docs.first.id);
       }
-
-      // ¿Solicitud recibida pendiente?
-      final received = await _requestsRef
-          .where('senderId', isEqualTo: otherUid)
-          .where('receiverId', isEqualTo: _currentUid)
-          .where('status', isEqualTo: FriendRequestStatus.pending.name)
-          .limit(1)
-          .get();
       if (received.docs.isNotEmpty) {
         return RelationshipResult(
             RelationshipStatus.requestReceived, received.docs.first.id);
