@@ -36,7 +36,10 @@ async function sendNotification(
     const fcmError = error as { code?: string };
     if (fcmError.code === 'messaging/registration-token-not-registered') {
       await db.doc(`users/${recipientUid}`).update({ fcmToken: FieldValue.delete() });
+      return;
     }
+    console.error('[sendNotification] Unexpected error:', error);
+    throw error;
   }
 }
 
