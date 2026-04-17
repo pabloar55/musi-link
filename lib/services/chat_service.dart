@@ -186,8 +186,10 @@ class ChatService {
         .limit(messagesPageSize)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) =>
-            snapshot.docs.reversed.map(Message.fromFirestore).toList());
+        .map((snapshot) => snapshot.docs.reversed
+            .map(Message.fromFirestore)
+            .whereType<Message>()
+            .toList());
   }
 
   /// Carga mensajes anteriores a [before] para paginación inversa.
@@ -205,7 +207,10 @@ class ChatService {
           .limit(messagesPageSize)
           .get();
 
-      return snapshot.docs.reversed.map(Message.fromFirestore).toList();
+      return snapshot.docs.reversed
+          .map(Message.fromFirestore)
+          .whereType<Message>()
+          .toList();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;

@@ -8,4 +8,5 @@ abstract final class FirestoreCollections {
   static const String chats = 'chats';
   static const String messages = 'messages';
   static const String friendRequests = 'friend_requests';
+  static const String spotifyLinks = 'spotify_links';
 }

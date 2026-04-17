@@ -110,25 +110,27 @@ class UserService {
     required String spotifyId,
     required String photoUrl,
   }) async {
-    if (spotifyId.isNotEmpty) {
-      final existing = await _usersRef
-          .where('spotifyId', isEqualTo: spotifyId)
-          .limit(1)
-          .get();
-      if (existing.docs.isNotEmpty && existing.docs.first.id != uid) {
-        throw const SpotifyAlreadyLinkedException();
-      }
-    }
-
     try {
-      final updates = <String, dynamic>{
-        'spotifyId': spotifyId,
-      };
-      if (photoUrl.trim().isNotEmpty) {
-        updates['photoUrl'] = photoUrl;
+      final userUpdates = <String, dynamic>{'spotifyId': spotifyId};
+      if (photoUrl.trim().isNotEmpty) userUpdates['photoUrl'] = photoUrl;
+
+      if (spotifyId.isNotEmpty) {
+        final linkRef = _firestore
+            .collection(FirestoreCollections.spotifyLinks)
+            .doc(spotifyId);
+
+        await _firestore.runTransaction((tx) async {
+          final linkSnap = await tx.get(linkRef);
+          if (linkSnap.exists && linkSnap.data()?['uid'] != uid) {
+            throw const SpotifyAlreadyLinkedException();
+          }
+          tx.set(linkRef, {'uid': uid});
+          tx.update(_usersRef.doc(uid), userUpdates);
+        });
+      } else {
+        await _usersRef.doc(uid).update(userUpdates);
       }
 
-      await _usersRef.doc(uid).update(updates);
       _userCache.remove(uid);
     } catch (e, stack) {
       if (e is SpotifyAlreadyLinkedException) rethrow;

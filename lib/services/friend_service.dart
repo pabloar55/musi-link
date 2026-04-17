@@ -40,6 +40,7 @@ class FriendService {
 
   /// Envía una solicitud de amistad a [receiverUid].
   Future<void> sendRequest(String receiverUid) async {
+    if (receiverUid == _currentUid) return;
     try {
       final existing = await _requestsRef
           .where('senderId', isEqualTo: _currentUid)
