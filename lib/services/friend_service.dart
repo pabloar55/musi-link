@@ -249,9 +249,11 @@ class FriendService {
           .where('receiverId', isEqualTo: uid)
           .get();
       final allDocs = [...sent.docs, ...received.docs];
-      if (allDocs.isNotEmpty) {
+      const requestBatchSize = 400;
+      for (var i = 0; i < allDocs.length; i += requestBatchSize) {
+        final chunk = allDocs.sublist(i, (i + requestBatchSize).clamp(0, allDocs.length));
         final batch = _firestore.batch();
-        for (final doc in allDocs) {
+        for (final doc in chunk) {
           batch.delete(doc.reference);
         }
         await batch.commit();

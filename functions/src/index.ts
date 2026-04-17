@@ -59,6 +59,7 @@ export const onNewMessage = onDocumentCreated(
     if (!chatData) return;
 
     const participants = chatData.participants as string[];
+    if (participants.length !== 2) return;
     const recipientId = participants.find((p) => p !== senderId);
     if (!recipientId) return;
 

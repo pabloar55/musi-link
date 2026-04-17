@@ -16,8 +16,19 @@ final userStreamProvider = StreamProvider.family<AppUser?, String>((ref, uid) {
 });
 
 final compatibilityProvider =
-    FutureProvider.family<DiscoveryResult, AppUser>((ref, user) {
-      return ref.read(musicProfileServiceProvider).getCompatibilityWith(user);
+    FutureProvider.family<DiscoveryResult, AppUser>((ref, user) async {
+      final myUser = await ref.watch(currentUserProvider.future);
+      if (myUser == null) {
+        return DiscoveryResult(
+          user: user,
+          score: 0,
+          sharedArtistNames: [],
+          sharedGenreNames: [],
+        );
+      }
+      return ref
+          .read(musicProfileServiceProvider)
+          .getCompatibilityWith(myUser, user);
     });
 
 final relationshipProvider =

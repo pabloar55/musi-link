@@ -80,7 +80,7 @@ final Provider<SpotifyService> spotifyServiceProvider =
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
     Provider<SpotifyGetStats>((ref) {
-  return SpotifyGetStats(ref.watch(spotifyServiceProvider));
+  return SpotifyGetStats(ref.watch(spotifyServiceProvider), ref.read(sharedPreferencesProvider));
 });
 
 final Provider<MusicProfileService> musicProfileServiceProvider =

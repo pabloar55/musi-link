@@ -117,6 +117,7 @@ class _AccountSettingsScreenState
         await authService.signOut();
       } catch (_) {}
       chatService.clearCache();
+      ref.read(musicProfileServiceProvider).clearCache();
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -153,6 +154,7 @@ class _AccountSettingsScreenState
       return;
     }
     chatService.clearCache();
+    ref.read(musicProfileServiceProvider).clearCache();
     if (!mounted) return;
     context.go('/auth');
   }

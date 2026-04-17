@@ -25,7 +25,10 @@ tag) {
         const fcmError = error;
         if (fcmError.code === 'messaging/registration-token-not-registered') {
             await db.doc(`users/${recipientUid}`).update({ fcmToken: firestore_2.FieldValue.delete() });
+            return;
         }
+        console.error('[sendNotification] Unexpected error:', error);
+        throw error;
     }
 }
 // ── Función 1 — Nuevo mensaje ─────────────────────────────────────────────────
@@ -41,6 +44,8 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
     if (!chatData)
         return;
     const participants = chatData.participants;
+    if (participants.length !== 2)
+        return;
     const recipientId = participants.find((p) => p !== senderId);
     if (!recipientId)
         return;

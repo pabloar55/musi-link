@@ -27,6 +27,12 @@ class MusicProfileService {
   int _displayedCount = 0;
   DateTime? _cacheTime;
 
+  void clearCache() {
+    _cachedResults = null;
+    _displayedCount = 0;
+    _cacheTime = null;
+  }
+
   static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
   static const _queryLimit = 100;
@@ -234,26 +240,10 @@ class MusicProfileService {
   }
 
   /// Calcula la compatibilidad entre el usuario actual y otro usuario.
-  Future<DiscoveryResult> getCompatibilityWith(AppUser otherUser) async {
-    final myDoc = await _usersRef.doc(_currentUid).get();
-    if (!myDoc.exists) {
-      return DiscoveryResult(
-        user: otherUser,
-        score: 0,
-        sharedArtistNames: [],
-        sharedGenreNames: [],
-      );
-    }
-
-    final myUser = AppUser.fromFirestore(myDoc);
-    if (myUser == null) {
-      return DiscoveryResult(
-        user: otherUser,
-        score: 0,
-        sharedArtistNames: [],
-        sharedGenreNames: [],
-      );
-    }
+  Future<DiscoveryResult> getCompatibilityWith(
+    AppUser myUser,
+    AppUser otherUser,
+  ) async {
     return MusicProfileService.calculateCompatibility(
       myArtistNames: myUser.topArtistNames,
       myGenreNames: myUser.topGenreNames,

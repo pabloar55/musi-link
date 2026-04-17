@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/utils/firestore_collections.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
@@ -110,7 +111,7 @@ class NotificationService {
     final token = await _messaging.getToken();
     if (token == null) return;
     await _firestore
-        .collection('users')
+        .collection(FirestoreCollections.users)
         .doc(uid)
         .update({'fcmToken': token});
   }
@@ -134,17 +135,15 @@ class NotificationService {
   Future<void> _clearFcmTokenFromFirestore(String uid) async {
     try {
       await _firestore
-          .collection('users')
+          .collection(FirestoreCollections.users)
           .doc(uid)
           .update({'fcmToken': FieldValue.delete()});
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_pendingClearUidKey);
+      await _prefs.remove(_pendingClearUidKey);
     } catch (e, stack) {
       await reportError(e, stack);
       // Queue so initialize() retries on the next app launch.
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_pendingClearUidKey, uid);
+        await _prefs.setString(_pendingClearUidKey, uid);
       } catch (_) {
         // SharedPreferences failure is non-critical; error already reported.
       }
@@ -153,8 +152,7 @@ class NotificationService {
 
   Future<void> _retryPendingTokenClear() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uid = prefs.getString(_pendingClearUidKey);
+      final uid = _prefs.getString(_pendingClearUidKey);
       if (uid == null) return;
       await _clearFcmTokenFromFirestore(uid);
     } catch (_) {

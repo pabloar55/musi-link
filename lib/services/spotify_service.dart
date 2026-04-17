@@ -121,12 +121,7 @@ class SpotifyService {
     _consecutiveErrors = 0;
     _currentInterval = track != null ? _intervalPlaying : _intervalIdle;
 
-    // Evitar actualizaciones innecesarias si es la misma canción
-    if (track != null &&
-        _lastNowPlayingTrack != null &&
-        track.spotifyUrl == _lastNowPlayingTrack!.spotifyUrl) {
-      return;
-    }
+    if (track?.spotifyUrl == _lastNowPlayingTrack?.spotifyUrl) return;
 
     _lastNowPlayingTrack = track;
 

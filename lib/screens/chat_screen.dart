@@ -74,7 +74,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         }
       });
       if (streamMessages.isNotEmpty) {
-        ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId);
+        unawaited(ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId));
         _scrollToBottom();
       }
     });

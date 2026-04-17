@@ -150,7 +150,7 @@ class ChatService {
       final message = Message(
         id: '',
         senderId: _currentUid,
-        text: text,
+        text: trimmed,
         timestamp: now,
       );
 
@@ -162,7 +162,7 @@ class ChatService {
 
       // Actualizar último mensaje e incrementar el contador del destinatario
       batch.update(_chatsRef.doc(chatId), {
-        'lastMessage': text,
+        'lastMessage': trimmed,
         'lastMessageTime': Timestamp.fromDate(now),
         'unreadCounts.$otherUid': FieldValue.increment(1),
       });

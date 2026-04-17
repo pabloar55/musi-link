@@ -19,10 +19,10 @@ class OfflineNoDataException implements Exception {
 /// Persiste el último resultado exitoso en [SharedPreferences] y lo devuelve
 /// como fallback cuando no hay conexión a internet.
 class SpotifyGetStats {
-  SpotifyGetStats(this._spotifyService);
+  SpotifyGetStats(this._spotifyService, this._prefs);
 
   final SpotifyService _spotifyService;
-  SharedPreferences? _prefs;
+  final SharedPreferences _prefs;
 
   /// `true` si el último resultado provino del caché persistido (sin red).
   bool _lastServedFromCache = false;
@@ -36,19 +36,12 @@ class SpotifyGetStats {
     'long_term': TimeRange.longTerm,
   };
 
-  Future<SharedPreferences> get _sharedPrefs async {
-    _prefs ??= await SharedPreferences.getInstance();
-    return _prefs!;
-  }
-
   Future<void> _saveCache(String key, List<Map<String, dynamic>> data) async {
-    final prefs = await _sharedPrefs;
-    await prefs.setString('$_cachePrefix$key', jsonEncode(data));
+    await _prefs.setString('$_cachePrefix$key', jsonEncode(data));
   }
 
   Future<List<Map<String, dynamic>>?> _loadCache(String key) async {
-    final prefs = await _sharedPrefs;
-    final raw = prefs.getString('$_cachePrefix$key');
+    final raw = _prefs.getString('$_cachePrefix$key');
     if (raw == null) return null;
     return (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
   }
