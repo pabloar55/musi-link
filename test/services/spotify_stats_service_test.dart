@@ -12,7 +12,8 @@ class MockSpotifyService extends Mock implements SpotifyService {}
 /// sin pasar por la SpotifyApi. Así se puede testear la lógica de
 /// agregación de géneros de forma aislada.
 class _FakeStats extends SpotifyGetStats {
-  _FakeStats(super.spotifyService);
+  _FakeStats(SpotifyService spotifyService, SharedPreferences prefs)
+      : super(spotifyService, prefs);
 
   List<app.Artist>? _artists;
   Object? _error;
@@ -38,10 +39,11 @@ void main() {
   late MockSpotifyService mockSpotify;
   late _FakeStats stats;
 
-  setUp(() {
+  setUp(() async {
     mockSpotify = MockSpotifyService();
-    stats = _FakeStats(mockSpotify);
     SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    stats = _FakeStats(mockSpotify, prefs);
   });
 
   // ── Aggregation algorithm ─────────────────────────────────────────────────

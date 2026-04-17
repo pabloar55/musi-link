@@ -34,13 +34,28 @@ void main() {
   group('FriendService', () {
     group('sendRequest', () {
       test('crea un friend_request con status pending', () async {
-        when(() => mockRequestsRef.add(any()))
-            .thenAnswer((_) async => MockDocumentReference());
+        final mockDupQ1 = MockQuery();
+        final mockDupQ2 = MockQuery();
+        final mockDupQ3 = MockQuery();
+        final mockDupSnap = MockQuerySnapshot();
+        when(() => mockRequestsRef.where('senderId', isEqualTo: 'current_uid'))
+            .thenReturn(mockDupQ1);
+        when(() => mockDupQ1.where('receiverId', isEqualTo: 'receiver_uid'))
+            .thenReturn(mockDupQ2);
+        when(() => mockDupQ2.where('status', isEqualTo: 'pending'))
+            .thenReturn(mockDupQ3);
+        when(() => mockDupQ3.limit(1)).thenReturn(mockDupQ3);
+        when(() => mockDupQ3.get()).thenAnswer((_) async => mockDupSnap);
+        when(() => mockDupSnap.docs).thenReturn([]);
+
+        final mockDocRef = MockDocumentReference();
+        when(() => mockRequestsRef.doc(any())).thenReturn(mockDocRef);
+        when(() => mockDocRef.set(any())).thenAnswer((_) async {});
 
         await friendService.sendRequest('receiver_uid');
 
         final captured =
-            verify(() => mockRequestsRef.add(captureAny())).captured.single
+            verify(() => mockDocRef.set(captureAny())).captured.single
                 as Map<String, dynamic>;
         expect(captured['senderId'], 'current_uid');
         expect(captured['receiverId'], 'receiver_uid');
@@ -50,7 +65,7 @@ void main() {
       });
 
       test('propaga error si Firestore falla', () async {
-        when(() => mockRequestsRef.add(any()))
+        when(() => mockRequestsRef.where('senderId', isEqualTo: 'current_uid'))
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(
@@ -193,6 +208,34 @@ void main() {
         when(() => mockDocSnap.data())
             .thenReturn({'friends': ['other_uid']});
 
+        final mockSentQ1 = MockQuery();
+        final mockSentQ2 = MockQuery();
+        final mockSentQ3 = MockQuery();
+        final mockSentSnap = MockQuerySnapshot();
+        when(() => mockRequestsRef.where('senderId', isEqualTo: 'current_uid'))
+            .thenReturn(mockSentQ1);
+        when(() => mockSentQ1.where('receiverId', isEqualTo: 'other_uid'))
+            .thenReturn(mockSentQ2);
+        when(() => mockSentQ2.where('status', isEqualTo: 'pending'))
+            .thenReturn(mockSentQ3);
+        when(() => mockSentQ3.limit(1)).thenReturn(mockSentQ3);
+        when(() => mockSentQ3.get()).thenAnswer((_) async => mockSentSnap);
+        when(() => mockSentSnap.docs).thenReturn([]);
+
+        final mockRecvQ1 = MockQuery();
+        final mockRecvQ2 = MockQuery();
+        final mockRecvQ3 = MockQuery();
+        final mockRecvSnap = MockQuerySnapshot();
+        when(() => mockRequestsRef.where('senderId', isEqualTo: 'other_uid'))
+            .thenReturn(mockRecvQ1);
+        when(() => mockRecvQ1.where('receiverId', isEqualTo: 'current_uid'))
+            .thenReturn(mockRecvQ2);
+        when(() => mockRecvQ2.where('status', isEqualTo: 'pending'))
+            .thenReturn(mockRecvQ3);
+        when(() => mockRecvQ3.limit(1)).thenReturn(mockRecvQ3);
+        when(() => mockRecvQ3.get()).thenAnswer((_) async => mockRecvSnap);
+        when(() => mockRecvSnap.docs).thenReturn([]);
+
         final result = await friendService.getRelationship('other_uid');
 
         expect(result.status, RelationshipStatus.friends);
@@ -226,6 +269,21 @@ void main() {
             .thenAnswer((_) async => mockSentSnapshot);
         when(() => mockSentSnapshot.docs).thenReturn([mockSentDoc]);
         when(() => mockSentDoc.id).thenReturn('sent_req_id');
+
+        // Received chain also runs concurrently via Future.wait — must be stubbed
+        final mockRecvQ1 = MockQuery();
+        final mockRecvQ2 = MockQuery();
+        final mockRecvQ3 = MockQuery();
+        final mockRecvSnap = MockQuerySnapshot();
+        when(() => mockRequestsRef.where('senderId', isEqualTo: 'other_uid'))
+            .thenReturn(mockRecvQ1);
+        when(() => mockRecvQ1.where('receiverId', isEqualTo: 'current_uid'))
+            .thenReturn(mockRecvQ2);
+        when(() => mockRecvQ2.where('status', isEqualTo: 'pending'))
+            .thenReturn(mockRecvQ3);
+        when(() => mockRecvQ3.limit(1)).thenReturn(mockRecvQ3);
+        when(() => mockRecvQ3.get()).thenAnswer((_) async => mockRecvSnap);
+        when(() => mockRecvSnap.docs).thenReturn([]);
 
         final result = await friendService.getRelationship('other_uid');
 
