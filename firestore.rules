@@ -85,9 +85,12 @@ service cloud.firestore {
           || chatId == request.resource.data.participants[1] + '_' + request.resource.data.participants[0]
         );
 
-      // Solo los participantes pueden actualizar (ej: lastMessage)
+      // Solo los participantes pueden actualizar, y únicamente los campos de metadatos del chat
       allow update: if request.auth != null
-        && request.auth.uid in resource.data.participants;
+        && request.auth.uid in resource.data.participants
+        && request.resource.data.diff(resource.data)
+             .affectedKeys()
+             .hasOnly(['lastMessage', 'lastMessageTime', 'unreadCounts']);
 
       // Solo los participantes pueden eliminar el chat
       allow delete: if request.auth != null

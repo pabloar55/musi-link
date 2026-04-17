@@ -12,8 +12,7 @@ class MockSpotifyService extends Mock implements SpotifyService {}
 /// sin pasar por la SpotifyApi. Así se puede testear la lógica de
 /// agregación de géneros de forma aislada.
 class _FakeStats extends SpotifyGetStats {
-  _FakeStats(SpotifyService spotifyService, SharedPreferences prefs)
-      : super(spotifyService, prefs);
+  _FakeStats(super.spotifyService, super.prefs);
 
   List<app.Artist>? _artists;
   Object? _error;

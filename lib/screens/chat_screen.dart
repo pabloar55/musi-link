@@ -276,6 +276,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 message: msg,
                 isMe: isMe,
                 colorScheme: colorScheme,
+                currentUid: _currentUid,
+                chatId: widget.chatId,
+                chatService: ref.read(chatServiceProvider),
               );
             },
           ),

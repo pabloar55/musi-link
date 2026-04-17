@@ -1,21 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:musi_link/models/message.dart';
+import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
+
+class _MockChatService extends Mock implements ChatService {}
 
 void main() {
   group('MessageBubble', () {
     final timestamp = DateTime(2025, 6, 15, 14, 5);
     const colorScheme = ColorScheme.dark();
+    late _MockChatService chatService;
+
+    setUp(() {
+      chatService = _MockChatService();
+    });
 
     Widget buildBubble({required Message message, required bool isMe}) {
-      return MaterialApp(
-        home: Scaffold(
-          body: MessageBubble(
-            message: message,
-            isMe: isMe,
-            colorScheme: colorScheme,
+      return ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: MessageBubble(
+              message: message,
+              isMe: isMe,
+              colorScheme: colorScheme,
+              currentUid: 'user1',
+              chatId: 'chat1',
+              chatService: chatService,
+            ),
           ),
         ),
       );

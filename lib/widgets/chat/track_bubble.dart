@@ -1,12 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
+import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/theme/app_theme.dart';
+import 'package:musi_link/widgets/chat/reaction_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class TrackBubble extends StatefulWidget {
+class TrackBubble extends ConsumerWidget {
   final Message message;
   final bool isMe;
   final ColorScheme colorScheme;
@@ -24,24 +27,16 @@ class TrackBubble extends StatefulWidget {
     required this.chatService,
   });
 
-  @override
-  State<TrackBubble> createState() => _TrackBubbleState();
-}
-
-class _TrackBubbleState extends State<TrackBubble> {
-  bool _showingPicker = false;
-
-  void _toggleReaction(String emoji) {
-    widget.chatService.toggleReaction(
-        widget.chatId, widget.message.id, emoji);
-    setState(() => _showingPicker = false);
+  void _toggleReaction(WidgetRef ref, String emoji) {
+    chatService.toggleReaction(chatId, message.id, emoji);
+    ref.read(activeReactionPickerProvider.notifier).close();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final message = widget.message;
-    final isMe = widget.isMe;
-    final cs = widget.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showingPicker =
+        ref.watch(activeReactionPickerProvider) == message.id;
+    final cs = colorScheme;
     final tt = Theme.of(context).textTheme;
     final track = message.trackData!;
     final time =
@@ -58,10 +53,10 @@ class _TrackBubbleState extends State<TrackBubble> {
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            // Card de la canción
             GestureDetector(
-              onLongPress: () =>
-                  setState(() => _showingPicker = !_showingPicker),
+              onLongPress: () => ref
+                  .read(activeReactionPickerProvider.notifier)
+                  .toggle(message.id),
               onTap: track.spotifyUrl.isNotEmpty
                   ? () async {
                       final uri = Uri.parse(track.spotifyUrl);
@@ -87,7 +82,6 @@ class _TrackBubbleState extends State<TrackBubble> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Carátula
                     if (track.imageUrl.isNotEmpty)
                       CachedNetworkImage(
                         imageUrl: track.imageUrl,
@@ -107,7 +101,6 @@ class _TrackBubbleState extends State<TrackBubble> {
                         ),
                       ),
 
-                    // Info canción
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         AppTokens.spaceMD,
@@ -141,7 +134,6 @@ class _TrackBubbleState extends State<TrackBubble> {
                       ),
                     ),
 
-                    // Timestamp + read receipt
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         AppTokens.spaceMD,
@@ -157,8 +149,7 @@ class _TrackBubbleState extends State<TrackBubble> {
                             style: tt.labelSmall?.copyWith(
                               fontSize: 11,
                               color: isMe
-                                  ? cs.onPrimary
-                                      .withAlpha(AppTokens.alphaMedium)
+                                  ? cs.onPrimary.withAlpha(AppTokens.alphaMedium)
                                   : cs.onSurface.withAlpha(AppTokens.alphaLow),
                             ),
                           ),
@@ -169,7 +160,6 @@ class _TrackBubbleState extends State<TrackBubble> {
                                   ? LucideIcons.checkCheck
                                   : LucideIcons.check,
                               size: 14,
-                              // Token semántico del design system
                               color: message.read
                                   ? AppTokens.readReceiptColor
                                   : cs.onPrimary
@@ -184,95 +174,23 @@ class _TrackBubbleState extends State<TrackBubble> {
               ),
             ),
 
-            // Picker de reacciones inline
-            if (_showingPicker)
+            if (showingPicker)
               Padding(
                 padding: const EdgeInsets.only(top: AppTokens.spaceXS),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTokens.spaceSM,
-                    vertical: AppTokens.spaceXS,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHigh,
-                    borderRadius:
-                        BorderRadius.circular(AppTokens.radiusFull),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: ['❤️', '🔥', '👏', '😍', '🎶'].map((emoji) {
-                      final hasReacted = widget.message.reactions[emoji]
-                              ?.contains(widget.currentUid) ??
-                          false;
-                      return GestureDetector(
-                        onTap: () => _toggleReaction(emoji),
-                        // Touch target mínimo de 44px
-                        child: SizedBox(
-                          width: AppTokens.minTouchTarget,
-                          height: AppTokens.minTouchTarget,
-                          child: Center(
-                            child: AnimatedContainer(
-                              duration: AppTokens.durationFast,
-                              padding: const EdgeInsets.all(
-                                  AppTokens.spaceXS + 2),
-                              decoration: BoxDecoration(
-                                color: hasReacted
-                                    ? cs.primaryContainer
-                                    : Colors.transparent,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                child: ReactionPicker(
+                  reactions: message.reactions,
+                  currentUid: currentUid,
+                  onReact: (emoji) => _toggleReaction(ref, emoji),
                 ),
               ),
 
-            // Reacciones existentes
             if (message.reactions.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: AppTokens.spaceXS),
-                child: Wrap(
-                  spacing: AppTokens.spaceXS,
-                  runSpacing: AppTokens.spaceXS,
-                  children: message.reactions.entries.map((entry) {
-                    final hasReacted =
-                        entry.value.contains(widget.currentUid);
-                    return GestureDetector(
-                      onTap: () => _toggleReaction(entry.key),
-                      child: AnimatedContainer(
-                        duration: AppTokens.durationFast,
-                        constraints: const BoxConstraints(
-                          minHeight: AppTokens.minTouchTarget - 8,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.spaceSM + 2,
-                          vertical: AppTokens.spaceXS,
-                        ),
-                        decoration: BoxDecoration(
-                          color: hasReacted
-                              ? cs.primaryContainer
-                              : cs.surfaceContainerHighest,
-                          borderRadius:
-                              BorderRadius.circular(AppTokens.radiusMD),
-                          border: hasReacted
-                              ? Border.all(
-                                  color: cs.primary, width: 1.5)
-                              : null,
-                        ),
-                        child: Text(
-                          '${entry.key} ${entry.value.length}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                child: ReactionRow(
+                  reactions: message.reactions,
+                  currentUid: currentUid,
+                  onReact: (emoji) => _toggleReaction(ref, emoji),
                 ),
               ),
           ],

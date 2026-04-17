@@ -92,6 +92,23 @@ final Provider<MusicProfileService> musicProfileServiceProvider =
   );
 });
 
+// ── UI state ────────────────────────────────────────────────────
+
+/// ID del mensaje cuyo reaction picker está abierto; null = ninguno.
+class ActiveReactionPickerNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void open(String messageId) => state = messageId;
+  void close() => state = null;
+  void toggle(String messageId) =>
+      state = state == messageId ? null : messageId;
+}
+
+final activeReactionPickerProvider =
+    NotifierProvider<ActiveReactionPickerNotifier, String?>(
+        ActiveReactionPickerNotifier.new);
+
 // ── StreamProviders de Firestore ────────────────────────────────
 
 final receivedRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
