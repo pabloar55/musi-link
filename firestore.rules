@@ -112,7 +112,9 @@ service cloud.firestore {
         // Solo se permite actualizar 'read' o 'reactions'
         allow update: if request.auth != null
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'reactions']);
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'reactions'])
+          && (!('reactions' in request.resource.data.diff(resource.data).affectedKeys())
+              || request.resource.data.reactions.size() <= 2);
 
         // Solo los participantes pueden eliminar mensajes
         allow delete: if request.auth != null
