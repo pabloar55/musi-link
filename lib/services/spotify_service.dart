@@ -111,10 +111,8 @@ class SpotifyService {
     try {
       track = await getCurrentlyPlayingTrack();
     } catch (e) {
-      if (_isRateLimitError(e)) {
-        _consecutiveErrors++;
-        _currentInterval = _backoffForErrors(_consecutiveErrors);
-      }
+      _consecutiveErrors++;
+      _currentInterval = _backoffForErrors(_consecutiveErrors);
       return;
     }
 
