@@ -298,6 +298,21 @@ class ChatService {
         final data = doc.data()!;
         final reactions =
             Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
+
+        // Remove any existing reaction from this user on a different emoji
+        for (final key in reactions.keys.toList()) {
+          if (key != emoji) {
+            final list = List<String>.from(reactions[key] as List? ?? []);
+            if (list.remove(_currentUid)) {
+              if (list.isEmpty) {
+                reactions.remove(key);
+              } else {
+                reactions[key] = list;
+              }
+            }
+          }
+        }
+
         final users = List<String>.from(reactions[emoji] as List? ?? []);
 
         if (users.contains(_currentUid)) {

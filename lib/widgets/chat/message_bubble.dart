@@ -7,7 +7,7 @@ import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/widgets/chat/reaction_picker.dart';
 
-class MessageBubble extends ConsumerWidget {
+class MessageBubble extends ConsumerStatefulWidget {
   final Message message;
   final bool isMe;
   final ColorScheme colorScheme;
@@ -25,113 +25,164 @@ class MessageBubble extends ConsumerWidget {
     required this.chatService,
   });
 
-  void _toggleReaction(WidgetRef ref, String emoji) {
-    chatService.toggleReaction(chatId, message.id, emoji);
+  @override
+  ConsumerState<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends ConsumerState<MessageBubble> {
+  final _layerLink = LayerLink();
+  OverlayEntry? _pickerEntry;
+  @override
+  void dispose() {
+    _pickerEntry?.remove();
+    _pickerEntry = null;
+    super.dispose();
+  }
+
+  void _showPicker() {
+    _pickerEntry?.remove();
+    _pickerEntry = OverlayEntry(
+      builder: (_) => FloatingReactionPicker(
+        layerLink: _layerLink,
+        isMe: widget.isMe,
+        reactions: widget.message.reactions,
+        currentUid: widget.currentUid,
+        onReact: _toggleReaction,
+        onDismiss: () =>
+            ref.read(activeReactionPickerProvider.notifier).close(),
+      ),
+    );
+    Overlay.of(context).insert(_pickerEntry!);
+  }
+
+  void _hidePicker() {
+    _pickerEntry?.remove();
+    _pickerEntry = null;
+  }
+
+  void _toggleReaction(String emoji) {
+    widget.chatService.toggleReaction(widget.chatId, widget.message.id, emoji);
     ref.read(activeReactionPickerProvider.notifier).close();
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showingPicker =
-        ref.watch(activeReactionPickerProvider) == message.id;
-    final cs = colorScheme;
+  Widget build(BuildContext context) {
+    ref.listen(activeReactionPickerProvider, (prev, next) {
+      if (next == widget.message.id) {
+        _showPicker();
+      } else if (prev == widget.message.id) {
+        _hidePicker();
+      }
+    });
+
+    final cs = widget.colorScheme;
     final tt = Theme.of(context).textTheme;
     final time =
-        '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}';
+        '${widget.message.timestamp.hour.toString().padLeft(2, '0')}:${widget.message.timestamp.minute.toString().padLeft(2, '0')}';
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onLongPress: () => ref
-                .read(activeReactionPickerProvider.notifier)
-                .toggle(message.id),
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              margin: const EdgeInsets.symmetric(vertical: AppTokens.spaceXS),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTokens.spaceMD,
-                vertical: AppTokens.spaceSM + 2,
-              ),
-              decoration: BoxDecoration(
-                color: isMe ? cs.primary : cs.surfaceContainerHighest,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(AppTokens.radiusLG),
-                  topRight: const Radius.circular(AppTokens.radiusLG),
-                  bottomLeft: Radius.circular(isMe ? AppTokens.radiusLG : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : AppTokens.radiusLG),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment:
-                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message.text,
-                    style: tt.bodyMedium?.copyWith(
-                      color: isMe ? cs.onPrimary : cs.onSurface,
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onLongPress: () => ref
+          .read(activeReactionPickerProvider.notifier)
+          .toggle(widget.message.id),
+      child: Align(
+          alignment:
+              widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Column(
+            crossAxisAlignment: widget.isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: AppTokens.spaceXS),
+                child: CompositedTransformTarget(
+                  link: _layerLink,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
                     ),
-                  ),
-                  const SizedBox(height: AppTokens.spaceXS),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        time,
-                        style: tt.labelSmall?.copyWith(
-                          fontSize: 11,
-                          color: isMe
-                              ? cs.onPrimary.withAlpha(AppTokens.alphaMedium)
-                              : cs.onSurface.withAlpha(AppTokens.alphaLow),
-                        ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTokens.spaceMD,
+                      vertical: AppTokens.spaceSM + 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.isMe
+                          ? cs.primary
+                          : cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(AppTokens.radiusLG),
+                        topRight: const Radius.circular(AppTokens.radiusLG),
+                        bottomLeft: Radius.circular(
+                            widget.isMe ? AppTokens.radiusLG : 4),
+                        bottomRight: Radius.circular(
+                            widget.isMe ? 4 : AppTokens.radiusLG),
                       ),
-                      if (isMe) ...[
-                        const SizedBox(width: AppTokens.spaceXS),
-                        Icon(
-                          message.read
-                              ? LucideIcons.checkCheck
-                              : LucideIcons.check,
-                          size: 14,
-                          color: message.read
-                              ? AppTokens.readReceiptColor
-                              : cs.onPrimary.withAlpha(AppTokens.alphaMedium),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: widget.isMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.message.text,
+                          style: tt.bodyMedium?.copyWith(
+                            color: widget.isMe ? cs.onPrimary : cs.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: AppTokens.spaceXS),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              time,
+                              style: tt.labelSmall?.copyWith(
+                                fontSize: 11,
+                                color: widget.isMe
+                                    ? cs.onPrimary
+                                        .withAlpha(AppTokens.alphaMedium)
+                                    : cs.onSurface
+                                        .withAlpha(AppTokens.alphaLow),
+                              ),
+                            ),
+                            if (widget.isMe) ...[
+                              const SizedBox(width: AppTokens.spaceXS),
+                              Icon(
+                                widget.message.read
+                                    ? LucideIcons.checkCheck
+                                    : LucideIcons.check,
+                                size: 14,
+                                color: widget.message.read
+                                    ? AppTokens.readReceiptColor
+                                    : cs.onPrimary
+                                        .withAlpha(AppTokens.alphaMedium),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ],
+                ),
               ),
-            ),
+
+              if (widget.message.reactions.isNotEmpty)
+                Transform.translate(
+                  offset: const Offset(0, -6),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: AppTokens.spaceXS),
+                    child: ReactionRow(
+                      reactions: widget.message.reactions,
+                      currentUid: widget.currentUid,
+                      onReact: _toggleReaction,
+                    ),
+                  ),
+                ),
+            ],
           ),
-
-          if (showingPicker)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTokens.spaceXS),
-              child: ReactionPicker(
-                reactions: message.reactions,
-                currentUid: currentUid,
-                onReact: (emoji) => _toggleReaction(ref, emoji),
-              ),
-            ),
-
-          if (message.reactions.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTokens.spaceXS),
-              child: ReactionRow(
-                reactions: message.reactions,
-                currentUid: currentUid,
-                onReact: (emoji) => _toggleReaction(ref, emoji),
-              ),
-            ),
-        ],
-      ),
+        ),
     );
   }
 }
