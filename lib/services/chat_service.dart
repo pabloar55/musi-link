@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/utils/error_reporter.dart';
@@ -133,14 +134,15 @@ class ChatService {
   //  Mensajes
 
   /// Envía un mensaje de texto en un chat.
-  static const int maxMessageLength = 2000;
+  static const int maxMessageBytes = 2000;
 
   Future<void> sendMessage(
     String chatId,
     String text, {
     required String otherUid,
   }) async {
-    if (text.trim().isEmpty || text.length > maxMessageLength) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || utf8.encode(trimmed).length > maxMessageBytes) {
       throw ArgumentError('Invalid message');
     }
     try {
