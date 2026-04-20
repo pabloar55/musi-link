@@ -65,8 +65,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
 
       final prefs = await SharedPreferences.getInstance();
-      final onboardingDone =
-          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
 
       // Comprobar si el usuario ya tiene artistas seleccionados en Firestore
       final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
@@ -78,12 +76,32 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         } catch (_) {}
       }
 
+      // Si ya tiene artistas en Firestore, completó el onboarding en algún
+      // momento. Usar eso como fuente de verdad por encima de SharedPreferences
+      // (que se borra al reinstalar la app).
+      final onboardingDone = artistsSelected ||
+          (prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false);
+
+      // Capturar la referencia al servicio antes de await para que siga
+      // siendo válida aunque el widget se desmonte (SplashScreen desaparece
+      // tras la navegación, y ref deja de ser accesible).
+      final userService = ref.read(userServiceProvider);
+
       await minSplash;
 
       if (mounted) {
         ref.read(appRouterNotifierProvider).setInitialized(
           artistsSelected: artistsSelected,
           onboardingDone: onboardingDone,
+          // Callback para re-consultar Firestore tras un login posterior
+          // (ej. usuario que reinstala la app y vuelve a iniciar sesión).
+          fetchUserState: (loginUid) async {
+            final profile = await userService.getUser(loginUid);
+            final hasArtists =
+                profile != null && profile.topArtistNames.isNotEmpty;
+            // Si ya tiene artistas, necesariamente completó el onboarding.
+            return (artistsSelected: hasArtists, onboardingDone: hasArtists);
+          },
         );
       }
     } catch (e, st) {

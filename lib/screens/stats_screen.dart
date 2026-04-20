@@ -6,6 +6,7 @@ import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/widgets/artist_tile.dart';
 import 'package:musi_link/widgets/genre_tile.dart';
 import 'package:musi_link/widgets/filter_button.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
@@ -57,7 +58,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         ),
         Expanded(
           child: userAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => SkeletonShimmer(
+              child: ListView.builder(
+                itemCount: 8,
+                itemBuilder: (_, _) => const SkeletonStatsTile(),
+              ),
+            ),
             error: (err, st) =>
                 Center(child: Text(l10n.statsNoData)),
             data: (user) {

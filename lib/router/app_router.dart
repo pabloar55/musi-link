@@ -20,22 +20,46 @@ class AppRouterNotifier extends ChangeNotifier {
   bool get artistsSelected => _artistsSelected;
   bool get onboardingDone => _onboardingDone;
 
+  Future<({bool artistsSelected, bool onboardingDone})> Function(
+    String uid,
+  )?
+  _fetchUserState;
+
   /// Llamar desde el SplashScreen una vez que la app ha terminado de
   /// inicializarse. Inicia la escucha de authStateChanges y dispara el
   /// primer redirect.
+  ///
+  /// [fetchUserState] es un callback que re-consulta Firestore cuando el
+  /// usuario hace login (necesario tras reinstalar la app, donde
+  /// SharedPreferences se borra pero los datos en Firestore persisten).
   void setInitialized({
     required bool artistsSelected,
     required bool onboardingDone,
+    Future<({bool artistsSelected, bool onboardingDone})> Function(
+      String uid,
+    )? fetchUserState,
   }) {
     _initialized = true;
     _artistsSelected = artistsSelected;
     _onboardingDone = onboardingDone;
-    _sub = _auth.authStateChanges().listen((user) {
+    _fetchUserState = fetchUserState;
+    _sub = _auth.authStateChanges().listen((user) async {
       if (user == null) {
         _artistsSelected = false;
         _onboardingDone = false;
+        notifyListeners();
+      } else if (_fetchUserState != null && !_artistsSelected) {
+        // Re-consultar Firestore al hacer login para evitar que usuarios
+        // existentes (que reinstalaron la app) pasen por el flujo de setup.
+        try {
+          final state = await _fetchUserState!(user.uid);
+          _artistsSelected = state.artistsSelected;
+          _onboardingDone = state.onboardingDone;
+        } catch (_) {}
+        notifyListeners();
+      } else {
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 
