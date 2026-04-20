@@ -37,7 +37,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   String _lastQuery = '';
 
   static const _minArtists = 3;
-  static const _maxArtists = 15;
+  static const _maxArtists = 50;
 
   @override
   void initState() {
@@ -140,6 +140,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         _suggestions.removeWhere((a) => a.name == artist.name);
       });
       if (artist.imageUrl.isEmpty) _enrichFromSpotify(artist);
+      _searchController.clear();
     }
     _loadSuggestions();
   }
@@ -233,7 +234,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                   const SizedBox(height: 4),
                   Text(
                     l10n.artistSelectorSubtitle(
-                        _selected.length, _minArtists),
+                        _minArtists, _selected.length),
                     style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),

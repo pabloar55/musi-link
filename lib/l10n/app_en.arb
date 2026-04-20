@@ -108,7 +108,7 @@
   "socialUser": "User",
 
   "artistSelectorTitle": "Your favourite artists",
-  "artistSelectorSubtitle": "Select at least {min} artists ({count} selected)",
+  "artistSelectorSubtitle": "{count} selected · the more you add, the better your experience (min. {min})",
   "@artistSelectorSubtitle": {
     "placeholders": {
       "min": { "type": "int" },

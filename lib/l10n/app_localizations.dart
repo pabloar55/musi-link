@@ -571,7 +571,7 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Select at least {min} artists ({count} selected)'**
+  /// **'{count} selected · the more you add, the better your experience (min. {min})'**
   String artistSelectorSubtitle(int min, int count);
 
   /// No description provided for @artistSelectorSearchHint.

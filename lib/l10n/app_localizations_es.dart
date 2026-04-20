@@ -260,7 +260,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String artistSelectorSubtitle(int min, int count) {
-    return 'Selecciona al menos $min artistas ($count seleccionados)';
+    return '$count seleccionados · cuantos más añadas, mejor será tu experiencia (mín. $min)';
   }
 
   @override

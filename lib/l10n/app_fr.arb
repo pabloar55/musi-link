@@ -88,7 +88,7 @@
   "socialUser": "Utilisateur",
 
   "artistSelectorTitle": "Vos artistes préférés",
-  "artistSelectorSubtitle": "Sélectionnez au moins {min} artistes ({count} sélectionnés)",
+  "artistSelectorSubtitle": "{count} sélectionnés · plus vous en ajoutez, meilleure sera votre expérience (min. {min})",
   "@artistSelectorSubtitle": {
     "placeholders": {
       "min": { "type": "int" },
