@@ -51,6 +51,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    ref.read(activeChatIdProvider.notifier).setChat(widget.chatId);
     _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
 
     _messagesSubscription = _messagesStream.listen((streamMessages) {
@@ -84,6 +85,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    ref.read(activeChatIdProvider.notifier).setChat(null);
     _messagesSubscription?.cancel();
     _scrollController.removeListener(_onScroll);
     _messageController.dispose();

@@ -16,17 +16,20 @@ class NotificationService {
     required FirebaseAuth auth,
     required SharedPreferences prefs,
     required void Function(Map<String, dynamic>) onNotificationTapped,
+    required String? Function() getActiveChatId,
   })  : _messaging = messaging,
         _firestore = firestore,
         _auth = auth,
         _prefs = prefs,
-        _onNotificationTapped = onNotificationTapped;
+        _onNotificationTapped = onNotificationTapped,
+        _getActiveChatId = getActiveChatId;
 
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final SharedPreferences _prefs;
   final void Function(Map<String, dynamic>) _onNotificationTapped;
+  final String? Function() _getActiveChatId;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -163,10 +166,11 @@ class NotificationService {
   void _onForegroundMessage(RemoteMessage message) {
     final n = message.notification;
     if (n == null) return;
+    final chatId = message.data['chatId'] as String?;
+    if (chatId != null && chatId == _getActiveChatId()) return;
     final vibrate = _prefs.getBool(kVibrationKey) ?? true;
     final channelId = vibrate ? _channelId : _channelNoVibrationId;
     final channelName = vibrate ? _channelName : _channelNoVibrationName;
-    final chatId = message.data['chatId'] as String?;
     // Messages from the same chat share a stable ID so they replace each
     // other in the notification drawer instead of stacking indefinitely.
     final notifId = chatId != null ? chatId.hashCode : n.hashCode;
@@ -189,14 +193,15 @@ class NotificationService {
     );
   }
 
-  void _onLocalNotificationTapped(NotificationResponse response) {
+  Future<void> _onLocalNotificationTapped(NotificationResponse response) async {
     final payload = response.payload;
     if (payload == null || payload.isEmpty) return;
     try {
       final data = jsonDecode(payload) as Map<String, dynamic>;
       _onNotificationTapped(data);
-    } catch (e) {
-      debugPrint('FCM: invalid notification payload: $e');
+    } catch (e, stack) {
+      if (kDebugMode) debugPrint('FCM: invalid notification payload: $e');
+      await reportError(e, stack);
     }
   }
 }

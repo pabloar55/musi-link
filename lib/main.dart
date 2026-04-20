@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('FCM background: ${message.messageId}');
+  if (kDebugMode) debugPrint('FCM background: ${message.messageId}');
 }
 
 void main() async {

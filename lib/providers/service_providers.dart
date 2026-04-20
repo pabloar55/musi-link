@@ -12,6 +12,18 @@ import 'package:musi_link/services/spotify_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
+// ── Chat activo (suprime notificaciones del chat en pantalla) ──────
+
+class ActiveChatNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setChat(String? chatId) => state = chatId;
+}
+
+final activeChatIdProvider =
+    NotifierProvider<ActiveChatNotifier, String?>(ActiveChatNotifier.new);
+
 // ── Notificación pendiente (cold-start o tap en local notification) ─
 
 class PendingNotificationNotifier extends Notifier<Map<String, dynamic>?> {
@@ -56,6 +68,7 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
     prefs: ref.read(sharedPreferencesProvider),
     onNotificationTapped: (data) =>
         ref.read(pendingNotificationProvider.notifier).setValue(data),
+    getActiveChatId: () => ref.read(activeChatIdProvider),
   );
 });
 
