@@ -9,6 +9,10 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get authTagline =>
+      'Conecta con personas que comparten tu gusto musical';
+
+  @override
   String get authName => 'Nombre';
 
   @override

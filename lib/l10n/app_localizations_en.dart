@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get authTagline => 'Connect with people who share your music taste';
+
+  @override
   String get authName => 'Name';
 
   @override

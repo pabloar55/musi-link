@@ -135,7 +135,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset('assets/images/logo.png', width: 250),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.authTagline,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 28),
 
                 // Formulario
                 Form(

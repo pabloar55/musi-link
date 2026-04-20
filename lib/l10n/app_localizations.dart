@@ -100,6 +100,12 @@ abstract class AppLocalizations {
     Locale('fr'),
   ];
 
+  /// No description provided for @authTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with people who share your music taste'**
+  String get authTagline;
+
   /// No description provided for @authName.
   ///
   /// In en, this message translates to:

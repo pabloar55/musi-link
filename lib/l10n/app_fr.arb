@@ -1,6 +1,8 @@
 {
   "@@locale": "fr",
 
+  "authTagline": "Connecte-toi avec des personnes qui partagent tes goûts musicaux",
+
   "authName": "Nom",
   "authEmail": "E-mail",
   "authPassword": "Mot de passe",
