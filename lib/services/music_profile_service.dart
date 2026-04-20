@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
@@ -49,25 +50,13 @@ class MusicProfileService with AuthenticatedService {
       _cacheTime != null &&
       DateTime.now().difference(_cacheTime!) < _cacheTtl;
 
-  /// Sincroniza los datos musicales del usuario desde Spotify a Firestore.
-  /// Aplica un cooldown de 24h para evitar llamadas innecesarias.
-  Future<void> syncMusicProfile(String uid) async {
+  /// Guarda los artistas seleccionados manualmente por el usuario en Firestore.
+  /// Deriva los géneros a partir de los artistas seleccionados.
+  Future<void> saveManualArtists(
+      String uid, List<app.Artist> selectedArtists) async {
     try {
-      final doc = await _usersRef.doc(uid).get();
-      if (!doc.exists) return;
-
-      final data = doc.data()!;
-      final lastSync = (data['musicDataUpdatedAt'] as Timestamp?)?.toDate();
-      if (lastSync != null &&
-          DateTime.now().difference(lastSync).inHours < 24) {
-        return;
-      }
-
-      final allArtists =
-          await _spotifyGetStats.getTopArtists(50, 'medium_term');
-      final artists = allArtists.take(15).toList();
-      final genres =
-          _spotifyGetStats.getTopGenresFromArtists(allArtists, 10);
+      final artists = selectedArtists.take(15).toList();
+      final genres = _spotifyGetStats.getTopGenresFromArtists(artists, 10);
 
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),
@@ -76,8 +65,10 @@ class MusicProfileService with AuthenticatedService {
         'topGenreNames': genres.map((g) => g.name).toList(),
         'musicDataUpdatedAt': Timestamp.now(),
       });
+      clearCache();
     } catch (e, stack) {
       await reportError(e, stack);
+      rethrow;
     }
   }
 

@@ -8,7 +8,6 @@ class AppUser {
   final String email;
   final String displayName;
   final String photoUrl;
-  final String? spotifyId;
   final DateTime createdAt;
   final DateTime lastLogin;
   final List<Artist> topArtists;
@@ -27,7 +26,6 @@ class AppUser {
     required this.email,
     required this.displayName,
     this.photoUrl = '',
-    this.spotifyId,
     required this.createdAt,
     required this.lastLogin,
     this.topArtists = const [],
@@ -50,11 +48,8 @@ class AppUser {
       email: (data['email'] ?? '').toString(),
       displayName: (data['displayName'] ?? '').toString(),
       photoUrl: (data['photoUrl'] ?? '').toString(),
-      spotifyId: data['spotifyId']?.toString(),
-      createdAt:
-          (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastLogin:
-          (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
       topArtists: (data['topArtists'] as List<dynamic>?)
               ?.map((e) => Artist.fromMap(e as Map<String, dynamic>))
               .toList() ??
@@ -71,8 +66,7 @@ class AppUser {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      musicDataUpdatedAt:
-          (data['musicDataUpdatedAt'] as Timestamp?)?.toDate(),
+      musicDataUpdatedAt: (data['musicDataUpdatedAt'] as Timestamp?)?.toDate(),
       friends: (data['friends'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -80,8 +74,7 @@ class AppUser {
       dailySong: data['dailySong'] != null
           ? Track.fromMap(data['dailySong'] as Map<String, dynamic>)
           : null,
-      dailySongUpdatedAt:
-          (data['dailySongUpdatedAt'] as Timestamp?)?.toDate(),
+      dailySongUpdatedAt: (data['dailySongUpdatedAt'] as Timestamp?)?.toDate(),
       nowPlaying: data['nowPlaying'] != null
           ? Track.fromMap(data['nowPlaying'] as Map<String, dynamic>)
           : null,
@@ -96,7 +89,6 @@ class AppUser {
       'displayName': displayName,
       'displayNameLower': displayName.toLowerCase(),
       'photoUrl': photoUrl,
-      'spotifyId': spotifyId,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLogin': Timestamp.fromDate(lastLogin),
     };
@@ -107,7 +99,6 @@ class AppUser {
   AppUser copyWith({
     String? displayName,
     String? photoUrl,
-    String? spotifyId,
     DateTime? lastLogin,
     List<Artist>? topArtists,
     List<Genre>? topGenres,
@@ -125,7 +116,6 @@ class AppUser {
       email: email,
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
-      spotifyId: spotifyId ?? this.spotifyId,
       createdAt: createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
       topArtists: topArtists ?? this.topArtists,

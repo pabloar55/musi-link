@@ -484,6 +484,12 @@ abstract class AppLocalizations {
   /// **'Error: {error}'**
   String statsError(String error);
 
+  /// No description provided for @statsEditArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit artists'**
+  String get statsEditArtists;
+
   /// No description provided for @statsNoData.
   ///
   /// In en, this message translates to:
@@ -556,35 +562,47 @@ abstract class AppLocalizations {
   /// **'User'**
   String get socialUser;
 
-  /// No description provided for @spotifyConnectTitle.
+  /// No description provided for @artistSelectorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Connect your Spotify'**
-  String get spotifyConnectTitle;
+  /// **'Your favourite artists'**
+  String get artistSelectorTitle;
 
-  /// No description provided for @spotifyConnectDescription.
+  /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'To see your music stats we need access to your Spotify account.'**
-  String get spotifyConnectDescription;
+  /// **'Select at least {min} artists ({count} selected)'**
+  String artistSelectorSubtitle(int min, int count);
 
-  /// No description provided for @spotifyConnectButton.
+  /// No description provided for @artistSelectorSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Connect Spotify'**
-  String get spotifyConnectButton;
+  /// **'Search artists...'**
+  String get artistSelectorSearchHint;
 
-  /// No description provided for @spotifyConnectError.
+  /// No description provided for @artistSelectorContinue.
   ///
   /// In en, this message translates to:
-  /// **'Error connecting to Spotify'**
-  String get spotifyConnectError;
+  /// **'Continue'**
+  String get artistSelectorContinue;
 
-  /// No description provided for @spotifyAlreadyLinkedError.
+  /// No description provided for @artistSelectorNoResults.
   ///
   /// In en, this message translates to:
-  /// **'This Spotify account is already linked to another user'**
-  String get spotifyAlreadyLinkedError;
+  /// **'No artists found'**
+  String get artistSelectorNoResults;
+
+  /// No description provided for @artistSelectorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for your favourite artists to get started'**
+  String get artistSelectorEmpty;
+
+  /// No description provided for @artistSelectorSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get artistSelectorSuggested;
 
   /// No description provided for @menuProfile.
   ///

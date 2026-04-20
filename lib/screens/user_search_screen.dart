@@ -230,13 +230,14 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                                   ),
                                 ),
                                 title: Text(user.displayName),
-                                subtitle: user.spotifyId != null
+                                subtitle: user.topArtistNames.isNotEmpty
                                     ? Text(
-                                        l10n.searchSpotifyConnected,
+                                        user.topArtistNames.take(2).join(', '),
                                         style: TextStyle(
-                                          color: colorScheme.primary,
+                                          color: colorScheme.onSurfaceVariant,
                                           fontSize: 12,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       )
                                     : null,
                                 trailing: _buildTrailingAction(

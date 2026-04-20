@@ -18,7 +18,6 @@ dependencies:
   http: ^1.2.0  # Para llamadas a la API
   flutter_secure_storage: ^10.0.0 # Para guardar el token de forma segura
   spotify: ^0.16.0              # Conexión a Spotify Web API
-  flutter_web_auth_2: ^5.0.1   # Para abrir navegador en OAuth
   font_awesome_flutter: ^11.0.0 # Para iconos
   lucide_icons_flutter: 3.1.12
   url_launcher: ^6.3.2

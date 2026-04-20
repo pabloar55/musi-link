@@ -72,6 +72,7 @@
   "statsMediumTerm": "6 meses",
   "statsLongTerm": "1 año",
   "statsError": "Error: {error}",
+  "statsEditArtists": "Editar artistas",
   "statsNoData": "No hay datos disponibles",
   "statsOfflineCache": "Sin conexión — mostrando datos guardados",
   "statsStaleCache": "Mostrando datos de hace más de 48 horas",
@@ -86,11 +87,19 @@
   "socialErrorLoading": "Error al cargar conversaciones",
   "socialUser": "Usuario",
 
-  "spotifyConnectTitle": "Conecta tu Spotify",
-  "spotifyConnectDescription": "Para ver tus estadísticas musicales necesitamos acceso a tu cuenta de Spotify.",
-  "spotifyConnectButton": "Conectar Spotify",
-  "spotifyConnectError": "Error al conectar con Spotify",
-  "spotifyAlreadyLinkedError": "Esta cuenta de Spotify ya está vinculada a otro usuario",
+  "artistSelectorTitle": "Tus artistas favoritos",
+  "artistSelectorSubtitle": "Selecciona al menos {min} artistas ({count} seleccionados)",
+  "@artistSelectorSubtitle": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "artistSelectorSearchHint": "Buscar artistas...",
+  "artistSelectorContinue": "Continuar",
+  "artistSelectorNoResults": "No se encontraron artistas",
+  "artistSelectorEmpty": "Busca tus artistas favoritos para empezar",
+  "artistSelectorSuggested": "Sugeridos",
 
   "menuProfile": "Mi perfil",
   "menuAccountOptions": "Opciones de cuenta",

@@ -214,6 +214,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get statsEditArtists => 'Modifier les artistes';
+
+  @override
   String get statsNoData => 'Aucune donnée disponible';
 
   @override
@@ -257,21 +260,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get socialUser => 'Utilisateur';
 
   @override
-  String get spotifyConnectTitle => 'Connectez votre Spotify';
+  String get artistSelectorTitle => 'Vos artistes préférés';
 
   @override
-  String get spotifyConnectDescription =>
-      'Pour voir vos statistiques musicales, nous avons besoin d\'accéder à votre compte Spotify.';
+  String artistSelectorSubtitle(int min, int count) {
+    return 'Sélectionnez au moins $min artistes ($count sélectionnés)';
+  }
 
   @override
-  String get spotifyConnectButton => 'Connecter Spotify';
+  String get artistSelectorSearchHint => 'Rechercher des artistes...';
 
   @override
-  String get spotifyConnectError => 'Erreur lors de la connexion à Spotify';
+  String get artistSelectorContinue => 'Continuer';
 
   @override
-  String get spotifyAlreadyLinkedError =>
-      'Ce compte Spotify est déjà lié à un autre utilisateur';
+  String get artistSelectorNoResults => 'Aucun artiste trouvé';
+
+  @override
+  String get artistSelectorEmpty =>
+      'Recherchez vos artistes préférés pour commencer';
+
+  @override
+  String get artistSelectorSuggested => 'Suggérés';
 
   @override
   String get menuProfile => 'Mon profil';

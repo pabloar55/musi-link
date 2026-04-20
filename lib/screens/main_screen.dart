@@ -32,9 +32,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (ref.read(spotifyServiceProvider).isInitialized) {
-      ref.read(spotifyServiceProvider).startPollingNowPlaying();
-    }
     // Initialize FCM: permisos, token, canal Android, listeners
     ref.read(notificationServiceProvider).initialize();
     // FCM: app abierta desde notificación en background
@@ -51,16 +48,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      if (ref.read(spotifyServiceProvider).isInitialized) {
-        ref.read(spotifyServiceProvider).startPollingNowPlaying();
-      }
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      ref.read(spotifyServiceProvider).stopPollingNowPlaying();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

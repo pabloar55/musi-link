@@ -10,7 +10,6 @@ import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/widgets/profile/compatibility_card.dart';
 import 'package:musi_link/widgets/profile/friendship_buttons.dart';
 import 'package:musi_link/widgets/profile/music_taste_section.dart';
-import 'package:musi_link/widgets/profile/now_playing_card.dart';
 import 'package:musi_link/widgets/profile/profile_daily_song_card.dart';
 import 'package:musi_link/widgets/profile/profile_header.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
@@ -103,16 +102,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           children: [
             ProfileHeader(user: user),
             const SizedBox(height: 20),
-
-            if (user.nowPlaying != null &&
-                user.nowPlayingUpdatedAt != null &&
-                DateTime.now().difference(user.nowPlayingUpdatedAt!).inMinutes < 10)
-              NowPlayingCard(
-                track: user.nowPlaying!,
-                onTap: user.nowPlaying!.spotifyUrl.isNotEmpty
-                    ? () => _openSpotifyUrl(user.nowPlaying!.spotifyUrl)
-                    : null,
-              ),
 
             if (user.dailySong != null)
               ProfileDailySongCard(

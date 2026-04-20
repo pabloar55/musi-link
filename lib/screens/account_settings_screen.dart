@@ -101,12 +101,7 @@ class _AccountSettingsScreenState
       await ref.read(friendServiceProvider).deleteAllUserFriendData(uid);
       await ref.read(userServiceProvider).anonymizeUser(uid);
 
-      // 5. Spotify (best effort)
-      try {
-        await ref.read(spotifyServiceProvider).disconnect();
-      } catch (_) {}
-
-      // 6. Capturar servicios antes de borrar (delete() desmonta el widget)
+      // 5. Capturar servicios antes de borrar (delete() desmonta el widget)
       final authService = ref.read(authServiceProvider);
       final chatService = ref.read(chatServiceProvider);
 
@@ -135,9 +130,6 @@ class _AccountSettingsScreenState
   Future<void> _signOut() async {
     if (!mounted) return;
     SigningOutDialog.show(context);
-    try {
-      await ref.read(spotifyServiceProvider).disconnect();
-    } catch (_) {}
     final authService = ref.read(authServiceProvider);
     final chatService = ref.read(chatServiceProvider);
     try {

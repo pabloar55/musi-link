@@ -8,7 +8,8 @@ import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/services/notification_service.dart';
-import 'package:musi_link/services/spotify_service.dart';
+import 'package:musi_link/services/last_fm_service.dart';
+import 'package:musi_link/services/spotify_client_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
@@ -81,19 +82,27 @@ final authServiceProvider = Provider<AuthService>((ref) {
   );
 });
 
-final Provider<SpotifyService> spotifyServiceProvider =
-    Provider<SpotifyService>((ref) {
-  final service = SpotifyService(
-    userService: ref.watch(userServiceProvider),
-    auth: ref.watch(firebaseAuthProvider),
+final Provider<SpotifyClientService> spotifyClientServiceProvider =
+    Provider<SpotifyClientService>((ref) {
+  return SpotifyClientService(
+    clientId: const String.fromEnvironment('SPOTIFY_CLIENT_ID'),
+    clientSecret: const String.fromEnvironment('SPOTIFY_CLIENT_SECRET'),
   );
-  ref.onDispose(service.stopPollingNowPlaying);
-  return service;
+});
+
+final Provider<LastFmService> lastFmServiceProvider =
+    Provider<LastFmService>((ref) {
+  return LastFmService(
+    apiKey: const String.fromEnvironment('LASTFM_API_KEY'),
+  );
 });
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
     Provider<SpotifyGetStats>((ref) {
-  return SpotifyGetStats(ref.watch(spotifyServiceProvider), ref.read(sharedPreferencesProvider));
+  return SpotifyGetStats(
+    ref.watch(spotifyClientServiceProvider),
+    ref.watch(lastFmServiceProvider),
+  );
 });
 
 final Provider<MusicProfileService> musicProfileServiceProvider =

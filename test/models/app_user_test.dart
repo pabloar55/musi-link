@@ -13,7 +13,6 @@ void main() {
       String email = 'test@example.com',
       String displayName = 'Test User',
       String photoUrl = '',
-      String? spotifyId,
       List<Artist> topArtists = const [],
       List<Genre> topGenres = const [],
       List<String> topArtistNames = const [],
@@ -27,7 +26,6 @@ void main() {
         email: email,
         displayName: displayName,
         photoUrl: photoUrl,
-        spotifyId: spotifyId,
         createdAt: now,
         lastLogin: now,
         topArtists: topArtists,
@@ -54,7 +52,6 @@ void main() {
         expect(user.email, 'test@example.com');
         expect(user.displayName, 'Test User');
         expect(user.photoUrl, '');
-        expect(user.spotifyId, isNull);
         expect(user.topArtists, isEmpty);
         expect(user.topGenres, isEmpty);
         expect(user.topArtistNames, isEmpty);
@@ -67,17 +64,13 @@ void main() {
 
     group('toFirestore', () {
       test('serializa los campos básicos', () {
-        final user = createTestUser(
-          displayName: 'Pablo García',
-          spotifyId: 'spotify123',
-        );
+        final user = createTestUser(displayName: 'Pablo García');
 
         final map = user.toFirestore();
 
         expect(map['email'], 'test@example.com');
         expect(map['displayName'], 'Pablo García');
         expect(map['displayNameLower'], 'pablo garcía');
-        expect(map['spotifyId'], 'spotify123');
         expect(map.containsKey('uid'), false);
       });
 
@@ -98,13 +91,6 @@ void main() {
         expect(updated.uid, original.uid);
         expect(updated.email, original.email);
         expect(updated.createdAt, original.createdAt);
-      });
-
-      test('actualiza spotifyId', () {
-        final original = createTestUser();
-        final updated = original.copyWith(spotifyId: 'spotify456');
-
-        expect(updated.spotifyId, 'spotify456');
       });
 
       test('actualiza listas de artistas y géneros', () {
@@ -157,7 +143,6 @@ void main() {
       test('mantiene todos los campos si no se pasan parámetros', () {
         final original = createTestUser(
           displayName: 'Keep This',
-          spotifyId: 'keep_spotify',
           topArtistNames: ['Keep Artist'],
           friends: ['keep_friend'],
         );
@@ -165,7 +150,6 @@ void main() {
         final copy = original.copyWith();
 
         expect(copy.displayName, original.displayName);
-        expect(copy.spotifyId, original.spotifyId);
         expect(copy.topArtistNames, original.topArtistNames);
         expect(copy.friends, original.friends);
       });

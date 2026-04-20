@@ -64,29 +64,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             .setValue(initialMessage.data);
       }
 
-      // Ejecutar checks en paralelo con el tiempo mínimo de splash
-      final spotifyFuture = ref.read(spotifyServiceProvider).tryRestoreSession();
-      final prefsFuture = SharedPreferences.getInstance();
-
-      final spotifyConnected = await spotifyFuture;
-      final prefs = await prefsFuture;
+      final prefs = await SharedPreferences.getInstance();
       final onboardingDone =
           prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
 
-      // Si Spotify está conectado, sincronizar perfil musical en background
-      if (spotifyConnected && mounted) {
-        final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
-        if (uid != null) {
-          ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
-        }
+      // Comprobar si el usuario ya tiene artistas seleccionados en Firestore
+      final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
+      bool artistsSelected = false;
+      if (uid != null) {
+        try {
+          final user = await ref.read(userServiceProvider).getUser(uid);
+          artistsSelected = user != null && user.topArtistNames.isNotEmpty;
+        } catch (_) {}
       }
 
-      // Esperar duración mínima de splash si aún no ha pasado
       await minSplash;
 
       if (mounted) {
         ref.read(appRouterNotifierProvider).setInitialized(
-          spotifyConnected: spotifyConnected,
+          artistsSelected: artistsSelected,
           onboardingDone: onboardingDone,
         );
       }
@@ -95,7 +91,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await minSplash;
       if (mounted) {
         ref.read(appRouterNotifierProvider).setInitialized(
-          spotifyConnected: false,
+          artistsSelected: false,
           onboardingDone: false,
         );
       }

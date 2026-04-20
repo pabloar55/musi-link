@@ -12,37 +12,37 @@ class AppRouterNotifier extends ChangeNotifier {
 
   StreamSubscription<User?>? _sub;
   bool _initialized = false;
-  bool _spotifyConnected = false;
+  bool _artistsSelected = false;
   bool _onboardingDone = false;
 
   bool get isInitialized => _initialized;
   bool get isLoggedIn => _auth.currentUser != null;
-  bool get spotifyConnected => _spotifyConnected;
+  bool get artistsSelected => _artistsSelected;
   bool get onboardingDone => _onboardingDone;
 
   /// Llamar desde el SplashScreen una vez que la app ha terminado de
   /// inicializarse. Inicia la escucha de authStateChanges y dispara el
   /// primer redirect.
   void setInitialized({
-    required bool spotifyConnected,
+    required bool artistsSelected,
     required bool onboardingDone,
   }) {
     _initialized = true;
-    _spotifyConnected = spotifyConnected;
+    _artistsSelected = artistsSelected;
     _onboardingDone = onboardingDone;
     _sub = _auth.authStateChanges().listen((user) {
       if (user == null) {
-        _spotifyConnected = false;
+        _artistsSelected = false;
         _onboardingDone = false;
       }
       notifyListeners();
     });
   }
 
-  /// Llamar después de conectar Spotify con éxito para que el router
-  /// re-evalúe y navegue automáticamente al siguiente paso.
-  void setSpotifyConnected({required bool onboardingDone}) {
-    _spotifyConnected = true;
+  /// Llamar después de seleccionar artistas para que el router re-evalúe
+  /// y navegue automáticamente al siguiente paso.
+  void setArtistsSelected({required bool onboardingDone}) {
+    _artistsSelected = true;
     _onboardingDone = onboardingDone;
     notifyListeners();
   }
@@ -70,8 +70,8 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   if (!notifier.isLoggedIn) {
     return location == '/auth' ? null : '/auth';
   }
-  if (!notifier.spotifyConnected) {
-    return location == '/spotify-connect' ? null : '/spotify-connect';
+  if (!notifier.artistsSelected) {
+    return location == '/artist-select' ? null : '/artist-select';
   }
   if (!notifier.onboardingDone) {
     return location == '/onboarding' ? null : '/onboarding';
@@ -79,7 +79,7 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   // Usuario listo: evitar que se quede en pantallas de setup
   if (location == '/splash' ||
       location == '/auth' ||
-      location == '/spotify-connect' ||
+      location == '/artist-select' ||
       location == '/onboarding') {
     return '/';
   }

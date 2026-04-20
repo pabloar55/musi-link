@@ -10,7 +10,7 @@ import 'package:musi_link/screens/chat_screen.dart';
 import 'package:musi_link/screens/main_screen.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
 import 'package:musi_link/screens/splash_screen.dart';
-import 'package:musi_link/screens/spotify_connect_screen.dart';
+import 'package:musi_link/screens/artist_selector_screen.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
 import 'package:musi_link/screens/user_search_screen.dart';
 
@@ -39,8 +39,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
-        path: '/spotify-connect',
-        builder: (context, state) => const SpotifyConnectScreen(),
+        path: '/artist-select',
+        builder: (context, state) => const ArtistSelectorScreen(),
+      ),
+      GoRoute(
+        path: '/artist-edit',
+        builder: (context, state) =>
+            const ArtistSelectorScreen(isEditMode: true),
       ),
       GoRoute(
         path: '/onboarding',

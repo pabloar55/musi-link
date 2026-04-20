@@ -82,6 +82,7 @@
       "error": { "type": "String" }
     }
   },
+  "statsEditArtists": "Edit artists",
   "statsNoData": "No data available",
   "statsOfflineCache": "Offline — showing saved data",
   "statsStaleCache": "Showing data from over 48 hours ago",
@@ -106,11 +107,19 @@
   "socialErrorLoading": "Error loading conversations",
   "socialUser": "User",
 
-  "spotifyConnectTitle": "Connect your Spotify",
-  "spotifyConnectDescription": "To see your music stats we need access to your Spotify account.",
-  "spotifyConnectButton": "Connect Spotify",
-  "spotifyConnectError": "Error connecting to Spotify",
-  "spotifyAlreadyLinkedError": "This Spotify account is already linked to another user",
+  "artistSelectorTitle": "Your favourite artists",
+  "artistSelectorSubtitle": "Select at least {min} artists ({count} selected)",
+  "@artistSelectorSubtitle": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "artistSelectorSearchHint": "Search artists...",
+  "artistSelectorContinue": "Continue",
+  "artistSelectorNoResults": "No artists found",
+  "artistSelectorEmpty": "Search for your favourite artists to get started",
+  "artistSelectorSuggested": "Suggested",
 
   "menuProfile": "My profile",
   "menuAccountOptions": "Account options",

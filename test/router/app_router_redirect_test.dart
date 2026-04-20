@@ -50,7 +50,7 @@ void main() {
 
     test('cualquier ruta → /auth', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: false, onboardingDone: false);
+        ..setInitialized(artistsSelected: false, onboardingDone: false);
       expect(appRedirect(n, '/'), '/auth');
       expect(appRedirect(n, '/splash'), '/auth');
       n.dispose();
@@ -58,48 +58,48 @@ void main() {
 
     test('ya en /auth → sin redirect', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: false, onboardingDone: false);
+        ..setInitialized(artistsSelected: false, onboardingDone: false);
       expect(appRedirect(n, '/auth'), isNull);
       n.dispose();
     });
   });
 
-  // ── Estado 3: autenticado, sin Spotify ────────────────────────
+  // ── Estado 3: autenticado, sin artistas ───────────────────────
 
-  group('logged in, no Spotify', () {
+  group('logged in, no artists selected', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
-    test('cualquier ruta → /spotify-connect', () {
+    test('cualquier ruta → /artist-select', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: false, onboardingDone: false);
-      expect(appRedirect(n, '/'), '/spotify-connect');
-      expect(appRedirect(n, '/auth'), '/spotify-connect');
+        ..setInitialized(artistsSelected: false, onboardingDone: false);
+      expect(appRedirect(n, '/'), '/artist-select');
+      expect(appRedirect(n, '/auth'), '/artist-select');
       n.dispose();
     });
 
-    test('ya en /spotify-connect → sin redirect', () {
+    test('ya en /artist-select → sin redirect', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: false, onboardingDone: false);
-      expect(appRedirect(n, '/spotify-connect'), isNull);
+        ..setInitialized(artistsSelected: false, onboardingDone: false);
+      expect(appRedirect(n, '/artist-select'), isNull);
       n.dispose();
     });
   });
 
-  // ── Estado 4: Spotify listo, sin onboarding ───────────────────
+  // ── Estado 4: artistas seleccionados, sin onboarding ──────────
 
-  group('logged in + Spotify, no onboarding', () {
+  group('logged in + artists, no onboarding', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
     test('cualquier ruta → /onboarding', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: false);
+        ..setInitialized(artistsSelected: true, onboardingDone: false);
       expect(appRedirect(n, '/'), '/onboarding');
       n.dispose();
     });
 
     test('ya en /onboarding → sin redirect', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: false);
+        ..setInitialized(artistsSelected: true, onboardingDone: false);
       expect(appRedirect(n, '/onboarding'), isNull);
       n.dispose();
     });
@@ -112,17 +112,17 @@ void main() {
 
     test('pantallas de setup → /', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: true);
+        ..setInitialized(artistsSelected: true, onboardingDone: true);
       expect(appRedirect(n, '/splash'), '/');
       expect(appRedirect(n, '/auth'), '/');
-      expect(appRedirect(n, '/spotify-connect'), '/');
+      expect(appRedirect(n, '/artist-select'), '/');
       expect(appRedirect(n, '/onboarding'), '/');
       n.dispose();
     });
 
     test('pantallas normales → sin redirect', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: true);
+        ..setInitialized(artistsSelected: true, onboardingDone: true);
       expect(appRedirect(n, '/'), isNull);
       expect(appRedirect(n, '/settings'), isNull);
       expect(appRedirect(n, '/search'), isNull);
@@ -136,38 +136,36 @@ void main() {
   group('state transitions', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
-    test('setSpotifyConnected avanza al paso de onboarding', () {
+    test('setArtistsSelected avanza al paso de onboarding', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: false, onboardingDone: false)
-        ..setSpotifyConnected(onboardingDone: false);
+        ..setInitialized(artistsSelected: false, onboardingDone: false)
+        ..setArtistsSelected(onboardingDone: false);
       expect(appRedirect(n, '/'), '/onboarding');
       n.dispose();
     });
 
     test('setOnboardingDone avanza a main y desbloquea app', () {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: false)
+        ..setInitialized(artistsSelected: true, onboardingDone: false)
         ..setOnboardingDone();
       expect(appRedirect(n, '/onboarding'), '/');
       expect(appRedirect(n, '/'), isNull);
       n.dispose();
     });
 
-    test('sign-out resetea flags de spotify y onboarding', () async {
+    test('sign-out resetea flags de artistas y onboarding', () async {
       final n = buildNotifier()
-        ..setInitialized(spotifyConnected: true, onboardingDone: true);
+        ..setInitialized(artistsSelected: true, onboardingDone: true);
 
-      expect(n.spotifyConnected, isTrue);
+      expect(n.artistsSelected, isTrue);
       expect(n.onboardingDone, isTrue);
 
-      // El usuario cierra sesión: el stream emite null
       authStream.add(null);
       await Future.microtask(() {});
 
-      expect(n.spotifyConnected, isFalse);
+      expect(n.artistsSelected, isFalse);
       expect(n.onboardingDone, isFalse);
 
-      // Con currentUser = null, isLoggedIn = false → redirige a /auth
       when(() => mockAuth.currentUser).thenReturn(null);
       expect(appRedirect(n, '/'), '/auth');
       n.dispose();

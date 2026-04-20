@@ -2,11 +2,13 @@ class Artist {
   final String name;
   final String imageUrl;
   final List<String> genres;
+  final String? spotifyId;
 
   const Artist({
     required this.name,
     required this.imageUrl,
     required this.genres,
+    this.spotifyId,
   });
 
   factory Artist.fromJson(Map<String, dynamic> json) {
@@ -26,11 +28,13 @@ class Artist {
         name: (map['name'] ?? '').toString(),
         imageUrl: (map['imageUrl'] ?? '').toString(),
         genres: (map['genres'] as List<dynamic>?)?.map((g) => g.toString()).toList() ?? [],
+        spotifyId: map['spotifyId']?.toString(),
       );
 
   Map<String, dynamic> toMap() => {
         'name': name,
         'imageUrl': imageUrl,
         'genres': genres,
+        if (spotifyId != null) 'spotifyId': spotifyId,
       };
 }
