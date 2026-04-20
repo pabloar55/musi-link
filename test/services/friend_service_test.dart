@@ -34,38 +34,29 @@ void main() {
   group('FriendService', () {
     group('sendRequest', () {
       test('crea un friend_request con status pending', () async {
-        final mockDupQ1 = MockQuery();
-        final mockDupQ2 = MockQuery();
-        final mockDupQ3 = MockQuery();
-        final mockDupSnap = MockQuerySnapshot();
-        when(() => mockRequestsRef.where('senderId', isEqualTo: 'current_uid'))
-            .thenReturn(mockDupQ1);
-        when(() => mockDupQ1.where('receiverId', isEqualTo: 'receiver_uid'))
-            .thenReturn(mockDupQ2);
-        when(() => mockDupQ2.where('status', isEqualTo: 'pending'))
-            .thenReturn(mockDupQ3);
-        when(() => mockDupQ3.limit(1)).thenReturn(mockDupQ3);
-        when(() => mockDupQ3.get()).thenAnswer((_) async => mockDupSnap);
-        when(() => mockDupSnap.docs).thenReturn([]);
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockDocSnap = MockDocumentSnapshot();
+        when(() => mockDocSnap.exists).thenReturn(false);
+        fakeTransaction.getResult = mockDocSnap;
 
         final mockDocRef = MockDocumentReference();
         when(() => mockRequestsRef.doc(any())).thenReturn(mockDocRef);
-        when(() => mockDocRef.set(any())).thenAnswer((_) async {});
 
         await friendService.sendRequest('receiver_uid');
 
-        final captured =
-            verify(() => mockDocRef.set(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['senderId'], 'current_uid');
-        expect(captured['receiverId'], 'receiver_uid');
-        expect(captured['status'], 'pending');
-        expect(captured['createdAt'], isA<Timestamp>());
-        expect(captured['updatedAt'], isA<Timestamp>());
+        expect(fakeTransaction.sets, hasLength(1));
+        final data = fakeTransaction.sets.first.value;
+        expect(data['senderId'], 'current_uid');
+        expect(data['receiverId'], 'receiver_uid');
+        expect(data['status'], 'pending');
+        expect(data['createdAt'], isA<Timestamp>());
+        expect(data['updatedAt'], isA<Timestamp>());
       });
 
       test('propaga error si Firestore falla', () async {
-        when(() => mockRequestsRef.where('senderId', isEqualTo: 'current_uid'))
+        when(() => mockRequestsRef.doc(any()))
             .thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(

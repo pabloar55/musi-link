@@ -20,16 +20,6 @@ void main() {
     registerFallbackValues();
   });
 
-  void stubSpotifyIdIsAvailable(String spotifyId) {
-    final mockQuery = MockQuery();
-    final mockQuerySnapshot = MockQuerySnapshot();
-    when(() => mockUsersRef.where('spotifyId', isEqualTo: spotifyId))
-        .thenReturn(mockQuery);
-    when(() => mockQuery.limit(1)).thenReturn(mockQuery);
-    when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
-    when(() => mockQuerySnapshot.docs).thenReturn([]);
-  }
-
   group('UserService', () {
     group('createUserProfile', () {
       test('crea perfil correctamente en Firestore', () async {
@@ -167,11 +157,27 @@ void main() {
     });
 
     group('linkSpotifyProfile', () {
+      FakeTransaction setupSpotifyTransaction() {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockSpotifyLinksRef = MockCollectionReference();
+        final mockLinkDocRef = MockDocumentReference();
+        when(() => mockFirestore.collection('spotify_links'))
+            .thenReturn(mockSpotifyLinksRef);
+        when(() => mockSpotifyLinksRef.doc('sp123')).thenReturn(mockLinkDocRef);
+
+        final mockLinkSnap = MockDocumentSnapshot();
+        when(() => mockLinkSnap.exists).thenReturn(false);
+        fakeTransaction.getResult = mockLinkSnap;
+
+        return fakeTransaction;
+      }
+
       test('actualiza spotifyId y photoUrl', () async {
+        final fakeTransaction = setupSpotifyTransaction();
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        stubSpotifyIdIsAvailable('sp123');
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
           'uid123',
@@ -179,18 +185,16 @@ void main() {
           photoUrl: 'https://photo.url',
         );
 
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
+        expect(fakeTransaction.updates, hasLength(1));
+        final captured = fakeTransaction.updates.first.value;
         expect(captured['spotifyId'], 'sp123');
         expect(captured['photoUrl'], 'https://photo.url');
       });
 
       test('no incluye photoUrl si está vacío', () async {
+        final fakeTransaction = setupSpotifyTransaction();
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        stubSpotifyIdIsAvailable('sp123');
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.linkSpotifyProfile(
           'uid123',
@@ -198,9 +202,8 @@ void main() {
           photoUrl: '  ',
         );
 
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
+        expect(fakeTransaction.updates, hasLength(1));
+        final captured = fakeTransaction.updates.first.value;
         expect(captured['spotifyId'], 'sp123');
         expect(captured.containsKey('photoUrl'), false);
       });
