@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.musi_link"
+    namespace = "app.musilink"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.musi_link"
+        applicationId = "app.musilink"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

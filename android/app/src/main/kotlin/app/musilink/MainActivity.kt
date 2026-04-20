@@ -1,4 +1,4 @@
-package com.example.musi_link
+package app.musilink
 
 import io.flutter.embedding.android.FlutterActivity
 
