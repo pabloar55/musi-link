@@ -1093,7 +1093,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS4Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.'**
+  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.'**
   String get privacyS4Body;
 
   /// No description provided for @privacyS5Title.
@@ -1155,6 +1155,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com'**
   String get privacyS9Body;
+
+  /// No description provided for @privacyS10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'10. International Data Transfers'**
+  String get privacyS10Title;
+
+  /// No description provided for @privacyS10Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and Spotify data are stored on servers located in the European region (europe-southwest1), within the EU.'**
+  String get privacyS10Body;
 }
 
 class _AppLocalizationsDelegate

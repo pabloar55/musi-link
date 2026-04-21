@@ -555,7 +555,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS4Body =>
-      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Les données peuvent être transférées aux États-Unis dans le cadre de clauses contractuelles types.\n\n• Spotify — Spotify AB. Utilisé uniquement pour lire vos données musicales avec votre autorisation.';
+      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase Firestore, Crashlytics et Analytics — Google LLC. Vos données de profil, messages et événements d\'utilisation sont stockés sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Les photos de profil sont stockées sur des serveurs situés aux États-Unis dans le cadre de clauses contractuelles types (Art. 46 RGPD).\n\n• Cloud Functions — Google LLC. Vos données de messages et demandes d\'amitié sont traitées sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Spotify — Spotify AB. Utilisé uniquement pour lire vos données musicales avec votre autorisation.';
 
   @override
   String get privacyS5Title => '5. Conservation et suppression des données';
@@ -591,4 +591,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get privacyS9Body =>
       'Pour toute question concernant cette Politique de Confidentialité ou le traitement de vos données personnelles, contactez-nous à :\n\nPablo Armas\narmasp80@gmail.com';
+
+  @override
+  String get privacyS10Title => '10. Transferts internationaux de données';
+
+  @override
+  String get privacyS10Body =>
+      'Les photos de profil sont stockées dans Google Firebase Storage avec des serveurs situés aux États-Unis. En utilisant l\'application, vous autorisez explicitement ce transfert international de données d\'images. Google a mis en place les mesures techniques et organisationnelles nécessaires en vertu des Clauses Contractuelles Types approuvées par la Commission Européenne (Art. 46 RGPD) pour garantir un niveau de protection adéquat équivalent à celui de l\'UE.\n\nVos données personnelles, messages et données Spotify sont stockés sur des serveurs situés dans la région européenne (europe-southwest1), au sein de l\'UE.';
 }

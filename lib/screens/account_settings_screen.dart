@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
@@ -29,10 +30,87 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
 
 class _AccountSettingsScreenState
     extends ConsumerState<AccountSettingsScreen> {
+  bool _isUploadingPhoto = false;
+
   Future<void> _goToProfile() async {
     final appUser = ref.read(currentUserProvider).asData?.value;
     if (appUser != null && mounted) {
       unawaited(context.push('/profile', extra: appUser));
+    }
+  }
+
+  Future<void> _changePhoto() async {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: Icon(LucideIcons.image, color: cs.onSurface),
+                title: Text(l10n.photoSetupGallery),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: Icon(LucideIcons.camera, color: cs.onSurface),
+                title: Text(l10n.photoSetupCamera),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+
+    final image = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (image == null || !mounted) return;
+
+    setState(() => _isUploadingPhoto = true);
+    try {
+      final uid = ref.read(firebaseAuthProvider).currentUser!.uid;
+      final url = await ref
+          .read(storageServiceProvider)
+          .uploadProfilePhoto(uid, image);
+      if (url != null && mounted) {
+        await ref.read(userServiceProvider).updateProfile(uid, photoUrl: url);
+      }
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.photoSetupError),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingPhoto = false);
     }
   }
 
@@ -181,6 +259,8 @@ class _AccountSettingsScreenState
                 email: email,
                 uid: appUser?.uid ?? firebaseUser?.uid ?? '',
                 onTap: _goToProfile,
+                onAvatarTap: _changePhoto,
+                isUploadingPhoto: _isUploadingPhoto,
               ),
 
               const SizedBox(height: AppTokens.spaceXL),
@@ -273,6 +353,8 @@ class _ProfileCard extends StatelessWidget {
   final String email;
   final String uid;
   final VoidCallback onTap;
+  final VoidCallback onAvatarTap;
+  final bool isUploadingPhoto;
 
   const _ProfileCard({
     required this.imageUrl,
@@ -280,6 +362,8 @@ class _ProfileCard extends StatelessWidget {
     required this.email,
     required this.uid,
     required this.onTap,
+    required this.onAvatarTap,
+    required this.isUploadingPhoto,
   });
 
   @override
@@ -294,17 +378,47 @@ class _ProfileCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppTokens.spaceLG),
           child: Row(
             children: [
-              Hero(
-                tag: 'user-avatar-$uid',
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundImage: imageUrl.trim().isNotEmpty
-                      ? CachedNetworkImageProvider(imageUrl)
-                      : null,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  child: imageUrl.trim().isEmpty
-                      ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
-                      : null,
+              GestureDetector(
+                onTap: isUploadingPhoto ? null : onAvatarTap,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Hero(
+                      tag: 'user-avatar-$uid',
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundImage: imageUrl.trim().isNotEmpty
+                            ? CachedNetworkImageProvider(imageUrl)
+                            : null,
+                        backgroundColor: cs.surfaceContainerHighest,
+                        child: isUploadingPhoto
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      cs.onSurfaceVariant),
+                                ),
+                              )
+                            : imageUrl.trim().isEmpty
+                                ? Icon(LucideIcons.user,
+                                    color: cs.onSurfaceVariant)
+                                : null,
+                      ),
+                    ),
+                    if (!isUploadingPhoto)
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 1.5),
+                        ),
+                        child: Icon(LucideIcons.camera,
+                            size: 10, color: cs.onPrimary),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: AppTokens.spaceLG),

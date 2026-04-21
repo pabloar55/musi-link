@@ -231,7 +231,7 @@
   "privacyS3Title": "3. How We Use Your Data",
   "privacyS3Body": "Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).",
   "privacyS4Title": "4. Third-Party Services",
-  "privacyS4Body": "We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.",
+  "privacyS4Body": "We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.",
   "privacyS5Title": "5. Data Retention & Deletion",
   "privacyS5Body": "We do not retain your data beyond the time you use the App. When you delete your account via the 'Delete account' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google's own retention policies.",
   "privacyS6Title": "6. Your Rights",
@@ -241,5 +241,7 @@
   "privacyS8Title": "8. Security",
   "privacyS8Body": "We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss, or alteration. Data is stored in Google Firebase, which applies industry-standard security controls.",
   "privacyS9Title": "9. Contact",
-  "privacyS9Body": "For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com"
+  "privacyS9Body": "For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com",
+  "privacyS10Title": "10. International Data Transfers",
+  "privacyS10Body": "Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and Spotify data are stored on servers located in the European region (europe-southwest1), within the EU."
 }
