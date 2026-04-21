@@ -16,6 +16,7 @@ import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/widgets/delete_account_dialog.dart';
+import 'package:musi_link/widgets/image_source_picker.dart';
 import 'package:musi_link/widgets/deleting_account_dialog.dart';
 import 'package:musi_link/widgets/reauth_password_dialog.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
@@ -41,45 +42,8 @@ class _AccountSettingsScreenState
 
   Future<void> _changePhoto() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
 
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: cs.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              ListTile(
-                leading: Icon(LucideIcons.image, color: cs.onSurface),
-                title: Text(l10n.photoSetupGallery),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: Icon(LucideIcons.camera, color: cs.onSurface),
-                title: Text(l10n.photoSetupCamera),
-                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
+    final source = await showImageSourcePicker(context);
     if (source == null || !mounted) return;
 
     final image = await ImagePicker().pickImage(

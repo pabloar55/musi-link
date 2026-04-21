@@ -9,6 +9,8 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
+import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/widgets/image_source_picker.dart';
 
 class PhotoSetupScreen extends ConsumerStatefulWidget {
   const PhotoSetupScreen({super.key});
@@ -24,51 +26,10 @@ class _PhotoSetupScreenState extends ConsumerState<PhotoSetupScreen> {
   bool _isUploading = false;
 
   Future<void> _pickImage() async {
-    final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              ListTile(
-                leading: Icon(LucideIcons.image, color: colorScheme.onSurface),
-                title: Text(l10n.photoSetupGallery),
-                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
-              ),
-              ListTile(
-                leading:
-                    Icon(LucideIcons.camera, color: colorScheme.onSurface),
-                title: Text(l10n.photoSetupCamera),
-                onTap: () => Navigator.of(context).pop(ImageSource.camera),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
+    final source = await showImageSourcePicker(context);
     if (source == null) return;
 
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
+    final image = await ImagePicker().pickImage(
       source: source,
       maxWidth: 512,
       maxHeight: 512,
@@ -107,7 +68,8 @@ class _PhotoSetupScreenState extends ConsumerState<PhotoSetupScreen> {
       }
       if (!mounted) return;
       await _completeSetup();
-    } catch (_) {
+    } catch (e, st) {
+      reportError(e, st).ignore();
       if (!mounted) return;
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -213,7 +175,9 @@ class _PhotoSetupScreenState extends ConsumerState<PhotoSetupScreen> {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton(
-                  onPressed: _isUploading ? null : _handleContinue,
+                  onPressed: _isUploading
+                      ? null
+                      : (hasPhoto ? _handleContinue : _pickImage),
                   child: _isUploading
                       ? SizedBox(
                           width: 20,
@@ -228,7 +192,7 @@ class _PhotoSetupScreenState extends ConsumerState<PhotoSetupScreen> {
                       : Text(
                           hasPhoto
                               ? l10n.photoSetupContinue
-                              : l10n.photoSetupSkip,
+                              : l10n.photoSetupChoose,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -239,12 +203,12 @@ class _PhotoSetupScreenState extends ConsumerState<PhotoSetupScreen> {
 
               const SizedBox(height: 12),
 
-              // Choose / change photo link
+              // Skip / change photo link
               TextButton(
-                onPressed: _isUploading ? null : _pickImage,
+                onPressed: _isUploading ? null : (hasPhoto ? _pickImage : _handleContinue),
                 child: Text(
-                  hasPhoto ? l10n.photoSetupChange : l10n.photoSetupChoose,
-                  style: TextStyle(color: colorScheme.primary),
+                  hasPhoto ? l10n.photoSetupChange : l10n.photoSetupSkip,
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
               ),
 
