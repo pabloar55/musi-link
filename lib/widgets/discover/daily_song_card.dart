@@ -2,12 +2,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/track.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DailySongCard extends StatelessWidget {
   final Track song;
-  final VoidCallback? onTap;
 
-  const DailySongCard({super.key, required this.song, this.onTap});
+  const DailySongCard({super.key, required this.song});
+
+  Future<void> _openSpotify() async {
+    if (song.spotifyUrl.isEmpty) return;
+    final uri = Uri.parse(song.spotifyUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +24,7 @@ class DailySongCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
+        onTap: _openSpotify,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

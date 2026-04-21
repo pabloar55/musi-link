@@ -61,6 +61,12 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       }
     });
 
+    final unreadChats = ref.watch(unreadChatsCountProvider);
+    final pendingCount = ref.watch(receivedRequestsProvider).maybeWhen(
+          data: (list) => list.length,
+          orElse: () => 0,
+        );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -82,8 +88,22 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
         destinations: [
           NavigationDestination(icon: const Icon(LucideIcons.compass500), label: l10n.navDiscover),
           NavigationDestination(icon: const Icon(LucideIcons.chartNoAxesColumn600), label: l10n.navStats),
-          NavigationDestination(icon: const Icon(LucideIcons.messageCircle500), label: l10n.navMessages),
-          NavigationDestination(icon: const Icon(LucideIcons.users500), label: l10n.navFriends),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: unreadChats > 0,
+              label: unreadChats > 9 ? const Text('9+') : Text('$unreadChats'),
+              child: const Icon(LucideIcons.messageCircle500),
+            ),
+            label: l10n.navMessages,
+          ),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: pendingCount > 0,
+              label: pendingCount > 9 ? const Text('9+') : Text('$pendingCount'),
+              child: const Icon(LucideIcons.users500),
+            ),
+            label: l10n.navFriends,
+          ),
         ],
         selectedIndex: currentPageIndex,
 

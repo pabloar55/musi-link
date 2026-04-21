@@ -119,12 +119,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
           ),
           const SizedBox(height: 12),
           if (_dailySong != null) ...[
-            DailySongCard(
-              song: _dailySong!,
-              onTap: _dailySong!.spotifyUrl.isNotEmpty
-                  ? () => _openSpotifyUrl(_dailySong!.spotifyUrl)
-                  : null,
-            ),
+            DailySongCard(song: _dailySong!),
             const SizedBox(height: 8),
             Center(
               child: TextButton.icon(

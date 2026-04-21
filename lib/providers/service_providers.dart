@@ -153,3 +153,14 @@ final friendsStreamProvider = StreamProvider<List<String>>((ref) {
 final chatsProvider = StreamProvider<List<Chat>>((ref) {
   return ref.watch(chatServiceProvider).getChats();
 });
+
+/// Número de chats con al menos un mensaje no leído por el usuario actual.
+final unreadChatsCountProvider = Provider<int>((ref) {
+  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  if (uid == null) return 0;
+  return ref.watch(chatsProvider).maybeWhen(
+        data: (chats) =>
+            chats.where((c) => (c.unreadCounts[uid] ?? 0) > 0).length,
+        orElse: () => 0,
+      );
+});

@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/discovery_result.dart';
-import 'package:musi_link/models/track.dart';
 import 'package:musi_link/theme/app_theme.dart';
 
 class UserDiscoveryCard extends StatelessWidget {
@@ -20,89 +18,103 @@ class UserDiscoveryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context)!;
     final user = result.user;
     final score = result.score.round();
+    final isHighScore = score >= 70;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(
+    return Padding(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppTokens.spaceLG,
         vertical: AppTokens.spaceXS,
       ),
-      child: InkWell(
-        onTap: onTap,
+      child: Material(
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppTokens.radiusMD),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTokens.spaceLG),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Avatar
-              _UserAvatar(photoUrl: user.photoUrl, uid: user.uid),
-              const SizedBox(width: AppTokens.spaceMD),
-
-              // Info principal
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Nombre + Score badge + Chevron
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Left accent stripe
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: isHighScore
+                          ? [AppTokens.spotifyGreen, AppTokens.spotifyGreenDark]
+                          : [cs.outline, cs.outlineVariant],
+                    ),
+                  ),
+                ),
+                // Card content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTokens.spaceLG),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            user.displayName,
-                            style: tt.titleMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        _UserAvatar(
+                          photoUrl: user.photoUrl,
+                          uid: user.uid,
+                          score: score,
                         ),
-                        _ScoreBadge(score: score, colorScheme: cs),
-                        const SizedBox(width: AppTokens.spaceXS),
-                        Icon(
-                          LucideIcons.chevronRight,
-                          color: cs.onSurfaceVariant,
-                          size: 20,
+                        const SizedBox(width: AppTokens.spaceMD),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      user.displayName,
+                                      style: tt.titleMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  _ScoreBadge(score: score, colorScheme: cs),
+                                  const SizedBox(width: AppTokens.spaceXS),
+                                  Icon(
+                                    LucideIcons.chevronRight,
+                                    color: cs.onSurfaceVariant,
+                                    size: 18,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppTokens.spaceXS),
+
+                              if (result.sharedArtistNames.isNotEmpty)
+                                _MetaRow(
+                                  icon: LucideIcons.music,
+                                  text: result.sharedArtistNames.join(', '),
+                                  colorScheme: cs,
+                                  textTheme: tt,
+                                ),
+
+                              if (result.sharedGenreNames.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                _GenreRow(
+                                  genres: result.sharedGenreNames,
+                                  colorScheme: cs,
+                                  textTheme: tt,
+                                ),
+                              ],
+
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppTokens.spaceXS),
-
-                    // Artistas compartidos
-                    if (result.sharedArtistNames.isNotEmpty)
-                      _MetaRow(
-                        icon: LucideIcons.music,
-                        text: result.sharedArtistNames.join(', '),
-                        colorScheme: cs,
-                        textTheme: tt,
-                      ),
-
-                    // Géneros compartidos
-                    if (result.sharedGenreNames.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      _MetaRow(
-                        icon: LucideIcons.tag,
-                        text: result.sharedGenreNames.join(', '),
-                        colorScheme: cs,
-                        textTheme: tt,
-                      ),
-                    ],
-
-                    // Daily song
-                    if (user.dailySong != null) ...[
-                      const SizedBox(height: AppTokens.spaceSM),
-                      _DailySongRow(
-                        song: user.dailySong!,
-                        l10n: l10n,
-                        cs: cs,
-                        tt: tt,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -115,22 +127,51 @@ class UserDiscoveryCard extends StatelessWidget {
 class _UserAvatar extends StatelessWidget {
   final String photoUrl;
   final String uid;
-  const _UserAvatar({required this.photoUrl, required this.uid});
+  final int score;
+  const _UserAvatar({
+    required this.photoUrl,
+    required this.uid,
+    required this.score,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasPhoto = photoUrl.isNotEmpty;
+    final isHighScore = score >= 70;
 
     return Hero(
       tag: 'user-avatar-$uid',
-      child: CircleAvatar(
-        radius: 26,
-        backgroundColor: cs.surfaceContainerHighest,
-        backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
-        child: hasPhoto
-            ? null
-            : Icon(LucideIcons.user, size: 28, color: cs.onSurfaceVariant),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isHighScore
+                ? AppTokens.spotifyGreen
+                : cs.outline,
+            width: isHighScore ? 2.5 : 1.5,
+          ),
+          boxShadow: isHighScore
+              ? [
+                  BoxShadow(
+                    color: AppTokens.spotifyGreen.withAlpha(80),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: CircleAvatar(
+          radius: 26,
+          backgroundColor: cs.surfaceContainerHighest,
+          backgroundImage:
+              hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
+          child: hasPhoto
+              ? null
+              : Icon(LucideIcons.user, size: 26, color: cs.onSurfaceVariant),
+        ),
       ),
     );
   }
@@ -146,25 +187,31 @@ class _ScoreBadge extends StatelessWidget {
     final cs = colorScheme;
     final isHigh = score >= 70;
     final isMedium = score >= 40;
-    final color = isHigh ? cs.primary : (isMedium ? cs.secondary : cs.onSurfaceVariant);
+    final color = isHigh
+        ? AppTokens.spotifyGreen
+        : (isMedium ? cs.secondary : cs.onSurfaceVariant);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.spaceSM + 2,
-        vertical: AppTokens.spaceXS,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
+        color: isHigh
+            ? AppTokens.spotifyGreen.withAlpha(30)
+            : color.withAlpha(18),
         borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-        border: Border.all(color: color.withAlpha(80), width: 1),
+        border: Border.all(
+          color: isHigh
+              ? AppTokens.spotifyGreen.withAlpha(160)
+              : color.withAlpha(80),
+          width: 1.5,
+        ),
       ),
       child: Text(
         '$score%',
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
           color: color,
-          letterSpacing: 0.2,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -188,7 +235,7 @@ class _MetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 13, color: colorScheme.onSurfaceVariant),
+        Icon(icon, size: 15, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: AppTokens.spaceXS),
         Expanded(
           child: Text(
@@ -203,79 +250,60 @@ class _MetaRow extends StatelessWidget {
   }
 }
 
-class _DailySongRow extends StatelessWidget {
-  final Track song;
-  final AppLocalizations l10n;
-  final ColorScheme cs;
-  final TextTheme tt;
+class _GenreRow extends StatelessWidget {
+  final List<String> genres;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
 
-  const _DailySongRow({
-    required this.song,
-    required this.l10n,
-    required this.cs,
-    required this.tt,
+  const _GenreRow({
+    required this.genres,
+    required this.colorScheme,
+    required this.textTheme,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.spaceSM,
-        vertical: AppTokens.spaceXS,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSM),
-      ),
-      child: Row(
-        children: [
-          // Artwork 40×40
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: song.imageUrl.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: song.imageUrl,
-                    width: 36,
-                    height: 36,
-                    fit: BoxFit.cover,
-                    errorWidget: (ctx, url, err) => _songPlaceholder(),
+    final cs = colorScheme;
+    return Row(
+      children: [
+        Icon(LucideIcons.tag, size: 15, color: cs.onSurfaceVariant),
+        const SizedBox(width: AppTokens.spaceXS),
+        Expanded(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: genres
+                  .take(3)
+                  .map(
+                    (g) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withAlpha(22),
+                          borderRadius:
+                              BorderRadius.circular(AppTokens.radiusFull),
+                        ),
+                        child: Text(
+                          g,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
                   )
-                : _songPlaceholder(),
-          ),
-          const SizedBox(width: AppTokens.spaceSM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.dailySongTitle,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                Text(
-                  '${song.title} — ${song.artist}',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                  .toList(),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _songPlaceholder() {
-    return Container(
-      width: 36,
-      height: 36,
-      color: Colors.white12,
-      child: const Icon(LucideIcons.music, size: 18, color: Colors.white54),
+        ),
+      ],
     );
   }
 }
+

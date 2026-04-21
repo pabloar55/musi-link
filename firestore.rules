@@ -44,9 +44,12 @@ service cloud.firestore {
 
     // ─── Solicitudes de amistad ───────────────────────────
     match /friend_requests/{requestId} {
-      // Solo el remitente o destinatario puede leer
+      // Solo el remitente o destinatario puede leer.
+      // resource == null cubre el caso en que el doc aún no existe (p.ej. tx.get
+      // dentro de sendRequest para comprobar duplicados antes de crear).
       allow read: if request.auth != null
-        && (request.auth.uid == resource.data.senderId
+        && (resource == null
+            || request.auth.uid == resource.data.senderId
             || request.auth.uid == resource.data.receiverId);
       // Solo el remitente puede crear, con ID determinista senderId_receiverId.
       // El ID determinista hace que un segundo intento sea tratado como update
