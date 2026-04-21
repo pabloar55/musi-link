@@ -260,11 +260,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get socialUser => 'Utilisateur';
 
   @override
-  String get artistSelectorTitle => 'Vos artistes préférés';
+  String get artistSelectorTitle => 'Vos Top Artistes';
 
   @override
   String artistSelectorSubtitle(int min, int count) {
-    return '$count sélectionnés · plus vous en ajoutez, meilleure sera votre expérience (min. $min)';
+    return '$count ajoutés · glisser pour réorganiser (min. $min)';
   }
 
   @override
@@ -444,6 +444,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingSkip => 'Passer';
 
   @override
+  String get photoSetupTitle => 'Ajouter une photo de profil';
+
+  @override
+  String get photoSetupSubtitle =>
+      'Montrez qui vous êtes. Vous pourrez la modifier à tout moment.';
+
+  @override
+  String get photoSetupChoose => 'Choisir une photo';
+
+  @override
+  String get photoSetupChange => 'Changer la photo';
+
+  @override
+  String get photoSetupContinue => 'Continuer';
+
+  @override
+  String get photoSetupSkip => 'Passer pour l\'instant';
+
+  @override
+  String get photoSetupUploading => 'Téléchargement...';
+
+  @override
+  String get photoSetupGallery => 'Galerie';
+
+  @override
+  String get photoSetupCamera => 'Appareil photo';
+
+  @override
+  String get photoSetupError =>
+      'Impossible de télécharger la photo. Veuillez réessayer.';
+
+  @override
   String get genericError => 'Une erreur s\'est produite. Veuillez réessayer.';
 
   @override
@@ -502,7 +534,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS1Body =>
-      'Musi Link est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).';
+      'MusiLink est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).';
 
   @override
   String get privacyS2Title => '2. Données collectées';
@@ -544,7 +576,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS7Body =>
-      'Musi Link est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu\'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.';
+      'MusiLink est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu\'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.';
 
   @override
   String get privacyS8Title => '8. Sécurité';

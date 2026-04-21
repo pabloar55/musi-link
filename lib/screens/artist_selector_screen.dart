@@ -123,6 +123,14 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     } catch (_) {}
   }
 
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex--;
+      final item = _selected.removeAt(oldIndex);
+      _selected.insert(newIndex, item);
+    });
+  }
+
   void _toggleArtist(Artist artist) {
     final idx = _selected.indexWhere((a) => a.name == artist.name);
     if (idx >= 0) {
@@ -263,28 +271,16 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
               ),
             ),
 
-            // Selected chips
+            // Ranked selected artists
             if (_selected.isNotEmpty)
-              SizedBox(
-                height: 44,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  scrollDirection: Axis.horizontal,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 256),
+                child: ReorderableListView.builder(
+                  shrinkWrap: true,
+                  buildDefaultDragHandles: false,
                   itemCount: _selected.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) {
-                    final a = _selected[i];
-                    return InputChip(
-                      avatar: a.imageUrl.isNotEmpty
-                          ? CircleAvatar(
-                              backgroundImage:
-                                  CachedNetworkImageProvider(a.imageUrl),
-                            )
-                          : null,
-                      label: Text(a.name),
-                      onDeleted: () => _toggleArtist(a),
-                    );
-                  },
+                  onReorder: _onReorder,
+                  itemBuilder: (_, i) => _buildRankedItem(_selected[i], i),
                 ),
               ),
 
@@ -374,6 +370,56 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRankedItem(Artist artist, int index) {
+    final cs = Theme.of(context).colorScheme;
+    return ListTile(
+      key: ValueKey(artist.name),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '${index + 1}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: cs.primary,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            radius: 18,
+            backgroundImage: artist.imageUrl.isNotEmpty
+                ? CachedNetworkImageProvider(artist.imageUrl)
+                : null,
+            child: artist.imageUrl.isEmpty
+                ? const Icon(Icons.person, size: 16)
+                : null,
+          ),
+        ],
+      ),
+      title: Text(artist.name),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.close, size: 18, color: cs.onSurfaceVariant),
+            onPressed: () => _toggleArtist(artist),
+          ),
+          ReorderableDragStartListener(
+            index: index,
+            child: Icon(Icons.drag_handle, color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+      dense: true,
     );
   }
 

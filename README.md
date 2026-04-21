@@ -1,6 +1,6 @@
-# musi link 
+# MusiLink
 
-**musi link** es una app social de música desarrollada en Flutter que conecta usuarios a través de sus gustos musicales vía Spotify. Los usuarios pueden descubrir personas con gustos compatibles, ver perfiles musicales públicos y chatear en tiempo real.
+**MusiLink** es una app social de música desarrollada en Flutter que conecta usuarios a través de sus gustos musicales vía Spotify. Los usuarios pueden descubrir personas con gustos compatibles, ver perfiles musicales públicos y chatear en tiempo real.
 
 ## Características Principales
 

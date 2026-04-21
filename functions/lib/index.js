@@ -88,7 +88,7 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
         const senderName = (_c = senderSnap.data()) === null || _c === void 0 ? void 0 : _c.displayName;
         if (!fcmToken || !senderName)
             return;
-        await sendNotification(receiverId, fcmToken, { title: 'musi link', body: `${senderName} sent you a friend request` }, { type: 'friend_request', senderId });
+        await sendNotification(receiverId, fcmToken, { title: 'MusiLink', body: `${senderName} sent you a friend request` }, { type: 'friend_request', senderId });
     }
     catch (error) {
         v2_1.logger.error('onFriendRequest: unhandled error', { requestId: event.params.requestId, error });
@@ -115,7 +115,7 @@ exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document:
         const accepterName = (_d = receiverSnap.data()) === null || _d === void 0 ? void 0 : _d.displayName;
         if (!fcmToken || !accepterName)
             return;
-        await sendNotification(senderId, fcmToken, { title: 'musi link', body: `${accepterName} accepted your friend request` }, { type: 'friend_request_accepted', accepterId: receiverId });
+        await sendNotification(senderId, fcmToken, { title: 'MusiLink', body: `${accepterName} accepted your friend request` }, { type: 'friend_request_accepted', accepterId: receiverId });
         await db.doc(event.document).delete();
     }
     catch (error) {

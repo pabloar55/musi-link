@@ -11,6 +11,7 @@ import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/last_fm_service.dart';
 import 'package:musi_link/services/spotify_client_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/storage_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
 // ── Chat activo (suprime notificaciones del chat en pantalla) ──────
@@ -43,6 +44,10 @@ final pendingNotificationProvider = NotifierProvider<PendingNotificationNotifier
 
 final userServiceProvider = Provider<UserService>((ref) {
   return UserService(firestore: ref.watch(firebaseFirestoreProvider));
+});
+
+final storageServiceProvider = Provider<StorageService>((ref) {
+  return StorageService(storage: ref.watch(firebaseStorageProvider));
 });
 
 final chatServiceProvider = Provider<ChatService>((ref) {

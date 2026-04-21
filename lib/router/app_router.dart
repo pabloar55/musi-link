@@ -14,39 +14,38 @@ class AppRouterNotifier extends ChangeNotifier {
   bool _initialized = false;
   bool _artistsSelected = false;
   bool _onboardingDone = false;
+  bool _photoSetupDone = false;
 
   bool get isInitialized => _initialized;
   bool get isLoggedIn => _auth.currentUser != null;
   bool get artistsSelected => _artistsSelected;
   bool get onboardingDone => _onboardingDone;
+  bool get photoSetupDone => _photoSetupDone;
 
-  Future<({bool artistsSelected, bool onboardingDone})> Function(
-    String uid,
-  )?
-  _fetchUserState;
+  Future<({bool artistsSelected, bool onboardingDone, bool photoSetupDone})>
+      Function(String uid)? _fetchUserState;
 
   /// Llamar desde el SplashScreen una vez que la app ha terminado de
   /// inicializarse. Inicia la escucha de authStateChanges y dispara el
   /// primer redirect.
-  ///
-  /// [fetchUserState] es un callback que re-consulta Firestore cuando el
-  /// usuario hace login (necesario tras reinstalar la app, donde
-  /// SharedPreferences se borra pero los datos en Firestore persisten).
   void setInitialized({
     required bool artistsSelected,
     required bool onboardingDone,
-    Future<({bool artistsSelected, bool onboardingDone})> Function(
-      String uid,
-    )? fetchUserState,
+    required bool photoSetupDone,
+    Future<({bool artistsSelected, bool onboardingDone, bool photoSetupDone})>
+            Function(String uid)?
+        fetchUserState,
   }) {
     _initialized = true;
     _artistsSelected = artistsSelected;
     _onboardingDone = onboardingDone;
+    _photoSetupDone = photoSetupDone;
     _fetchUserState = fetchUserState;
     _sub = _auth.authStateChanges().listen((user) async {
       if (user == null) {
         _artistsSelected = false;
         _onboardingDone = false;
+        _photoSetupDone = false;
         notifyListeners();
       } else if (_fetchUserState != null && !_artistsSelected) {
         // Re-consultar Firestore al hacer login para evitar que usuarios
@@ -55,6 +54,7 @@ class AppRouterNotifier extends ChangeNotifier {
           final state = await _fetchUserState!(user.uid);
           _artistsSelected = state.artistsSelected;
           _onboardingDone = state.onboardingDone;
+          _photoSetupDone = state.photoSetupDone;
         } catch (_) {}
         notifyListeners();
       } else {
@@ -72,9 +72,15 @@ class AppRouterNotifier extends ChangeNotifier {
   }
 
   /// Llamar al completar el onboarding para que el router re-evalúe
-  /// y navegue automáticamente a MainScreen.
+  /// y navegue automáticamente a la pantalla de foto de perfil.
   void setOnboardingDone() {
     _onboardingDone = true;
+    notifyListeners();
+  }
+
+  /// Llamar al completar (o saltar) la configuración de foto de perfil.
+  void setPhotoSetupDone() {
+    _photoSetupDone = true;
     notifyListeners();
   }
 
@@ -100,11 +106,15 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   if (!notifier.onboardingDone) {
     return location == '/onboarding' ? null : '/onboarding';
   }
+  if (!notifier.photoSetupDone) {
+    return location == '/photo-setup' ? null : '/photo-setup';
+  }
   // Usuario listo: evitar que se quede en pantallas de setup
   if (location == '/splash' ||
       location == '/auth' ||
       location == '/artist-select' ||
-      location == '/onboarding') {
+      location == '/onboarding' ||
+      location == '/photo-setup') {
     return '/';
   }
   return null;

@@ -1,5 +1,5 @@
 name: musi_link
-description: "musi link - Connect through music."
+description: "MusiLink - Connect through music."
 publish_to: 'none'
 version: 0.1.0
 
@@ -31,6 +31,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cached_network_image: ^3.4.1
+  image_picker: ^1.2.1
+  firebase_storage: ^13.3.0
 
 
 dev_dependencies:

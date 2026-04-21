@@ -117,7 +117,7 @@ export const onFriendRequest = onDocumentCreated(
       await sendNotification(
         receiverId,
         fcmToken,
-        { title: 'musi link', body: `${senderName} sent you a friend request` },
+        { title: 'MusiLink', body: `${senderName} sent you a friend request` },
         { type: 'friend_request', senderId },
       );
     } catch (error) {
@@ -153,7 +153,7 @@ export const onFriendRequestAccepted = onDocumentUpdated(
       await sendNotification(
         senderId,
         fcmToken,
-        { title: 'musi link', body: `${accepterName} accepted your friend request` },
+        { title: 'MusiLink', body: `${accepterName} accepted your friend request` },
         { type: 'friend_request_accepted', accepterId: receiverId },
       );
 

@@ -87,8 +87,8 @@
   "socialErrorLoading": "Erreur lors du chargement des conversations",
   "socialUser": "Utilisateur",
 
-  "artistSelectorTitle": "Vos artistes préférés",
-  "artistSelectorSubtitle": "{count} sélectionnés · plus vous en ajoutez, meilleure sera votre expérience (min. {min})",
+  "artistSelectorTitle": "Vos Top Artistes",
+  "artistSelectorSubtitle": "{count} ajoutés · glisser pour réorganiser (min. {min})",
   "@artistSelectorSubtitle": {
     "placeholders": {
       "min": { "type": "int" },
@@ -159,6 +159,17 @@
   "onboardingGetStarted": "Commencer",
   "onboardingSkip": "Passer",
 
+  "photoSetupTitle": "Ajouter une photo de profil",
+  "photoSetupSubtitle": "Montrez qui vous êtes. Vous pourrez la modifier à tout moment.",
+  "photoSetupChoose": "Choisir une photo",
+  "photoSetupChange": "Changer la photo",
+  "photoSetupContinue": "Continuer",
+  "photoSetupSkip": "Passer pour l'instant",
+  "photoSetupUploading": "Téléchargement...",
+  "photoSetupGallery": "Galerie",
+  "photoSetupCamera": "Appareil photo",
+  "photoSetupError": "Impossible de télécharger la photo. Veuillez réessayer.",
+
   "genericError": "Une erreur s'est produite. Veuillez réessayer.",
 
   "settingsTitle": "Paramètres",
@@ -179,7 +190,7 @@
   "privacyTitle": "Politique de confidentialité",
   "privacyLastUpdated": "Dernière mise à jour : 6 avril 2026",
   "privacyS1Title": "1. Responsable du traitement",
-  "privacyS1Body": "Musi Link est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).",
+  "privacyS1Body": "MusiLink est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).",
   "privacyS2Title": "2. Données collectées",
   "privacyS2Body": "Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données Spotify : identifiant utilisateur Spotify, photo de profil, artistes, genres et titres les plus écoutés, et titre en cours de lecture — synchronisés via l'API Spotify avec votre autorisation explicite.\n\n• Données sociales : messages, chansons partagées, chanson du jour, demandes d'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.",
   "privacyS3Title": "3. Utilisation de vos données",
@@ -191,7 +202,7 @@
   "privacyS6Title": "6. Vos droits",
   "privacyS6Body": "En vertu du RGPD, vous disposez des droits suivants :\n\n• Accès : demander une copie des données que nous détenons à votre sujet.\n• Rectification : corriger des données inexactes ou incomplètes.\n• Effacement : supprimer votre compte et toutes les données associées via le bouton « Supprimer le compte » dans les Paramètres.\n• Limitation : demander que nous limitions le traitement de vos données.\n• Portabilité : recevoir vos données dans un format structuré et lisible par machine.\n• Opposition : vous opposer au traitement fondé sur l'intérêt légitime.\n\nPour exercer ces droits, contactez armasp80@gmail.com. Vous pouvez également introduire une réclamation auprès de l'Agence Espagnole de Protection des Données (AEPD) à l'adresse www.aepd.es.",
   "privacyS7Title": "7. Âge minimum",
-  "privacyS7Body": "Musi Link est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.",
+  "privacyS7Body": "MusiLink est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.",
   "privacyS8Title": "8. Sécurité",
   "privacyS8Body": "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données personnelles contre tout accès non autorisé, perte ou altération. Les données sont stockées sur Google Firebase, qui applique des contrôles de sécurité conformes aux normes du secteur.",
   "privacyS9Title": "9. Contact",

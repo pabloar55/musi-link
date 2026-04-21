@@ -9,6 +9,7 @@ import 'package:musi_link/screens/privacy_policy_screen.dart';
 import 'package:musi_link/screens/chat_screen.dart';
 import 'package:musi_link/screens/main_screen.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/screens/photo_setup_screen.dart';
 import 'package:musi_link/screens/splash_screen.dart';
 import 'package:musi_link/screens/artist_selector_screen.dart';
 import 'package:musi_link/screens/user_profile_screen.dart';
@@ -50,6 +51,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/photo-setup',
+        builder: (context, state) => const PhotoSetupScreen(),
       ),
       GoRoute(
         path: '/',

@@ -9,6 +9,7 @@ import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/screens/photo_setup_screen.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -82,6 +83,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final onboardingDone = artistsSelected ||
           (prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false);
 
+      // Usuarios que ya completaron el onboarding antes de que existiera
+      // el paso de foto de perfil saltan ese paso automáticamente.
+      // Nuevos usuarios lo verán tras completar el onboarding de slides.
+      final photoSetupDone = onboardingDone ||
+          (prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false);
+      if (onboardingDone &&
+          !(prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false)) {
+        await prefs.setBool(PhotoSetupScreen.photoSetupDoneKey, true);
+      }
+
       // Capturar la referencia al servicio antes de await para que siga
       // siendo válida aunque el widget se desmonte (SplashScreen desaparece
       // tras la navegación, y ref deja de ser accesible).
@@ -93,14 +104,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ref.read(appRouterNotifierProvider).setInitialized(
           artistsSelected: artistsSelected,
           onboardingDone: onboardingDone,
+          photoSetupDone: photoSetupDone,
           // Callback para re-consultar Firestore tras un login posterior
           // (ej. usuario que reinstala la app y vuelve a iniciar sesión).
           fetchUserState: (loginUid) async {
             final profile = await userService.getUser(loginUid);
             final hasArtists =
                 profile != null && profile.topArtistNames.isNotEmpty;
-            // Si ya tiene artistas, necesariamente completó el onboarding.
-            return (artistsSelected: hasArtists, onboardingDone: hasArtists);
+            // Si ya tiene artistas, necesariamente completó el onboarding y foto.
+            return (
+              artistsSelected: hasArtists,
+              onboardingDone: hasArtists,
+              photoSetupDone: hasArtists,
+            );
           },
         );
       }
@@ -111,6 +127,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ref.read(appRouterNotifierProvider).setInitialized(
           artistsSelected: false,
           onboardingDone: false,
+          photoSetupDone: false,
         );
       }
     }

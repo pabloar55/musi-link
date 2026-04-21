@@ -107,8 +107,8 @@
   "socialErrorLoading": "Error loading conversations",
   "socialUser": "User",
 
-  "artistSelectorTitle": "Your favourite artists",
-  "artistSelectorSubtitle": "{count} selected · the more you add, the better your experience (min. {min})",
+  "artistSelectorTitle": "Your Top Artists",
+  "artistSelectorSubtitle": "{count} added · drag to reorder (min. {min})",
   "@artistSelectorSubtitle": {
     "placeholders": {
       "min": { "type": "int" },
@@ -194,6 +194,17 @@
   "onboardingGetStarted": "Get started",
   "onboardingSkip": "Skip",
 
+  "photoSetupTitle": "Add a profile photo",
+  "photoSetupSubtitle": "Let others know who you are. You can always change it later.",
+  "photoSetupChoose": "Choose photo",
+  "photoSetupChange": "Change photo",
+  "photoSetupContinue": "Continue",
+  "photoSetupSkip": "Skip for now",
+  "photoSetupUploading": "Uploading...",
+  "photoSetupGallery": "Gallery",
+  "photoSetupCamera": "Camera",
+  "photoSetupError": "Could not upload photo. Please try again.",
+
   "genericError": "Something went wrong. Please try again.",
 
   "settingsTitle": "Settings",
@@ -214,7 +225,7 @@
   "privacyTitle": "Privacy Policy",
   "privacyLastUpdated": "Last updated: 6 April 2026",
   "privacyS1Title": "1. Data Controller",
-  "privacyS1Body": "Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).",
+  "privacyS1Body": "MusiLink is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).",
   "privacyS2Title": "2. Data We Collect",
   "privacyS2Body": "We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify's API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.",
   "privacyS3Title": "3. How We Use Your Data",
@@ -226,7 +237,7 @@
   "privacyS6Title": "6. Your Rights",
   "privacyS6Body": "Under GDPR, you have the following rights:\n\n• Access: request a copy of data we hold about you.\n• Rectification: correct inaccurate or incomplete data.\n• Erasure: delete your account and all data via the 'Delete account' button in Settings.\n• Restriction: request we limit processing of your data.\n• Portability: receive your data in a structured, machine-readable format.\n• Objection: object to processing based on legitimate interest.\n\nTo exercise these rights, contact armasp80@gmail.com. You may also file a complaint with the Spanish Data Protection Authority (AEPD) at www.aepd.es.",
   "privacyS7Title": "7. Minimum Age",
-  "privacyS7Body": "Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.",
+  "privacyS7Body": "MusiLink is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.",
   "privacyS8Title": "8. Security",
   "privacyS8Body": "We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss, or alteration. Data is stored in Google Firebase, which applies industry-standard security controls.",
   "privacyS9Title": "9. Contact",

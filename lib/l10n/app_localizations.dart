@@ -565,13 +565,13 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your favourite artists'**
+  /// **'Your Top Artists'**
   String get artistSelectorTitle;
 
   /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'{count} selected · the more you add, the better your experience (min. {min})'**
+  /// **'{count} added · drag to reorder (min. {min})'**
   String artistSelectorSubtitle(int min, int count);
 
   /// No description provided for @artistSelectorSearchHint.
@@ -886,6 +886,66 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get onboardingSkip;
 
+  /// No description provided for @photoSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a profile photo'**
+  String get photoSetupTitle;
+
+  /// No description provided for @photoSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let others know who you are. You can always change it later.'**
+  String get photoSetupSubtitle;
+
+  /// No description provided for @photoSetupChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get photoSetupChoose;
+
+  /// No description provided for @photoSetupChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get photoSetupChange;
+
+  /// No description provided for @photoSetupContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get photoSetupContinue;
+
+  /// No description provided for @photoSetupSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get photoSetupSkip;
+
+  /// No description provided for @photoSetupUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get photoSetupUploading;
+
+  /// No description provided for @photoSetupGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get photoSetupGallery;
+
+  /// No description provided for @photoSetupCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get photoSetupCamera;
+
+  /// No description provided for @photoSetupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload photo. Please try again.'**
+  String get photoSetupError;
+
   /// No description provided for @genericError.
   ///
   /// In en, this message translates to:
@@ -997,7 +1057,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS1Body.
   ///
   /// In en, this message translates to:
-  /// **'Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).'**
+  /// **'MusiLink is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).'**
   String get privacyS1Body;
 
   /// No description provided for @privacyS2Title.
@@ -1069,7 +1129,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS7Body.
   ///
   /// In en, this message translates to:
-  /// **'Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.'**
+  /// **'MusiLink is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.'**
   String get privacyS7Body;
 
   /// No description provided for @privacyS8Title.

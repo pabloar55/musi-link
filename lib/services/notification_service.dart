@@ -35,9 +35,9 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   static const _channelId = 'musilink_high';
-  static const _channelName = 'musi link Notifications';
+  static const _channelName = 'MusiLink Notifications';
   static const _channelNoVibrationId = 'musilink_high_no_vibration';
-  static const _channelNoVibrationName = 'musi link Notifications (no vibration)';
+  static const _channelNoVibrationName = 'MusiLink Notifications (no vibration)';
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
   static const kVibrationKey = 'notification_vibration';
 
