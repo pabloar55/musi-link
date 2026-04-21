@@ -8,10 +8,12 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/models/message.dart';
+import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
 import 'package:musi_link/widgets/chat/track_bubble.dart';
 import 'package:musi_link/widgets/chat/track_search_sheet.dart';
 import 'package:musi_link/widgets/skeleton_loader.dart';
+import 'package:musi_link/widgets/user_circle_avatar.dart';
 import 'package:go_router/go_router.dart';
 
 /// Pantalla de conversación individual.
@@ -37,6 +39,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final Stream<List<Message>> _messagesStream;
   StreamSubscription<List<Message>>? _messagesSubscription;
   late final ActiveChatNotifier _activeChatNotifier;
+  late final Future<AppUser?> _otherUserFuture;
 
   // Paginación: lista única de mensajes acumulados.
   List<Message> _allMessages = [];
@@ -57,6 +60,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) _activeChatNotifier.setChat(widget.chatId);
     });
     _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
+    _otherUserFuture = ref.read(userServiceProvider).getUser(widget.otherUserId);
 
     _messagesSubscription = _messagesStream.listen((streamMessages) {
       if (!mounted) return;
@@ -204,6 +208,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  Future<void> _openOtherUserProfile() async {
+    final nav = GoRouter.of(context);
+    final user = await _otherUserFuture;
+    if (user != null && mounted) {
+      unawaited(nav.push('/profile', extra: user));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -211,16 +223,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
+        titleSpacing: 0,
         title: GestureDetector(
-          onTap: () async {
-            final nav = GoRouter.of(context);
-            final user =
-                await ref.read(userServiceProvider).getUser(widget.otherUserId);
-            if (user != null && mounted) {
-              unawaited(nav.push('/profile', extra: user));
-            }
-          },
-          child: Text(widget.otherUserName),
+          onTap: _openOtherUserProfile,
+          child: FutureBuilder<AppUser?>(
+            future: _otherUserFuture,
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              final name = user?.displayName ?? widget.otherUserName;
+              final photoUrl = user?.photoUrl ?? '';
+
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  UserCircleAvatar(
+                    photoUrl: photoUrl,
+                    name: name,
+                    radius: 16,
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      name,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
       body: Column(
