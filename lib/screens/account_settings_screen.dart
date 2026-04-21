@@ -146,6 +146,7 @@ class _AccountSettingsScreenState
       // 5. Capturar servicios antes de borrar (delete() desmonta el widget)
       final authService = ref.read(authServiceProvider);
       final chatService = ref.read(chatServiceProvider);
+      final musicProfileService = ref.read(musicProfileServiceProvider);
 
       await firebaseUser.delete();
 
@@ -154,7 +155,7 @@ class _AccountSettingsScreenState
         await authService.signOut();
       } catch (_) {}
       chatService.clearCache();
-      ref.read(musicProfileServiceProvider).clearCache();
+      musicProfileService.clearCache();
 
       if (!mounted) return;
       Navigator.of(context).pop();
