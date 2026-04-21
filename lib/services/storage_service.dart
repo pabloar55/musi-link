@@ -11,8 +11,11 @@ class StorageService {
 
   Future<String?> uploadProfilePhoto(String uid, XFile imageFile) async {
     try {
-      final ref = _storage.ref('profile_photos/$uid.jpg');
-      await ref.putFile(File(imageFile.path));
+      final ref = _storage.ref('profile_photos/$uid');
+      await ref.putFile(
+        File(imageFile.path),
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
       return await ref.getDownloadURL();
     } catch (e, st) {
       await reportError(e, st);
