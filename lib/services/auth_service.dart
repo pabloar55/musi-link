@@ -18,9 +18,9 @@ class AuthService {
     required FirebaseAuth auth,
     required GoogleSignIn googleSignIn,
     required NotificationService notificationService,
-  })  : _auth = auth,
-        _googleSignIn = googleSignIn,
-        _notificationService = notificationService;
+  }) : _auth = auth,
+       _googleSignIn = googleSignIn,
+       _notificationService = notificationService;
 
   final UserService _userService;
   final FirebaseAuth _auth;
@@ -161,7 +161,9 @@ class AuthService {
       if (googleUser.email != _auth.currentUser?.email) {
         // Limpiar el estado de Google Sign-In (quedó apuntando a la cuenta
         // incorrecta) sin afectar la sesión de Firebase Auth del usuario real.
-        try { await _googleSignIn.signOut(); } catch (_) {}
+        try {
+          await _googleSignIn.signOut();
+        } catch (_) {}
         throw const GoogleAccountMismatchException();
       }
 
@@ -183,10 +185,16 @@ class AuthService {
 
   /// Re-autentica con email y contraseña.
   /// Lanza [FirebaseAuthException] si las credenciales son incorrectas.
-  Future<void> reauthenticateWithPassword(
-      String email, String password) async {
-    final credential =
-        EmailAuthProvider.credential(email: email, password: password);
-    await _auth.currentUser!.reauthenticateWithCredential(credential);
+  Future<void> reauthenticateWithPassword(String email, String password) async {
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await _auth.currentUser!.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e, st) {
+      await reportError(e, st);
+      rethrow;
+    }
   }
 }

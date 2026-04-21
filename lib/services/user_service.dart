@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:musi_link/utils/error_reporter.dart';
@@ -17,8 +18,10 @@ class UserService {
   Timer? _searchDebounce;
   Completer<List<AppUser>>? _pendingSearch;
 
+  static const int _maxCacheSize = 200;
   static const _userCacheTtl = Duration(minutes: 10);
-  final Map<String, ({AppUser user, DateTime cachedAt})> _userCache = {};
+  final LinkedHashMap<String, ({AppUser user, DateTime cachedAt})>
+      _userCache = LinkedHashMap();
 
   void clearCache() => _userCache.clear();
 
@@ -56,9 +59,8 @@ class UserService {
   /// Resultado cacheado en memoria por [_userCacheTtl] para evitar reads
   /// repetidas desde discovery, chats y amigos.
   Future<AppUser?> getUser(String uid) async {
-    final cached = _userCache[uid];
-    if (cached != null &&
-        DateTime.now().difference(cached.cachedAt) < _userCacheTtl) {
+    final cached = _getFromCache(uid);
+    if (cached != null) {
       return cached.user;
     }
     try {
@@ -66,13 +68,35 @@ class UserService {
       if (!doc.exists) return null;
       final user = AppUser.fromFirestore(doc);
       if (user != null) {
-        _userCache[uid] = (user: user, cachedAt: DateTime.now());
+        _addToCache(uid, user);
       }
       return user;
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
     }
+  }
+
+  ({AppUser user, DateTime cachedAt})? _getFromCache(String uid) {
+    final cached = _userCache[uid];
+    if (cached == null) return null;
+    if (DateTime.now().difference(cached.cachedAt) >= _userCacheTtl) {
+      _userCache.remove(uid);
+      return null;
+    }
+
+    _userCache
+      ..remove(uid)
+      ..[uid] = cached;
+    return cached;
+  }
+
+  void _addToCache(String uid, AppUser user) {
+    _userCache.remove(uid);
+    while (_userCache.length >= _maxCacheSize) {
+      _userCache.remove(_userCache.keys.first);
+    }
+    _userCache[uid] = (user: user, cachedAt: DateTime.now());
   }
 
   /// Comprueba si un usuario existe en Firestore.

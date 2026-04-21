@@ -40,6 +40,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   StreamSubscription<List<Message>>? _messagesSubscription;
   late final ActiveChatNotifier _activeChatNotifier;
   late final Future<AppUser?> _otherUserFuture;
+  DateTime? _lastSeenTimestamp;
 
   // Paginación: lista única de mensajes acumulados.
   List<Message> _allMessages = [];
@@ -65,6 +66,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messagesSubscription = _messagesStream.listen((streamMessages) {
       if (!mounted) return;
       final isFirst = _isInitialLoading;
+      final latestTimestamp =
+          streamMessages.isEmpty ? null : streamMessages.last.timestamp;
+      final hasNewMessages = latestTimestamp != null &&
+          (_lastSeenTimestamp == null ||
+              latestTimestamp.isAfter(_lastSeenTimestamp!));
       setState(() {
         if (streamMessages.isNotEmpty) {
           // Preservar mensajes más antiguos ya cargados por paginación.
@@ -82,7 +88,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _hasMoreMessages = streamMessages.length >= 30;
         }
       });
-      if (streamMessages.isNotEmpty) {
+      if (hasNewMessages) {
+        _lastSeenTimestamp = latestTimestamp;
         unawaited(ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId));
         _scrollToBottom();
       }
@@ -384,4 +391,3 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 }
-

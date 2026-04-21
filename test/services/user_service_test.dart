@@ -104,6 +104,41 @@ void main() {
           throwsA(isA<FirebaseException>()),
         );
       });
+
+      test('cache aplica LRU y desaloja la entrada menos reciente', () async {
+        final docRefs = <String, MockDocumentReference>{};
+
+        for (var i = 0; i <= 200; i++) {
+          final uid = 'uid_$i';
+          final mockDocRef = MockDocumentReference();
+          final mockDocSnap = MockDocumentSnapshot();
+          docRefs[uid] = mockDocRef;
+
+          when(() => mockUsersRef.doc(uid)).thenReturn(mockDocRef);
+          when(() => mockDocRef.get()).thenAnswer((_) async => mockDocSnap);
+          when(() => mockDocSnap.exists).thenReturn(true);
+          when(() => mockDocSnap.id).thenReturn(uid);
+          when(() => mockDocSnap.data()).thenReturn({
+            'email': '$uid@test.com',
+            'displayName': 'User $i',
+            'photoUrl': '',
+            'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
+            'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
+          });
+        }
+
+        for (var i = 0; i < 200; i++) {
+          await userService.getUser('uid_$i');
+        }
+
+        await userService.getUser('uid_0');
+        await userService.getUser('uid_200');
+        await userService.getUser('uid_1');
+        await userService.getUser('uid_0');
+
+        verify(() => docRefs['uid_1']!.get()).called(2);
+        verify(() => docRefs['uid_0']!.get()).called(1);
+      });
     });
 
     group('userExists', () {

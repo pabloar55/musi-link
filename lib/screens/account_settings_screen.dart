@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -121,11 +122,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         await ref
             .read(authServiceProvider)
             .reauthenticateWithPassword(firebaseUser.email ?? '', password);
-      } on Exception catch (e) {
+      } on FirebaseAuthException catch (e) {
         if (!mounted) return;
-        final msg =
-            e.toString().contains('wrong-password') ||
-                e.toString().contains('invalid-credential')
+        final msg = e.code == 'wrong-password' || e.code == 'invalid-credential'
             ? l10n.authErrorWrongPassword
             : l10n.genericError;
         ScaffoldMessenger.of(
