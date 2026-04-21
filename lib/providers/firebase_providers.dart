@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -25,4 +26,8 @@ final firebaseMessagingProvider = Provider<FirebaseMessaging>((ref) {
 
 final firebaseStorageProvider = Provider<FirebaseStorage>((ref) {
   return FirebaseStorage.instance;
+});
+
+final firebaseFunctionsProvider = Provider<FirebaseFunctions>((ref) {
+  return FirebaseFunctions.instanceFor(region: 'europe-southwest1');
 });

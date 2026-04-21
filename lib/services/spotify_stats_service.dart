@@ -2,7 +2,7 @@ import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/models/track.dart' as app;
 import 'package:musi_link/services/last_fm_service.dart';
-import 'package:musi_link/services/spotify_client_service.dart';
+import 'package:musi_link/services/spotify_cloud_service.dart';
 
 /// Lanzada cuando no hay conexión y tampoco hay datos en caché local.
 class OfflineNoDataException implements Exception {
@@ -13,7 +13,7 @@ class OfflineNoDataException implements Exception {
 class SpotifyGetStats {
   SpotifyGetStats(this._client, this._lastFm);
 
-  final SpotifyClientService _client;
+  final SpotifyCloudService _client;
   final LastFmService _lastFm;
 
   List<Genre> getTopGenresFromArtists(List<app.Artist> artists, int limit) {

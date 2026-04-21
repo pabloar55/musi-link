@@ -5,6 +5,7 @@ import {
 } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v2';
 import { FieldValue } from 'firebase-admin/firestore';
+export { searchSpotifyArtists, searchSpotifyTracks } from './spotify';
 
 admin.initializeApp();
 

@@ -9,7 +9,7 @@ import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/last_fm_service.dart';
-import 'package:musi_link/services/spotify_client_service.dart';
+import 'package:musi_link/services/spotify_cloud_service.dart';
 import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/storage_service.dart';
 import 'package:musi_link/services/user_service.dart';
@@ -87,12 +87,9 @@ final authServiceProvider = Provider<AuthService>((ref) {
   );
 });
 
-final Provider<SpotifyClientService> spotifyClientServiceProvider =
-    Provider<SpotifyClientService>((ref) {
-  return SpotifyClientService(
-    clientId: const String.fromEnvironment('SPOTIFY_CLIENT_ID'),
-    clientSecret: const String.fromEnvironment('SPOTIFY_CLIENT_SECRET'),
-  );
+final Provider<SpotifyCloudService> spotifyClientServiceProvider =
+    Provider<SpotifyCloudService>((ref) {
+  return SpotifyCloudService(ref.watch(firebaseFunctionsProvider));
 });
 
 final Provider<LastFmService> lastFmServiceProvider =
@@ -109,6 +106,7 @@ final Provider<SpotifyGetStats> spotifyStatsProvider =
     ref.watch(lastFmServiceProvider),
   );
 });
+
 
 final Provider<MusicProfileService> musicProfileServiceProvider =
     Provider<MusicProfileService>((ref) {
