@@ -14,6 +14,7 @@ import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/utils/session_cleanup.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/widgets/delete_account_dialog.dart';
 import 'package:musi_link/widgets/image_source_picker.dart';
@@ -29,8 +30,7 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
       _AccountSettingsScreenState();
 }
 
-class _AccountSettingsScreenState
-    extends ConsumerState<AccountSettingsScreen> {
+class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   bool _isUploadingPhoto = false;
 
   Future<void> _goToProfile() async {
@@ -88,27 +88,29 @@ class _AccountSettingsScreenState
     final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
     if (firebaseUser == null) return;
 
-    final isGoogle =
-        firebaseUser.providerData.any((p) => p.providerId == 'google.com');
+    final isGoogle = firebaseUser.providerData.any(
+      (p) => p.providerId == 'google.com',
+    );
 
     // 2. Re-autenticación antes de tocar nada
     if (isGoogle) {
       bool success;
       try {
-        success =
-            await ref.read(authServiceProvider).reauthenticateWithGoogle();
+        success = await ref
+            .read(authServiceProvider)
+            .reauthenticateWithGoogle();
       } on GoogleAccountMismatchException {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.reauthWrongAccount)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.reauthWrongAccount)));
         return;
       } catch (e, st) {
         reportError(e, st).ignore();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.genericError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.genericError)));
         return;
       }
       if (!success || !mounted) return; // usuario canceló
@@ -121,12 +123,14 @@ class _AccountSettingsScreenState
             .reauthenticateWithPassword(firebaseUser.email ?? '', password);
       } on Exception catch (e) {
         if (!mounted) return;
-        final msg = e.toString().contains('wrong-password') ||
+        final msg =
+            e.toString().contains('wrong-password') ||
                 e.toString().contains('invalid-credential')
             ? l10n.authErrorWrongPassword
             : l10n.genericError;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
         return;
       }
     }
@@ -156,6 +160,7 @@ class _AccountSettingsScreenState
       } catch (_) {}
       chatService.clearCache();
       musicProfileService.clearCache();
+      if (mounted) clearSessionState(ref);
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -164,9 +169,9 @@ class _AccountSettingsScreenState
       reportError(e, st).ignore();
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.genericError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.genericError)));
     }
   }
 
@@ -182,14 +187,13 @@ class _AccountSettingsScreenState
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.genericError),
-        ),
+        SnackBar(content: Text(AppLocalizations.of(context)!.genericError)),
       );
       return;
     }
     chatService.clearCache();
     ref.read(musicProfileServiceProvider).clearCache();
+    clearSessionState(ref);
     if (!mounted) return;
     context.go('/auth');
   }
@@ -361,13 +365,13 @@ class _ProfileCard extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    cs.onSurfaceVariant),
+                                  cs.onSurfaceVariant,
+                                ),
                               ),
                             )
                           : imageUrl.trim().isEmpty
-                              ? Icon(LucideIcons.user,
-                                  color: cs.onSurfaceVariant)
-                              : null,
+                          ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
+                          : null,
                     ),
                     if (!isUploadingPhoto)
                       Container(
@@ -377,8 +381,11 @@ class _ProfileCard extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: cs.surface, width: 1.5),
                         ),
-                        child: Icon(LucideIcons.camera,
-                            size: 10, color: cs.onPrimary),
+                        child: Icon(
+                          LucideIcons.camera,
+                          size: 10,
+                          color: cs.onPrimary,
+                        ),
                       ),
                   ],
                 ),
@@ -391,16 +398,16 @@ class _ProfileCard extends StatelessWidget {
                     Text(
                       displayName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (email.isNotEmpty) ...[
                       const SizedBox(height: AppTokens.spaceXS),
                       Text(
                         email,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -431,10 +438,10 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          letterSpacing: 0.8,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

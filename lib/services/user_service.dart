@@ -8,18 +8,19 @@ import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar perfiles de usuario en Firestore.
 class UserService {
-  UserService({required FirebaseFirestore firestore})
-      : _firestore = firestore;
+  UserService({required FirebaseFirestore firestore}) : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
-  late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
+      .collection(FirestoreCollections.users);
 
   Timer? _searchDebounce;
   Completer<List<AppUser>>? _pendingSearch;
 
   static const _userCacheTtl = Duration(minutes: 10);
   final Map<String, ({AppUser user, DateTime cachedAt})> _userCache = {};
+
+  void clearCache() => _userCache.clear();
 
   /// Crea un perfil de usuario nuevo en Firestore.
   Future<void> createUserProfile({
@@ -45,9 +46,10 @@ class UserService {
 
   /// Stream en tiempo real del perfil de un usuario.
   Stream<AppUser?> watchUser(String uid) {
-    return _usersRef.doc(uid).snapshots().map(
-          (doc) => doc.exists ? AppUser.fromFirestore(doc) : null,
-        );
+    return _usersRef
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists ? AppUser.fromFirestore(doc) : null);
   }
 
   /// Obtiene el perfil de un usuario por su UID.
@@ -123,8 +125,7 @@ class UserService {
   /// Excluye al usuario con [excludeUid] de los resultados. (el que hace la búsqueda)
   /// Si llega una nueva llamada antes de que expire el timer, la anterior
   /// se resuelve con [] (fue superada) y el timer se reinicia.
-  Future<List<AppUser>> searchUsers(String query,
-      {String? excludeUid}) async {
+  Future<List<AppUser>> searchUsers(String query, {String? excludeUid}) async {
     _searchDebounce?.cancel();
 
     final pending = _pendingSearch;
@@ -141,18 +142,18 @@ class UserService {
       try {
         final lowerQuery = query.trim().toLowerCase();
         final snapshot = await _usersRef
-            .where('displayNameLower',
-                isGreaterThanOrEqualTo: lowerQuery)
-            .where('displayNameLower',
-                isLessThanOrEqualTo: '$lowerQuery\uf8ff')
+            .where('displayNameLower', isGreaterThanOrEqualTo: lowerQuery)
+            .where('displayNameLower', isLessThanOrEqualTo: '$lowerQuery\uf8ff')
             .limit(20)
             .get();
         if (!completer.isCompleted) {
-          completer.complete(snapshot.docs
-              .map(AppUser.fromFirestore)
-              .whereType<AppUser>()
-              .where((u) => u.uid != excludeUid)
-              .toList());
+          completer.complete(
+            snapshot.docs
+                .map(AppUser.fromFirestore)
+                .whereType<AppUser>()
+                .where((u) => u.uid != excludeUid)
+                .toList(),
+          );
         }
       } catch (e, stack) {
         await reportError(e, stack);
@@ -209,7 +210,9 @@ class UserService {
       final futures = <Future<QuerySnapshot<Map<String, dynamic>>>>[];
       for (var i = 0; i < uids.length; i += 10) {
         final chunk = uids.sublist(i, (i + 10).clamp(0, uids.length));
-        futures.add(_usersRef.where(FieldPath.documentId, whereIn: chunk).get());
+        futures.add(
+          _usersRef.where(FieldPath.documentId, whereIn: chunk).get(),
+        );
       }
       final snapshots = await Future.wait(futures);
       return snapshots

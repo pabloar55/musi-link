@@ -71,6 +71,21 @@ service cloud.firestore {
     }
 
     // ─── Chats ──────────────────────────────────────────
+    function validReactionList(reactions, participants, index) {
+      let users = reactions[reactions.keys()[index]];
+      return users is list
+        && users.size() <= participants.size()
+        && users.hasOnly(participants)
+        && users.toSet().size() == users.size();
+    }
+
+    function validReactions(reactions, participants) {
+      return reactions is map
+        && reactions.size() <= 2
+        && (reactions.size() < 1 || validReactionList(reactions, participants, 0))
+        && (reactions.size() < 2 || validReactionList(reactions, participants, 1));
+    }
+
     match /chats/{chatId} {
       // Solo los participantes pueden leer el chat.
       // resource == null cubre el caso en que el doc aún no existe (p.ej. tx.get
@@ -120,7 +135,10 @@ service cloud.firestore {
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'reactions'])
           && (!('reactions' in request.resource.data.diff(resource.data).affectedKeys())
-              || request.resource.data.reactions.size() <= 2);
+              || validReactions(
+                request.resource.data.reactions,
+                get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+              ));
 
         // Solo los participantes pueden eliminar mensajes
         allow delete: if request.auth != null

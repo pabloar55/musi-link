@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/friend_request.dart';
@@ -23,8 +25,9 @@ class ActiveChatNotifier extends Notifier<String?> {
   void setChat(String? chatId) => state = chatId;
 }
 
-final activeChatIdProvider =
-    NotifierProvider<ActiveChatNotifier, String?>(ActiveChatNotifier.new);
+final activeChatIdProvider = NotifierProvider<ActiveChatNotifier, String?>(
+  ActiveChatNotifier.new,
+);
 
 // ── Notificación pendiente (cold-start o tap en local notification) ─
 
@@ -37,8 +40,10 @@ class PendingNotificationNotifier extends Notifier<Map<String, dynamic>?> {
   }
 }
 
-final pendingNotificationProvider = NotifierProvider<PendingNotificationNotifier,
-    Map<String, dynamic>?>(PendingNotificationNotifier.new);
+final pendingNotificationProvider =
+    NotifierProvider<PendingNotificationNotifier, Map<String, dynamic>?>(
+      PendingNotificationNotifier.new,
+    );
 
 // ── Servicios sin dependencias ──────────────────────────────────
 
@@ -89,33 +94,31 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
 final Provider<SpotifyCloudService> spotifyClientServiceProvider =
     Provider<SpotifyCloudService>((ref) {
-  return SpotifyCloudService(ref.watch(firebaseFunctionsProvider));
-});
+      return SpotifyCloudService(ref.watch(firebaseFunctionsProvider));
+    });
 
-final Provider<LastFmService> lastFmServiceProvider =
-    Provider<LastFmService>((ref) {
-  return LastFmService(
-    apiKey: const String.fromEnvironment('LASTFM_API_KEY'),
-  );
+final Provider<LastFmService> lastFmServiceProvider = Provider<LastFmService>((
+  ref,
+) {
+  return LastFmService(apiKey: const String.fromEnvironment('LASTFM_API_KEY'));
 });
 
 final Provider<SpotifyGetStats> spotifyStatsProvider =
     Provider<SpotifyGetStats>((ref) {
-  return SpotifyGetStats(
-    ref.watch(spotifyClientServiceProvider),
-    ref.watch(lastFmServiceProvider),
-  );
-});
-
+      return SpotifyGetStats(
+        ref.watch(spotifyClientServiceProvider),
+        ref.watch(lastFmServiceProvider),
+      );
+    });
 
 final Provider<MusicProfileService> musicProfileServiceProvider =
     Provider<MusicProfileService>((ref) {
-  return MusicProfileService(
-    ref.watch(spotifyStatsProvider),
-    firestore: ref.watch(firebaseFirestoreProvider),
-    auth: ref.watch(firebaseAuthProvider),
-  );
-});
+      return MusicProfileService(
+        ref.watch(spotifyStatsProvider),
+        firestore: ref.watch(firebaseFirestoreProvider),
+        auth: ref.watch(firebaseAuthProvider),
+      );
+    });
 
 // ── UI state ────────────────────────────────────────────────────
 
@@ -132,31 +135,62 @@ class ActiveReactionPickerNotifier extends Notifier<String?> {
 
 final activeReactionPickerProvider =
     NotifierProvider<ActiveReactionPickerNotifier, String?>(
-        ActiveReactionPickerNotifier.new);
+      ActiveReactionPickerNotifier.new,
+    );
 
 // ── StreamProviders de Firestore ────────────────────────────────
 
 final receivedRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
+  final authUser =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser;
+  if (authUser == null) return Stream.value(const <FriendRequest>[]);
   return ref.watch(friendServiceProvider).getReceivedRequests();
 });
 
 final sentRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
+  final authUser =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser;
+  if (authUser == null) return Stream.value(const <FriendRequest>[]);
   return ref.watch(friendServiceProvider).getSentRequests();
 });
 
 final friendsStreamProvider = StreamProvider<List<String>>((ref) {
+  final authUser =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser;
+  if (authUser == null) return Stream.value(const <String>[]);
   return ref.watch(friendServiceProvider).getFriendsStream();
 });
 
 final chatsProvider = StreamProvider<List<Chat>>((ref) {
+  final authUser =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser;
+  if (authUser == null) return Stream.value(const <Chat>[]);
   return ref.watch(chatServiceProvider).getChats();
 });
 
 /// Número de chats con al menos un mensaje no leído por el usuario actual.
 final unreadChatsCountProvider = Provider<int>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user?.uid, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser?.uid;
   if (uid == null) return 0;
-  return ref.watch(chatsProvider).maybeWhen(
+  return ref
+      .watch(chatsProvider)
+      .maybeWhen(
         data: (chats) =>
             chats.where((c) => (c.unreadCounts[uid] ?? 0) > 0).length,
         orElse: () => 0,
