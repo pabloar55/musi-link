@@ -27,7 +27,6 @@ class MusicProfileService with AuthenticatedService {
   late final CollectionReference<Map<String, dynamic>> _usersRef =
       _firestore.collection(FirestoreCollections.users);
 
-  // --- Discovery cache & pagination state ---
   List<DiscoveryResult>? _cachedResults;
   int _displayedCount = 0;
   DateTime? _cacheTime;
@@ -40,7 +39,7 @@ class MusicProfileService with AuthenticatedService {
 
   static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
-  static const _queryLimit = 100;
+  static const _recommendationLimit = 100;
 
   bool get hasMoreDiscoveryUsers =>
       _cachedResults != null && _displayedCount < _cachedResults!.length;
@@ -50,10 +49,10 @@ class MusicProfileService with AuthenticatedService {
       _cacheTime != null &&
       DateTime.now().difference(_cacheTime!) < _cacheTtl;
 
-  /// Guarda los artistas seleccionados manualmente por el usuario en Firestore.
-  /// Deriva los géneros a partir de los artistas seleccionados.
   Future<void> saveManualArtists(
-      String uid, List<app.Artist> selectedArtists) async {
+    String uid,
+    List<app.Artist> selectedArtists,
+  ) async {
     try {
       final artists = selectedArtists.take(15).toList();
       final genres = _spotifyGetStats.getTopGenresFromArtists(artists, 10);
@@ -72,8 +71,6 @@ class MusicProfileService with AuthenticatedService {
     }
   }
 
-  /// Intenta obtener resultados desde la caché local de Firestore (sin red).
-  /// Devuelve null si la caché está vacía (primera ejecución o datos purgados).
   Future<List<DiscoveryResult>?> getDiscoveryUsersFromCache() async {
     if (_isCacheValid) {
       return List<DiscoveryResult>.unmodifiable(
@@ -93,7 +90,7 @@ class MusicProfileService with AuthenticatedService {
         return null;
       }
 
-      final results = await _fetchRelevantUsers(myUser, options: opts);
+      final results = await _fetchStoredRecommendations(options: opts);
       if (results == null) return null;
 
       _cachedResults = results;
@@ -101,7 +98,6 @@ class MusicProfileService with AuthenticatedService {
       _displayedCount = results.length.clamp(0, _pageSize);
       return List<DiscoveryResult>.unmodifiable(results.take(_displayedCount));
     } on FirebaseException catch (e) {
-      // 'unavailable' es el código esperado cuando la caché local está vacía.
       if (e.code == 'unavailable') return null;
       await reportError(e, StackTrace.current);
       return null;
@@ -110,8 +106,6 @@ class MusicProfileService with AuthenticatedService {
     }
   }
 
-  /// Obtiene la primera página de usuarios para el feed de descubrimiento.
-  /// Usa caché con TTL de 30 minutos. Pasa [forceRefresh] para invalidarlo.
   Future<List<DiscoveryResult>> getDiscoveryUsers({
     bool forceRefresh = false,
   }) async {
@@ -126,9 +120,7 @@ class MusicProfileService with AuthenticatedService {
       _displayedCount = 0;
 
       final myDoc = await _usersRef.doc(currentUid).get();
-      if (!myDoc.exists) {
-        return [];
-      }
+      if (!myDoc.exists) return [];
 
       final myUser = AppUser.fromFirestore(myDoc);
       if (myUser == null) return [];
@@ -136,7 +128,7 @@ class MusicProfileService with AuthenticatedService {
         return [];
       }
 
-      final results = await _fetchRelevantUsers(myUser) ?? [];
+      final results = await _fetchStoredRecommendations() ?? [];
       _cachedResults = results;
       _cacheTime = DateTime.now();
       _displayedCount = results.length.clamp(0, _pageSize);
@@ -149,7 +141,6 @@ class MusicProfileService with AuthenticatedService {
     }
   }
 
-  /// Devuelve la siguiente página desde el caché local (0 Firestore reads).
   Future<(List<DiscoveryResult>, bool hasMore)> loadMoreDiscoveryUsers() async {
     if (_cachedResults == null || _displayedCount >= _cachedResults!.length) {
       return (List<DiscoveryResult>.unmodifiable(_cachedResults ?? []), false);
@@ -163,71 +154,74 @@ class MusicProfileService with AuthenticatedService {
     );
   }
 
-  /// Lanza dos queries en paralelo usando arrayContainsAny para traer
-  /// solo usuarios que comparten al menos un artista o género.
-  /// Máximo ~200 reads (100 por query) en vez de escanear toda la colección.
-  /// [options] null → servidor (por defecto); Source.cache → caché local.
-  /// Devuelve null solo cuando [options] apunta a caché y ésta está vacía.
-  Future<List<DiscoveryResult>?> _fetchRelevantUsers(
-    AppUser myUser, {
+  Future<List<DiscoveryResult>?> _fetchStoredRecommendations({
     GetOptions? options,
   }) async {
-    final artistNames = myUser.topArtistNames.take(10).toList();
-    final genreNames = myUser.topGenreNames.take(10).toList();
-
     try {
-      // Lanzar ambas queries en paralelo
-      final artistFuture = artistNames.isNotEmpty
-          ? _usersRef
-              .where('topArtistNames', arrayContainsAny: artistNames)
-              .limit(_queryLimit)
-              .get(options)
-          : null;
+      final snapshot = await _usersRef
+          .doc(currentUid)
+          .collection(FirestoreCollections.recommendations)
+          .orderBy('score', descending: true)
+          .limit(_recommendationLimit)
+          .get(options);
 
-      final genreFuture = genreNames.isNotEmpty
-          ? _usersRef
-              .where('topGenreNames', arrayContainsAny: genreNames)
-              .limit(_queryLimit)
-              .get(options)
-          : null;
+      if (snapshot.docs.isEmpty) return null;
 
-      final seen = <String>{currentUid};
-      final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      final recommendationDocs = snapshot.docs;
+      final orderedIds = recommendationDocs
+          .map((doc) => (doc.data()['userId'] ?? doc.id).toString())
+          .where((uid) => uid.isNotEmpty && uid != currentUid)
+          .toList();
 
-      if (artistFuture != null) {
-        for (final doc in (await artistFuture).docs) {
-          if (seen.add(doc.id)) allDocs.add(doc);
-        }
-      }
+      if (orderedIds.isEmpty) return null;
 
-      if (genreFuture != null) {
-        for (final doc in (await genreFuture).docs) {
-          if (seen.add(doc.id)) allDocs.add(doc);
+      final usersById = <String, AppUser>{};
+      for (var i = 0; i < orderedIds.length; i += 10) {
+        final chunk = orderedIds.sublist(
+          i,
+          (i + 10).clamp(0, orderedIds.length),
+        );
+        final usersSnapshot = await _usersRef
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get(options);
+        for (final doc in usersSnapshot.docs) {
+          final user = AppUser.fromFirestore(doc);
+          if (user != null) usersById[user.uid] = user;
         }
       }
 
       final results = <DiscoveryResult>[];
-      for (final doc in allDocs) {
-        final user = AppUser.fromFirestore(doc);
+      for (final doc in recommendationDocs) {
+        final data = doc.data();
+        final uid = (data['userId'] ?? doc.id).toString();
+        final user = usersById[uid];
         if (user == null) continue;
         if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
 
-        results.add(calculateCompatibility(
-          myArtistNames: myUser.topArtistNames,
-          myGenreNames: myUser.topGenreNames,
-          otherUser: user,
+        results.add(DiscoveryResult(
+          user: user,
+          score: ((data['score'] as num?) ?? 0).toDouble(),
+          sharedArtistNames: (data['sharedArtistNames'] as List<dynamic>?)
+                  ?.map((value) => value.toString())
+                  .toList() ??
+              const [],
+          sharedGenreNames: (data['sharedGenreNames'] as List<dynamic>?)
+                  ?.map((value) => value.toString())
+                  .toList() ??
+              const [],
         ));
       }
 
-      results.sort((a, b) => b.score.compareTo(a.score));
-      return results;
+      return results.isEmpty ? null : results;
     } on FirebaseException catch (e) {
       if (options?.source == Source.cache && e.code == 'unavailable') return null;
-      rethrow;
+      await reportError(e, StackTrace.current);
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
-  /// Calcula la compatibilidad entre el usuario actual y otro usuario.
   Future<DiscoveryResult> getCompatibilityWith(
     AppUser myUser,
     AppUser otherUser,
@@ -254,9 +248,7 @@ class MusicProfileService with AuthenticatedService {
         .toSet()
         .intersection(otherUser.topGenreNames.toSet())
         .toList();
-    // Con 5 artistas en común ya se llega al máximo de 70 puntos, y con 5 géneros se llega al máximo de 30 puntos.
-    // 5*14 = 70 puntos de artistas, y 5*6 = 30 puntos de géneros, para un total de 100 puntos.
-    // El clamp asegura que no se pase de esos máximos aunque haya más coincidencias.
+
     final artistScore = (sharedArtists.length * 14.0).clamp(0.0, 70.0);
     final genreScore = (sharedGenres.length * 6.0).clamp(0.0, 30.0);
 

@@ -10,8 +10,6 @@ import '../helpers/mocks.dart';
 
 class MockSpotifyGetStats extends Mock implements SpotifyGetStats {}
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 AppUser createUser({
   String uid = 'other',
   List<String> topArtistNames = const [],
@@ -28,7 +26,11 @@ AppUser createUser({
   );
 }
 
-MockQueryDocumentSnapshot buildUserDoc(String uid) {
+MockQueryDocumentSnapshot buildUserDoc(
+  String uid, {
+  List<String> topArtistNames = const ['Artist A', 'Artist B'],
+  List<String> topGenreNames = const ['rock'],
+}) {
   final doc = MockQueryDocumentSnapshot();
   when(() => doc.id).thenReturn(uid);
   when(() => doc.data()).thenReturn({
@@ -37,8 +39,25 @@ MockQueryDocumentSnapshot buildUserDoc(String uid) {
     'photoUrl': '',
     'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
     'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
-    'topArtistNames': ['Artist A', 'Artist B'],
-    'topGenreNames': ['rock'],
+    'topArtistNames': topArtistNames,
+    'topGenreNames': topGenreNames,
+  });
+  return doc;
+}
+
+MockQueryDocumentSnapshot buildRecommendationDoc(
+  String uid, {
+  double score = 42,
+  List<String> sharedArtistNames = const ['Artist A'],
+  List<String> sharedGenreNames = const ['rock'],
+}) {
+  final doc = MockQueryDocumentSnapshot();
+  when(() => doc.id).thenReturn(uid);
+  when(() => doc.data()).thenReturn({
+    'userId': uid,
+    'score': score,
+    'sharedArtistNames': sharedArtistNames,
+    'sharedGenreNames': sharedGenreNames,
   });
   return doc;
 }
@@ -48,8 +67,6 @@ MockQuerySnapshot buildSnapshot(List<MockQueryDocumentSnapshot> docs) {
   when(() => snap.docs).thenReturn(docs);
   return snap;
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 void main() {
   group('MusicProfileService.calculateCompatibility', () {
@@ -68,7 +85,7 @@ void main() {
       expect(result.sharedGenreNames, isEmpty);
     });
 
-    test('1 artista en común = 14 puntos', () {
+    test('1 artista en comun = 14 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['Queen', 'Radiohead'],
         myGenreNames: [],
@@ -79,7 +96,7 @@ void main() {
       expect(result.sharedArtistNames, ['Queen']);
     });
 
-    test('1 género en común = 6 puntos', () {
+    test('1 genero en comun = 6 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: [],
         myGenreNames: ['rock', 'jazz'],
@@ -90,7 +107,7 @@ void main() {
       expect(result.sharedGenreNames, ['rock']);
     });
 
-    test('3 artistas + 2 géneros = 42 + 12 = 54 puntos', () {
+    test('3 artistas + 2 generos = 42 + 12 = 54 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['Queen', 'Radiohead', 'Muse', 'Coldplay'],
         myGenreNames: ['rock', 'alternative', 'pop'],
@@ -105,27 +122,31 @@ void main() {
       expect(result.sharedGenreNames.length, 2);
     });
 
-    test('máximo de artistas (5+) se limita a 70 puntos', () {
+    test('maximo de artistas (5+) se limita a 70 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
         myGenreNames: [],
-        otherUser: createUser(topArtistNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G']),
+        otherUser: createUser(
+          topArtistNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+        ),
       );
 
       expect(result.score, 70.0);
     });
 
-    test('máximo de géneros (5+) se limita a 30 puntos', () {
+    test('maximo de generos (5+) se limita a 30 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: [],
         myGenreNames: ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7'],
-        otherUser: createUser(topGenreNames: ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7']),
+        otherUser: createUser(
+          topGenreNames: ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7'],
+        ),
       );
 
       expect(result.score, 30.0);
     });
 
-    test('compatibilidad máxima (100 puntos) con 5 artistas y 5 géneros', () {
+    test('compatibilidad maxima (100 puntos) con 5 artistas y 5 generos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['A1', 'A2', 'A3', 'A4', 'A5'],
         myGenreNames: ['G1', 'G2', 'G3', 'G4', 'G5'],
@@ -154,7 +175,7 @@ void main() {
       expect(result.user.uid, 'other123');
     });
 
-    test('listas vacías para ambos usuarios devuelve score 0', () {
+    test('listas vacias para ambos usuarios devuelve score 0', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: [],
         myGenreNames: [],
@@ -165,22 +186,25 @@ void main() {
     });
   });
 
-  // ── Filtrado server-side y caché ─────────────────────────────────────────
-
-  group('MusicProfileService discovery (filtrado server-side y caché)', () {
+  group('MusicProfileService discovery (backend recommendations)', () {
     late MockFirebaseFirestore mockFirestore;
     late MockFirebaseAuth mockAuth;
     late MockUser mockCurrentUser;
     late MockCollectionReference mockUsersRef;
+    late MockCollectionReference mockRecommendationsRef;
     late MockDocumentReference mockMyDocRef;
     late MockDocumentSnapshot mockMyDocSnap;
-    late MockQuery mockArtistQuery;
-    late MockQuery mockGenreQuery;
+    late MockQuery mockRecommendationOrderQuery;
+    late MockQuery mockRecommendationLimitQuery;
+    late MockQuery mockUsersByIdQuery;
     late MusicProfileService service;
 
     const myUid = 'me';
 
-    void stubMyUserDoc() {
+    void stubMyUserDoc({
+      List<String> topArtistNames = const ['Artist A'],
+      List<String> topGenreNames = const ['rock'],
+    }) {
       when(() => mockUsersRef.doc(myUid)).thenReturn(mockMyDocRef);
       when(() => mockMyDocRef.get()).thenAnswer((_) async => mockMyDocSnap);
       when(() => mockMyDocSnap.exists).thenReturn(true);
@@ -191,19 +215,19 @@ void main() {
         'photoUrl': '',
         'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
         'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
-        'topArtistNames': ['Artist A'],
-        'topGenreNames': ['rock'],
+        'topArtistNames': topArtistNames,
+        'topGenreNames': topGenreNames,
       });
     }
 
-    void stubQueries({
-      List<MockQueryDocumentSnapshot> artistDocs = const [],
-      List<MockQueryDocumentSnapshot> genreDocs = const [],
+    void stubStoredRecommendations({
+      required List<MockQueryDocumentSnapshot> recommendationDocs,
+      required List<MockQueryDocumentSnapshot> userDocs,
     }) {
-      when(() => mockArtistQuery.get())
-          .thenAnswer((_) async => buildSnapshot(artistDocs));
-      when(() => mockGenreQuery.get())
-          .thenAnswer((_) async => buildSnapshot(genreDocs));
+      when(() => mockRecommendationLimitQuery.get())
+          .thenAnswer((_) async => buildSnapshot(recommendationDocs));
+      when(() => mockUsersByIdQuery.get())
+          .thenAnswer((_) async => buildSnapshot(userDocs));
     }
 
     setUp(() {
@@ -211,10 +235,12 @@ void main() {
       mockAuth = MockFirebaseAuth();
       mockCurrentUser = MockUser();
       mockUsersRef = MockCollectionReference();
+      mockRecommendationsRef = MockCollectionReference();
       mockMyDocRef = MockDocumentReference();
       mockMyDocSnap = MockDocumentSnapshot();
-      mockArtistQuery = MockQuery();
-      mockGenreQuery = MockQuery();
+      mockRecommendationOrderQuery = MockQuery();
+      mockRecommendationLimitQuery = MockQuery();
+      mockUsersByIdQuery = MockQuery();
 
       registerFallbackValues();
       registerFallbackValue(<Object?>[]);
@@ -225,18 +251,16 @@ void main() {
 
       stubMyUserDoc();
 
-      // Mock de las queries arrayContainsAny
+      when(() => mockMyDocRef.collection('recommendations'))
+          .thenReturn(mockRecommendationsRef);
+      when(() => mockRecommendationsRef.orderBy('score', descending: true))
+          .thenReturn(mockRecommendationOrderQuery);
+      when(() => mockRecommendationOrderQuery.limit(any()))
+          .thenReturn(mockRecommendationLimitQuery);
       when(() => mockUsersRef.where(
-            'topArtistNames',
-            arrayContainsAny: any(named: 'arrayContainsAny'),
-          )).thenReturn(mockArtistQuery);
-      when(() => mockArtistQuery.limit(any())).thenReturn(mockArtistQuery);
-
-      when(() => mockUsersRef.where(
-            'topGenreNames',
-            arrayContainsAny: any(named: 'arrayContainsAny'),
-          )).thenReturn(mockGenreQuery);
-      when(() => mockGenreQuery.limit(any())).thenReturn(mockGenreQuery);
+            any(),
+            whereIn: any(named: 'whereIn'),
+          )).thenReturn(mockUsersByIdQuery);
 
       service = MusicProfileService(
         MockSpotifyGetStats(),
@@ -246,22 +270,33 @@ void main() {
     });
 
     group('getDiscoveryUsers', () {
-      test('más de 20 resultados relevantes → hasMoreDiscoveryUsers es true',
+      test('more than 20 stored recommendations sets hasMoreDiscoveryUsers true',
           () async {
-        final artistDocs = List.generate(15, (i) => buildUserDoc('artist$i'));
-        final genreDocs = List.generate(10, (i) => buildUserDoc('genre$i'));
-        stubQueries(artistDocs: artistDocs, genreDocs: genreDocs);
+        final recommendations = List.generate(
+          25,
+          (i) => buildRecommendationDoc('user$i', score: 100 - i.toDouble()),
+        );
+        final users = List.generate(25, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         final results = await service.getDiscoveryUsers();
 
-        expect(results.length, 20); // primera página
+        expect(results.length, 20);
         expect(service.hasMoreDiscoveryUsers, isTrue);
       });
 
-      test('menos de 20 resultados relevantes → hasMoreDiscoveryUsers es false',
+      test('less than 20 stored recommendations sets hasMoreDiscoveryUsers false',
           () async {
-        final docs = List.generate(15, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: docs, genreDocs: []);
+        final recommendations =
+            List.generate(15, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(15, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         final results = await service.getDiscoveryUsers();
 
@@ -269,99 +304,119 @@ void main() {
         expect(service.hasMoreDiscoveryUsers, isFalse);
       });
 
-      test('excluye al usuario actual de los resultados', () async {
-        final docs = [
-          buildUserDoc(myUid), // debe ser excluido
+      test('empty recommendation collection returns empty discovery', () async {
+        stubStoredRecommendations(recommendationDocs: [], userDocs: []);
+
+        final results = await service.getDiscoveryUsers();
+
+        expect(results, isEmpty);
+        expect(service.hasMoreDiscoveryUsers, isFalse);
+      });
+
+      test('excludes current user from stored recommendations', () async {
+        final recommendations = [
+          buildRecommendationDoc(myUid),
+          buildRecommendationDoc('other1'),
+          buildRecommendationDoc('other2'),
+        ];
+        final users = [
           buildUserDoc('other1'),
           buildUserDoc('other2'),
         ];
-        stubQueries(artistDocs: docs, genreDocs: []);
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         final results = await service.getDiscoveryUsers();
 
         expect(results.length, 2);
-        expect(results.any((r) => r.user.uid == myUid), isFalse);
+        expect(results.any((result) => result.user.uid == myUid), isFalse);
       });
 
-      test('deduplica usuarios que aparecen en ambas queries', () async {
-        final sharedDoc = buildUserDoc('shared');
-        stubQueries(artistDocs: [sharedDoc], genreDocs: [sharedDoc]);
+      test('uses stored recommendation score and shared names', () async {
+        final recommendations = [
+          buildRecommendationDoc(
+            'other1',
+            score: 90,
+            sharedArtistNames: ['A', 'B'],
+            sharedGenreNames: ['rock'],
+          ),
+          buildRecommendationDoc(
+            'other2',
+            score: 20,
+            sharedArtistNames: ['C'],
+            sharedGenreNames: [],
+          ),
+        ];
+        final users = [
+          buildUserDoc('other1'),
+          buildUserDoc('other2'),
+        ];
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         final results = await service.getDiscoveryUsers();
 
-        expect(results.length, 1);
-      });
-
-      test('resultados se ordenan por score descendente', () async {
-        // other1: comparte Artist A → 14 pts; other2: sin coincidencia → 0 pts
-        final doc1 = MockQueryDocumentSnapshot();
-        when(() => doc1.id).thenReturn('other1');
-        when(() => doc1.data()).thenReturn({
-          'email': 'other1@test.com',
-          'displayName': 'Other 1',
-          'photoUrl': '',
-          'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
-          'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
-          'topArtistNames': ['Artist A'], // coincide con myUser
-          'topGenreNames': <String>[],
-        });
-
-        final doc2 = MockQueryDocumentSnapshot();
-        when(() => doc2.id).thenReturn('other2');
-        when(() => doc2.data()).thenReturn({
-          'email': 'other2@test.com',
-          'displayName': 'Other 2',
-          'photoUrl': '',
-          'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
-          'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
-          'topArtistNames': ['Unknown Artist'],
-          'topGenreNames': <String>[],
-        });
-
-        // Devuelve doc2 primero (menor score), doc1 segundo
-        stubQueries(artistDocs: [doc2, doc1], genreDocs: []);
-
-        final results = await service.getDiscoveryUsers();
-
-        // Debe estar ordenado: other1 (14 pts) antes que other2 (0 pts)
         expect(results.first.user.uid, 'other1');
+        expect(results.first.score, 90);
+        expect(results.first.sharedArtistNames, ['A', 'B']);
+        expect(results.first.sharedGenreNames, ['rock']);
         expect(results.last.user.uid, 'other2');
       });
 
-      test('segunda llamada sin forceRefresh sirve caché sin consultar Firestore',
-          () async {
-        final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: docs, genreDocs: []);
+      test('second call without forceRefresh serves in-memory cache', () async {
+        final recommendations =
+            List.generate(5, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(5, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         await service.getDiscoveryUsers();
-        await service.getDiscoveryUsers(); // debe usar caché
+        await service.getDiscoveryUsers();
 
-        verify(() => mockArtistQuery.get()).called(1);
+        verify(() => mockRecommendationLimitQuery.get()).called(1);
+        verify(() => mockUsersByIdQuery.get()).called(1);
       });
 
-      test('forceRefresh invalida caché y vuelve a consultar Firestore',
+      test('forceRefresh invalidates cache and reads recommendations again',
           () async {
-        final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: docs, genreDocs: []);
+        final recommendations =
+            List.generate(5, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(5, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         await service.getDiscoveryUsers(forceRefresh: true);
         await service.getDiscoveryUsers(forceRefresh: true);
 
-        verify(() => mockArtistQuery.get()).called(2);
+        verify(() => mockRecommendationLimitQuery.get()).called(2);
+        verify(() => mockUsersByIdQuery.get()).called(2);
       });
     });
 
     group('loadMoreDiscoveryUsers', () {
-      test('sin carga previa devuelve lista vacía', () async {
+      test('without previous load returns empty list', () async {
         final (results, hasMore) = await service.loadMoreDiscoveryUsers();
 
         expect(results, isEmpty);
         expect(hasMore, isFalse);
       });
 
-      test('si total <= pageSize, loadMore no amplía resultados', () async {
-        final docs = List.generate(5, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: docs, genreDocs: []);
+      test('when total <= pageSize, loadMore does not expand results', () async {
+        final recommendations =
+            List.generate(5, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(5, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
         await service.getDiscoveryUsers();
 
         final (results, hasMore) = await service.loadMoreDiscoveryUsers();
@@ -370,11 +425,14 @@ void main() {
         expect(hasMore, isFalse);
       });
 
-      test('devuelve siguiente lote del caché sin consultar Firestore',
-          () async {
-        // 25 total → página 1: 20, página 2: 25
-        final artistDocs = List.generate(25, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: artistDocs, genreDocs: []);
+      test('returns next page from recommendation cache', () async {
+        final recommendations =
+            List.generate(25, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(25, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         await service.getDiscoveryUsers();
         expect(service.hasMoreDiscoveryUsers, isTrue);
@@ -383,14 +441,17 @@ void main() {
 
         expect(allResults.length, 25);
         expect(hasMore, isFalse);
-        // Solo 1 llamada a Firestore (desde getDiscoveryUsers)
-        verify(() => mockArtistQuery.get()).called(1);
+        verify(() => mockRecommendationLimitQuery.get()).called(1);
       });
 
-      test('múltiples loadMore pagina correctamente desde caché', () async {
-        // 50 total → página 1: 20, página 2: 40, página 3: 50
-        final artistDocs = List.generate(50, (i) => buildUserDoc('user$i'));
-        stubQueries(artistDocs: artistDocs, genreDocs: []);
+      test('multiple loadMore calls page correctly from cache', () async {
+        final recommendations =
+            List.generate(50, (i) => buildRecommendationDoc('user$i'));
+        final users = List.generate(50, (i) => buildUserDoc('user$i'));
+        stubStoredRecommendations(
+          recommendationDocs: recommendations,
+          userDocs: users,
+        );
 
         await service.getDiscoveryUsers();
         expect(service.hasMoreDiscoveryUsers, isTrue);
