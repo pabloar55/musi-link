@@ -15,7 +15,6 @@ class UserAvatarButton extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(currentUserProvider).asData?.value;
     final imageUrl = appUser?.photoUrl ?? '';
-    final uid = appUser?.uid ?? '';
 
     return Tooltip(
       message: l10n.menuAccountOptions,
@@ -24,17 +23,14 @@ class UserAvatarButton extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppTokens.radiusFull),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Hero(
-            tag: 'user-avatar-$uid',
-            child: CircleAvatar(
-              radius: 16,
-              backgroundImage: imageUrl.trim().isNotEmpty
-                  ? CachedNetworkImageProvider(imageUrl)
-                  : null,
-              child: imageUrl.trim().isEmpty
-                  ? const Icon(LucideIcons.user, size: 18)
-                  : null,
-            ),
+          child: CircleAvatar(
+            radius: 16,
+            backgroundImage: imageUrl.trim().isNotEmpty
+                ? CachedNetworkImageProvider(imageUrl)
+                : null,
+            child: imageUrl.trim().isEmpty
+                ? const Icon(LucideIcons.user, size: 18)
+                : null,
           ),
         ),
       ),

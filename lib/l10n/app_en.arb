@@ -89,7 +89,6 @@
   "statsOfflineNoData": "No connection and no saved data yet.\nVisit this tab online first.",
 
   "socialNow": "Now",
-  "nowPlaying": "Now playing",
   "socialMinutes": "{minutes} min",
   "@socialMinutes": {
     "placeholders": {

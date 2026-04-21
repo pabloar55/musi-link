@@ -348,29 +348,26 @@ class _ProfileCard extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.bottomRight,
                   children: [
-                    Hero(
-                      tag: 'user-avatar-$uid',
-                      child: CircleAvatar(
-                        radius: 28,
-                        backgroundImage: imageUrl.trim().isNotEmpty
-                            ? CachedNetworkImageProvider(imageUrl)
-                            : null,
-                        backgroundColor: cs.surfaceContainerHighest,
-                        child: isUploadingPhoto
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      cs.onSurfaceVariant),
-                                ),
-                              )
-                            : imageUrl.trim().isEmpty
-                                ? Icon(LucideIcons.user,
-                                    color: cs.onSurfaceVariant)
-                                : null,
-                      ),
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: imageUrl.trim().isNotEmpty
+                          ? CachedNetworkImageProvider(imageUrl)
+                          : null,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      child: isUploadingPhoto
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    cs.onSurfaceVariant),
+                              ),
+                            )
+                          : imageUrl.trim().isEmpty
+                              ? Icon(LucideIcons.user,
+                                  color: cs.onSurfaceVariant)
+                              : null,
                     ),
                     if (!isUploadingPhoto)
                       Container(

@@ -267,42 +267,6 @@ void main() {
       });
     });
 
-    group('updateNowPlaying', () {
-      test('actualiza con track', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        const track = Track(
-          title: 'Song',
-          artist: 'Artist',
-          imageUrl: 'https://img.url',
-        );
-
-        await userService.updateNowPlaying('uid123', track);
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['nowPlaying'], isNotNull);
-        expect(captured['nowPlayingUpdatedAt'], isA<Timestamp>());
-      });
-
-      test('limpia nowPlaying con null', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        await userService.updateNowPlaying('uid123', null);
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['nowPlaying'], isNull);
-        expect(captured['nowPlayingUpdatedAt'], isNull);
-      });
-    });
-
     group('getUsersByIds', () {
       test('devuelve lista vacía con UIDs vacíos', () async {
         final result = await userService.getUsersByIds([]);

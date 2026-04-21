@@ -175,19 +175,6 @@ class UserService {
     }
   }
 
-  /// Actualiza la canción que el usuario está escuchando ahora.
-  Future<void> updateNowPlaying(String uid, Track? track) async {
-    try {
-      final updates = <String, dynamic>{
-        'nowPlaying': track?.toMap(),
-        'nowPlayingUpdatedAt': track != null ? Timestamp.fromDate(DateTime.now()) : null,
-      };
-      await _usersRef.doc(uid).update(updates);
-    } catch (e, stack) {
-      await reportError(e, stack);
-    }
-  }
-
   /// Anonimiza el perfil de [uid] eliminando todos los datos personales.
   /// El documento se mantiene para que los mensajes existentes sigan teniendo
   /// un autor reconocible ("Deleted user") en lugar de romperse.
@@ -206,8 +193,6 @@ class UserService {
         'friends': [],
         'dailySong': FieldValue.delete(),
         'dailySongUpdatedAt': FieldValue.delete(),
-        'nowPlaying': FieldValue.delete(),
-        'nowPlayingUpdatedAt': FieldValue.delete(),
         'fcmToken': FieldValue.delete(),
       });
       _userCache.remove(uid);

@@ -34,7 +34,6 @@ void main() {
         topGenreNames: topGenreNames,
         friends: friends,
         dailySong: dailySong,
-        nowPlaying: nowPlaying,
       );
     }
 
@@ -58,7 +57,6 @@ void main() {
         expect(user.topGenreNames, isEmpty);
         expect(user.friends, isEmpty);
         expect(user.dailySong, isNull);
-        expect(user.nowPlaying, isNull);
       });
     });
 
@@ -125,19 +123,6 @@ void main() {
         expect(updated.dailySong, isNotNull);
         expect(updated.dailySong!.title, 'New Song');
         expect(original.dailySong, isNull);
-      });
-
-      test('actualiza nowPlaying', () {
-        final original = createTestUser();
-        const track = Track(
-          title: 'Playing Now',
-          artist: 'Current Artist',
-          imageUrl: 'url',
-        );
-        final updated = original.copyWith(nowPlaying: track);
-
-        expect(updated.nowPlaying, isNotNull);
-        expect(updated.nowPlaying!.title, 'Playing Now');
       });
 
       test('mantiene todos los campos si no se pasan parámetros', () {

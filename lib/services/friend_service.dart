@@ -138,8 +138,6 @@ class FriendService with AuthenticatedService {
   }
 
   /// Stream de la lista de amigos del usuario actual.
-  /// Uses distinct() to suppress rebuilds caused by unrelated doc writes
-  /// (e.g. nowPlaying updates every ~30 s) when the friends list is unchanged.
   Stream<List<String>> getFriendsStream() {
     return _usersRef
         .doc(currentUid)

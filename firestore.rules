@@ -72,9 +72,11 @@ service cloud.firestore {
 
     // ─── Chats ──────────────────────────────────────────
     match /chats/{chatId} {
-      // Solo los participantes pueden leer el chat
+      // Solo los participantes pueden leer el chat.
+      // resource == null cubre el caso en que el doc aún no existe (p.ej. tx.get
+      // dentro de getOrCreateChat para comprobar si el chat existe antes de crearlo).
       allow read: if request.auth != null
-        && request.auth.uid in resource.data.participants;
+        && (resource == null || request.auth.uid in resource.data.participants);
 
       // Solo se puede crear un chat con un ID determinista: los dos UIDs de los
       // participantes ordenados lexicográficamente y unidos por "_".

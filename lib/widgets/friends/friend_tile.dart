@@ -34,12 +34,9 @@ class FriendTile extends StatelessWidget {
         final photoUrl = user?.photoUrl ?? '';
 
         return ListTile(
-          leading: Hero(
-            tag: 'user-avatar-$uid',
-            child: UserCircleAvatar(
-              photoUrl: photoUrl,
-              name: name,
-            ),
+          leading: UserCircleAvatar(
+            photoUrl: photoUrl,
+            name: name,
           ),
           title:
               Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),

@@ -140,9 +140,7 @@ class _UserAvatar extends StatelessWidget {
     final hasPhoto = photoUrl.isNotEmpty;
     final isHighScore = score >= 70;
 
-    return Hero(
-      tag: 'user-avatar-$uid',
-      child: Container(
+    return Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
@@ -172,7 +170,6 @@ class _UserAvatar extends StatelessWidget {
               ? null
               : Icon(LucideIcons.user, size: 26, color: cs.onSurfaceVariant),
         ),
-      ),
     );
   }
 }

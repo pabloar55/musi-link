@@ -231,9 +231,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get socialNow => 'Ahora';
 
   @override
-  String get nowPlaying => 'Escuchando ahora';
-
-  @override
   String socialMinutes(int minutes) {
     return '$minutes min';
   }

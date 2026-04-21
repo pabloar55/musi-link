@@ -520,12 +520,6 @@ abstract class AppLocalizations {
   /// **'Now'**
   String get socialNow;
 
-  /// No description provided for @nowPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Now playing'**
-  String get nowPlaying;
-
   /// No description provided for @socialMinutes.
   ///
   /// In en, this message translates to:
