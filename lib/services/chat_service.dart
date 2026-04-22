@@ -256,9 +256,6 @@ class ChatService with AuthenticatedService {
   /// del chat.
   Future<void> markMessagesAsRead(String chatId) async {
     try {
-      // Resetear el contador desnormalizado: una sola escritura, sin listeners.
-      await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
-
       // Marcar mensajes individuales como leídos (impulsa los ticks de lectura).
       final messagesRef = _chatsRef
           .doc(chatId)
@@ -279,6 +276,11 @@ class ChatService with AuthenticatedService {
 
         if (snapshot.docs.length < _deleteBatchSize) break;
       }
+
+      // Resetear el contador desnormalizado al final. Si el proceso se
+      // interrumpe antes, la siguiente lectura del chat puede reintentar y
+      // completar los ticks pendientes antes de limpiar el badge.
+      await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
     } catch (e, stack) {
       await reportError(e, stack);
     }

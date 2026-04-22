@@ -315,6 +315,11 @@ async function rebuildMusicRecommendations(uid, before, after, options = {}) {
     const reciprocalCandidates = profileChanged || forceSelfRefresh
         ? await matchingCandidateProfiles(uid, [before, after])
         : new Map();
+    // This pipeline touches a dynamic set of index, self-recommendation, and
+    // reciprocal recommendation docs, so it cannot be made fully atomic in one
+    // Firestore write. Each step uses deterministic doc IDs and set/delete
+    // operations so a later profile change or manual refresh can repair any
+    // stale recommendation data left by a partial failure.
     if (profileChanged || forceSelfRefresh)
         await updateRecommendationIndex(uid, before, after);
     await refreshRecommendations(uid, after);

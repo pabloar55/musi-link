@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:musi_link/providers/shared_preferences_provider.dart';
 
 const _kThemeKey = 'theme_mode';
 
@@ -50,9 +50,3 @@ final isDarkProvider = Provider<bool>((ref) {
   }
   return mode == ThemeMode.dark;
 });
-
-/// SharedPreferences inyectado como provider para poder accederlo desde notifiers.
-/// Se sobreescribe en main() antes de runApp con el valor real.
-final sharedPreferencesProvider = Provider<SharedPreferences>(
-  (ref) => throw UnimplementedError('Must be overridden in main'),
-);

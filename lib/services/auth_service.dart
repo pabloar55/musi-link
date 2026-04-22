@@ -26,12 +26,11 @@ class AuthService {
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
   final NotificationService _notificationService;
-  bool _googleInitialized = false;
+  static Future<void>? _googleInitialization;
 
   Future<void> _ensureGoogleInitialized() async {
-    if (_googleInitialized) return;
-    await _googleSignIn.initialize();
-    _googleInitialized = true;
+    _googleInitialization ??= _googleSignIn.initialize();
+    await _googleInitialization;
   }
 
   /// Usuario actual de Firebase

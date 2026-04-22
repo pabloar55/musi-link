@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
@@ -90,7 +91,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _isInitialLoading = false;
         // Si la primera carga tiene menos del límite de página, no hay mensajes más antiguos.
         if (isFirst) {
-          _hasMoreMessages = streamMessages.length >= 30;
+          _hasMoreMessages =
+              streamMessages.length >= ChatService.messagesPageSize;
         }
       });
       if (hasNewMessages) {

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:musi_link/providers/theme_provider.dart';
+import 'package:musi_link/providers/shared_preferences_provider.dart';
 
 const _kVibrationKey = 'notification_vibration';
 
