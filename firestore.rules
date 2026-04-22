@@ -65,7 +65,8 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
         && friendRequestRateLimitAllows(request.auth.uid)
-        && requestId == request.resource.data.senderId + '_' + request.resource.data.receiverId;
+        && requestId == request.resource.data.senderId + '_' + request.resource.data.receiverId
+        && !exists(/databases/$(database)/documents/friend_requests/$(request.resource.data.receiverId + '_' + request.resource.data.senderId));
       // El destinatario puede aceptar/rechazar; el remitente puede actualizar para cancelar.
       // Solo se permiten cambios en 'status' y 'updatedAt'; los campos de identidad son inmutables.
       allow update: if request.auth != null

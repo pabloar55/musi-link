@@ -78,14 +78,33 @@ class FriendService with AuthenticatedService {
       // Atomic read-then-write on the deterministic doc ID eliminates the
       // check-then-act race without a collection query.
       final docRef = _requestsRef.doc(docId);
+      final inverseDocRef = _requestsRef.doc('${receiverUid}_$currentUid');
       final limiterRef = _rateLimitsRef.doc(currentUid);
       final currentUserRef = _usersRef.doc(currentUid);
+      final receiverUserRef = _usersRef.doc(receiverUid);
       await _firestore.runTransaction((tx) async {
         final currentUserSnap = await tx.get(currentUserRef);
         final friends = List<String>.from(
           currentUserSnap.data()?['friends'] as List? ?? [],
         );
         if (friends.contains(receiverUid)) return;
+
+        final inverseSnapshot = await tx.get(inverseDocRef);
+        if (inverseSnapshot.exists &&
+            inverseSnapshot.data()?['status'] ==
+                FriendRequestStatus.pending.name) {
+          tx.update(inverseDocRef, {
+            'status': FriendRequestStatus.accepted.name,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          tx.update(currentUserRef, {
+            'friends': FieldValue.arrayUnion([receiverUid]),
+          });
+          tx.update(receiverUserRef, {
+            'friends': FieldValue.arrayUnion([currentUid]),
+          });
+          return;
+        }
 
         final snapshot = await tx.get(docRef);
         if (snapshot.exists) return;
@@ -115,15 +134,23 @@ class FriendService with AuthenticatedService {
   Future<void> acceptRequest(String requestId, String otherUid) async {
     try {
       await _firestore.runTransaction((tx) async {
-        final requestDoc = await tx.get(_requestsRef.doc(requestId));
+        final requestRef = _requestsRef.doc(requestId);
+        final requestDoc = await tx.get(requestRef);
 
         if (!requestDoc.exists ||
             requestDoc['status'] != FriendRequestStatus.pending.name) {
           return; // ya fue aceptada o rechazada
         }
 
-        tx.update(_requestsRef.doc(requestId), {
+        final senderId = (requestDoc.data()?['senderId'] ?? otherUid)
+            .toString();
+        final receiverId = (requestDoc.data()?['receiverId'] ?? currentUid)
+            .toString();
+        final inverseRef = _requestsRef.doc('${receiverId}_$senderId');
+
+        tx.update(requestRef, {
           'status': FriendRequestStatus.accepted.name,
+          'updatedAt': FieldValue.serverTimestamp(),
         });
         tx.update(_usersRef.doc(currentUid), {
           'friends': FieldValue.arrayUnion([otherUid]),
@@ -131,6 +158,7 @@ class FriendService with AuthenticatedService {
         tx.update(_usersRef.doc(otherUid), {
           'friends': FieldValue.arrayUnion([currentUid]),
         });
+        tx.delete(inverseRef);
       });
     } catch (e, stack) {
       await reportError(e, stack);

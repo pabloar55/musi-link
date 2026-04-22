@@ -44,24 +44,37 @@ void main() {
         mockFirestore.fakeTransaction = fakeTransaction;
 
         final mockCurrentUserDoc = MockDocumentReference();
+        final mockReceiverUserDoc = MockDocumentReference();
         when(
           () => mockUsersRef.doc('current_uid'),
         ).thenReturn(mockCurrentUserDoc);
+        when(
+          () => mockUsersRef.doc('receiver_uid'),
+        ).thenReturn(mockReceiverUserDoc);
         final mockCurrentUserSnap = MockDocumentSnapshot();
         when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
 
         final mockDocSnap = MockDocumentSnapshot();
         when(() => mockDocSnap.exists).thenReturn(false);
+        final mockInverseDocSnap = MockDocumentSnapshot();
+        when(() => mockInverseDocSnap.exists).thenReturn(false);
         final mockRateLimitSnap = MockDocumentSnapshot();
         when(() => mockRateLimitSnap.data()).thenReturn({});
         fakeTransaction.getResults.addAll([
           mockCurrentUserSnap,
+          mockInverseDocSnap,
           mockDocSnap,
           mockRateLimitSnap,
         ]);
 
         final mockDocRef = MockDocumentReference();
-        when(() => mockRequestsRef.doc(any())).thenReturn(mockDocRef);
+        final mockInverseDocRef = MockDocumentReference();
+        when(
+          () => mockRequestsRef.doc('current_uid_receiver_uid'),
+        ).thenReturn(mockDocRef);
+        when(
+          () => mockRequestsRef.doc('receiver_uid_current_uid'),
+        ).thenReturn(mockInverseDocRef);
         final mockRateLimitDocRef = MockDocumentReference();
         when(
           () => mockRateLimitsRef.doc('current_uid'),
@@ -92,9 +105,13 @@ void main() {
         mockFirestore.fakeTransaction = fakeTransaction;
 
         final mockCurrentUserDoc = MockDocumentReference();
+        final mockReceiverUserDoc = MockDocumentReference();
         when(
           () => mockUsersRef.doc('current_uid'),
         ).thenReturn(mockCurrentUserDoc);
+        when(
+          () => mockUsersRef.doc('receiver_uid'),
+        ).thenReturn(mockReceiverUserDoc);
         final mockCurrentUserSnap = MockDocumentSnapshot();
         when(() => mockCurrentUserSnap.data()).thenReturn({
           'friends': ['receiver_uid'],
@@ -112,6 +129,76 @@ void main() {
 
         expect(fakeTransaction.sets, isEmpty);
       });
+
+      test(
+        'acepta solicitud inversa pendiente en vez de crear duplicado',
+        () async {
+          final fakeTransaction = FakeTransaction();
+          mockFirestore.fakeTransaction = fakeTransaction;
+
+          final mockCurrentUserDoc = MockDocumentReference();
+          final mockReceiverUserDoc = MockDocumentReference();
+          when(
+            () => mockUsersRef.doc('current_uid'),
+          ).thenReturn(mockCurrentUserDoc);
+          when(
+            () => mockUsersRef.doc('receiver_uid'),
+          ).thenReturn(mockReceiverUserDoc);
+
+          final mockCurrentUserSnap = MockDocumentSnapshot();
+          when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
+          final mockInverseSnap = MockDocumentSnapshot();
+          when(() => mockInverseSnap.exists).thenReturn(true);
+          when(() => mockInverseSnap.data()).thenReturn({
+            'senderId': 'receiver_uid',
+            'receiverId': 'current_uid',
+            'status': 'pending',
+          });
+          fakeTransaction.getResults.addAll([
+            mockCurrentUserSnap,
+            mockInverseSnap,
+          ]);
+
+          final mockForwardDocRef = MockDocumentReference();
+          final mockInverseDocRef = MockDocumentReference();
+          when(
+            () => mockRequestsRef.doc('current_uid_receiver_uid'),
+          ).thenReturn(mockForwardDocRef);
+          when(
+            () => mockRequestsRef.doc('receiver_uid_current_uid'),
+          ).thenReturn(mockInverseDocRef);
+          final mockRateLimitDocRef = MockDocumentReference();
+          when(
+            () => mockRateLimitsRef.doc('current_uid'),
+          ).thenReturn(mockRateLimitDocRef);
+
+          await friendService.sendRequest('receiver_uid');
+
+          expect(fakeTransaction.sets, isEmpty);
+          expect(
+            fakeTransaction.updates.any(
+              (e) =>
+                  e.key == mockInverseDocRef && e.value['status'] == 'accepted',
+            ),
+            isTrue,
+          );
+          expect(
+            fakeTransaction.updates.any(
+              (e) =>
+                  e.key == mockCurrentUserDoc && e.value.containsKey('friends'),
+            ),
+            isTrue,
+          );
+          expect(
+            fakeTransaction.updates.any(
+              (e) =>
+                  e.key == mockReceiverUserDoc &&
+                  e.value.containsKey('friends'),
+            ),
+            isTrue,
+          );
+        },
+      );
 
       test('propaga error si Firestore falla', () async {
         when(
@@ -132,6 +219,10 @@ void main() {
 
         final mockRequestDoc = MockDocumentReference();
         when(() => mockRequestsRef.doc('req_123')).thenReturn(mockRequestDoc);
+        final mockInverseDoc = MockDocumentReference();
+        when(
+          () => mockRequestsRef.doc('current_uid_other_uid'),
+        ).thenReturn(mockInverseDoc);
 
         final mockCurrentUserDoc = MockDocumentReference();
         final mockOtherUserDoc = MockDocumentReference();
@@ -143,6 +234,11 @@ void main() {
         final mockRequestSnap = MockDocumentSnapshot();
         when(() => mockRequestSnap.exists).thenReturn(true);
         when(() => mockRequestSnap['status']).thenReturn('pending');
+        when(() => mockRequestSnap.data()).thenReturn({
+          'senderId': 'other_uid',
+          'receiverId': 'current_uid',
+          'status': 'pending',
+        });
         fakeTransaction.getResult = mockRequestSnap;
 
         await friendService.acceptRequest('req_123', 'other_uid');
@@ -168,6 +264,7 @@ void main() {
           ),
           isTrue,
         );
+        expect(fakeTransaction.deletes, [mockInverseDoc]);
       });
     });
 
