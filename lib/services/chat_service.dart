@@ -134,6 +134,9 @@ class ChatService with AuthenticatedService {
   static const int maxMessageBytes = 2000;
   static const Duration _messageRateLimitWindow = Duration(seconds: 10);
 
+  static bool _isValidMessageText(String text) =>
+      text.isNotEmpty && utf8.encode(text).length <= maxMessageBytes;
+
   Map<String, Object?> _nextMessageRateLimit(
     DocumentSnapshot<Map<String, dynamic>> snap,
   ) {
@@ -160,7 +163,7 @@ class ChatService with AuthenticatedService {
     required String otherUid,
   }) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || utf8.encode(trimmed).length > maxMessageBytes) {
+    if (!_isValidMessageText(trimmed)) {
       throw ArgumentError('Invalid message');
     }
     try {
@@ -287,12 +290,17 @@ class ChatService with AuthenticatedService {
     Track track, {
     required String otherUid,
   }) async {
+    final text = '${track.title} - ${track.artist}'.trim();
+    if (!_isValidMessageText(text)) {
+      throw ArgumentError('Invalid message');
+    }
+
     try {
       final now = DateTime.now();
       final message = Message(
         id: '',
         senderId: currentUid,
-        text: '${track.title} - ${track.artist}',
+        text: text,
         timestamp: now,
         type: MessageType.track,
         trackData: track,

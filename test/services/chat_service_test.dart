@@ -144,6 +144,25 @@ void main() {
     });
 
     group('sendTrackMessage', () {
+      test('rechaza track si el texto supera el limite de bytes', () async {
+        final longTitle = '🎵' * 501;
+        final track = Track(
+          title: longTitle,
+          artist: 'Queen',
+          imageUrl: 'https://img.url',
+          spotifyUrl: 'https://spotify.url',
+        );
+
+        expect(
+          () => chatService.sendTrackMessage(
+            'chat_123',
+            track,
+            otherUid: 'other_uid',
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
       test('envía mensaje de tipo track con datos de la canción', () async {
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
