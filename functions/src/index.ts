@@ -20,6 +20,7 @@ const maxIndexUsersPerToken = 80;
 const maxStoredRecommendations = 100;
 
 type TokenType = 'artist' | 'genre';
+type SupportedLocale = 'en' | 'es' | 'fr';
 
 interface MusicToken {
   key: string;
@@ -42,6 +43,22 @@ interface RecommendationResult {
   sharedArtistNames: string[];
   sharedGenreNames: string[];
 }
+
+const defaultLocale: SupportedLocale = 'en';
+const supportedLocales = new Set<SupportedLocale>(['en', 'es', 'fr']);
+
+const notificationText = {
+  friendRequest: {
+    en: (name: string) => `${name} sent you a friend request`,
+    es: (name: string) => `${name} te envió una solicitud de amistad`,
+    fr: (name: string) => `${name} vous a envoyé une demande d'amitié`,
+  },
+  friendRequestAccepted: {
+    en: (name: string) => `${name} accepted your friend request`,
+    es: (name: string) => `${name} aceptó tu solicitud de amistad`,
+    fr: (name: string) => `${name} a accepté votre demande d'amitié`,
+  },
+} satisfies Record<string, Record<SupportedLocale, (name: string) => string>>;
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
@@ -74,6 +91,16 @@ async function sendNotification(
     logger.error('sendNotification: unexpected FCM error', { recipientUid, error });
     throw error;
   }
+}
+
+function preferredLocale(data: admin.firestore.DocumentData | undefined): SupportedLocale {
+  const locale = data?.preferredLocale;
+  if (typeof locale !== 'string') return defaultLocale;
+
+  const languageCode = locale.toLowerCase().split(/[-_]/)[0];
+  return supportedLocales.has(languageCode as SupportedLocale)
+    ? languageCode as SupportedLocale
+    : defaultLocale;
 }
 
 function stringList(value: unknown): string[] {
@@ -344,6 +371,7 @@ export const onFriendRequest = onDocumentCreated(
     try {
       const request = event.data?.data();
       if (!request) return;
+      if (request.status !== 'pending') return;
 
       const senderId = request.senderId as string;
       const receiverId = request.receiverId as string;
@@ -353,14 +381,16 @@ export const onFriendRequest = onDocumentCreated(
         db.doc(`users/${senderId}`).get(),
       ]);
 
-      const fcmToken = receiverSnap.data()?.fcmToken as string | undefined;
+      const receiver = receiverSnap.data();
+      const fcmToken = receiver?.fcmToken as string | undefined;
       const senderName = senderSnap.data()?.displayName as string | undefined;
       if (!fcmToken || !senderName) return;
+      const locale = preferredLocale(receiver);
 
       await sendNotification(
         receiverId,
         fcmToken,
-        { title: 'MusiLink', body: `${senderName} sent you a friend request` },
+        { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) },
         { type: 'friend_request', senderId },
       );
     } catch (error) {
@@ -389,14 +419,16 @@ export const onFriendRequestAccepted = onDocumentUpdated(
         db.doc(`users/${receiverId}`).get(),
       ]);
 
-      const fcmToken = senderSnap.data()?.fcmToken as string | undefined;
+      const sender = senderSnap.data();
+      const fcmToken = sender?.fcmToken as string | undefined;
       const accepterName = receiverSnap.data()?.displayName as string | undefined;
       if (!fcmToken || !accepterName) return;
+      const locale = preferredLocale(sender);
 
       await sendNotification(
         senderId,
         fcmToken,
-        { title: 'MusiLink', body: `${accepterName} accepted your friend request` },
+        { title: 'MusiLink', body: notificationText.friendRequestAccepted[locale](accepterName) },
         { type: 'friend_request_accepted', accepterId: receiverId },
       );
 

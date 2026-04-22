@@ -17,6 +17,20 @@ const maxRecommendationInputArtists = 10;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
 const maxStoredRecommendations = 100;
+const defaultLocale = 'en';
+const supportedLocales = new Set(['en', 'es', 'fr']);
+const notificationText = {
+    friendRequest: {
+        en: (name) => `${name} sent you a friend request`,
+        es: (name) => `${name} te envió una solicitud de amistad`,
+        fr: (name) => `${name} vous a envoyé une demande d'amitié`,
+    },
+    friendRequestAccepted: {
+        en: (name) => `${name} accepted your friend request`,
+        es: (name) => `${name} aceptó tu solicitud de amistad`,
+        fr: (name) => `${name} a accepté votre demande d'amitié`,
+    },
+};
 // ── Helper ────────────────────────────────────────────────────────────────────
 async function sendNotification(recipientUid, token, notification, data, 
 // Notifications with the same tag replace each other in the drawer,
@@ -40,6 +54,15 @@ tag) {
         v2_1.logger.error('sendNotification: unexpected FCM error', { recipientUid, error });
         throw error;
     }
+}
+function preferredLocale(data) {
+    const locale = data === null || data === void 0 ? void 0 : data.preferredLocale;
+    if (typeof locale !== 'string')
+        return defaultLocale;
+    const languageCode = locale.toLowerCase().split(/[-_]/)[0];
+    return supportedLocales.has(languageCode)
+        ? languageCode
+        : defaultLocale;
 }
 function stringList(value) {
     if (!Array.isArray(value))
@@ -253,10 +276,12 @@ exports.onUserMusicProfileChanged = (0, firestore_1.onDocumentUpdated)({ documen
 });
 // ── Función 3 — Nueva solicitud de amistad ────────────────────────────────────
 exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend_requests/{requestId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b, _c;
+    var _a, _b;
     try {
         const request = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
         if (!request)
+            return;
+        if (request.status !== 'pending')
             return;
         const senderId = request.senderId;
         const receiverId = request.receiverId;
@@ -264,11 +289,13 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
             db.doc(`users/${receiverId}`).get(),
             db.doc(`users/${senderId}`).get(),
         ]);
-        const fcmToken = (_b = receiverSnap.data()) === null || _b === void 0 ? void 0 : _b.fcmToken;
-        const senderName = (_c = senderSnap.data()) === null || _c === void 0 ? void 0 : _c.displayName;
+        const receiver = receiverSnap.data();
+        const fcmToken = receiver === null || receiver === void 0 ? void 0 : receiver.fcmToken;
+        const senderName = (_b = senderSnap.data()) === null || _b === void 0 ? void 0 : _b.displayName;
         if (!fcmToken || !senderName)
             return;
-        await sendNotification(receiverId, fcmToken, { title: 'MusiLink', body: `${senderName} sent you a friend request` }, { type: 'friend_request', senderId });
+        const locale = preferredLocale(receiver);
+        await sendNotification(receiverId, fcmToken, { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) }, { type: 'friend_request', senderId });
     }
     catch (error) {
         v2_1.logger.error('onFriendRequest: unhandled error', { requestId: event.params.requestId, error });
@@ -277,7 +304,7 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
 });
 // ── Función 4 — Solicitud de amistad aceptada ─────────────────────────────────
 exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document: 'friend_requests/{requestId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     try {
         const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before.data();
         const after = (_b = event.data) === null || _b === void 0 ? void 0 : _b.after.data();
@@ -291,11 +318,13 @@ exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document:
             db.doc(`users/${senderId}`).get(),
             db.doc(`users/${receiverId}`).get(),
         ]);
-        const fcmToken = (_c = senderSnap.data()) === null || _c === void 0 ? void 0 : _c.fcmToken;
-        const accepterName = (_d = receiverSnap.data()) === null || _d === void 0 ? void 0 : _d.displayName;
+        const sender = senderSnap.data();
+        const fcmToken = sender === null || sender === void 0 ? void 0 : sender.fcmToken;
+        const accepterName = (_c = receiverSnap.data()) === null || _c === void 0 ? void 0 : _c.displayName;
         if (!fcmToken || !accepterName)
             return;
-        await sendNotification(senderId, fcmToken, { title: 'MusiLink', body: `${accepterName} accepted your friend request` }, { type: 'friend_request_accepted', accepterId: receiverId });
+        const locale = preferredLocale(sender);
+        await sendNotification(senderId, fcmToken, { title: 'MusiLink', body: notificationText.friendRequestAccepted[locale](accepterName) }, { type: 'friend_request_accepted', accepterId: receiverId });
         await db.doc(event.document).delete();
     }
     catch (error) {

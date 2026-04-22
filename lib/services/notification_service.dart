@@ -17,12 +17,12 @@ class NotificationService {
     required SharedPreferences prefs,
     required void Function(Map<String, dynamic>) onNotificationTapped,
     required String? Function() getActiveChatId,
-  })  : _messaging = messaging,
-        _firestore = firestore,
-        _auth = auth,
-        _prefs = prefs,
-        _onNotificationTapped = onNotificationTapped,
-        _getActiveChatId = getActiveChatId;
+  }) : _messaging = messaging,
+       _firestore = firestore,
+       _auth = auth,
+       _prefs = prefs,
+       _onNotificationTapped = onNotificationTapped,
+       _getActiveChatId = getActiveChatId;
 
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
@@ -37,7 +37,9 @@ class NotificationService {
   static const _channelId = 'musilink_high';
   static const _channelName = 'MusiLink Notifications';
   static const _channelNoVibrationId = 'musilink_high_no_vibration';
-  static const _channelNoVibrationName = 'MusiLink Notifications (no vibration)';
+  static const _channelNoVibrationName =
+      'MusiLink Notifications (no vibration)';
+  static const _supportedPreferredLocales = {'en', 'es', 'fr'};
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
   static const kVibrationKey = 'notification_vibration';
 
@@ -54,7 +56,8 @@ class NotificationService {
     // one with vibration and one without.
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         _channelId,
@@ -113,10 +116,19 @@ class NotificationService {
     if (uid == null) return;
     final token = await _messaging.getToken();
     if (token == null) return;
-    await _firestore
-        .collection(FirestoreCollections.users)
-        .doc(uid)
-        .update({'fcmToken': token});
+    await _firestore.collection(FirestoreCollections.users).doc(uid).update({
+      'fcmToken': token,
+      'preferredLocale': _preferredLocale(),
+    });
+  }
+
+  String _preferredLocale() {
+    final languageCode = PlatformDispatcher.instance.locale.languageCode
+        .toLowerCase();
+    if (_supportedPreferredLocales.contains(languageCode)) {
+      return languageCode;
+    }
+    return 'en';
   }
 
   Future<void> clearToken() async {
@@ -137,10 +149,9 @@ class NotificationService {
 
   Future<void> _clearFcmTokenFromFirestore(String uid) async {
     try {
-      await _firestore
-          .collection(FirestoreCollections.users)
-          .doc(uid)
-          .update({'fcmToken': FieldValue.delete()});
+      await _firestore.collection(FirestoreCollections.users).doc(uid).update({
+        'fcmToken': FieldValue.delete(),
+      });
       await _prefs.remove(_pendingClearUidKey);
     } catch (e, stack) {
       await reportError(e, stack);
