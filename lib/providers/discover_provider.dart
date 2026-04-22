@@ -73,15 +73,18 @@ class DiscoverNotifier extends Notifier<DiscoverState> {
       }
     }
 
-    // Sin caché disponible o forceRefresh: mostrar shimmer y esperar servidor.
+    // Sin datos visibles, mostrar shimmer y esperar al servidor.
+    // En pull-to-refresh conservamos los resultados actuales para que solo
+    // se vea el indicador de refresco hasta recibir la nueva lista.
     // Se fuerza forceRefresh: true para evitar que un _isCacheValid falso
     // (establecido por getDiscoveryUsersFromCache con resultados vacíos)
     // devuelva una lista vacía en lugar de ir al servidor.
+    final keepVisibleResults = forceRefresh && state.results.isNotEmpty;
     state = state.copyWith(
-      isLoading: true,
-      isStale: false,
+      isLoading: !keepVisibleResults,
+      isStale: keepVisibleResults,
       error: null,
-      results: forceRefresh ? [] : null,
+      results: keepVisibleResults ? null : [],
     );
 
     try {

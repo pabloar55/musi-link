@@ -184,11 +184,21 @@ async function deleteExistingRecommendations(uid) {
         return;
     await commitBatches(existing.docs.map((doc) => (batch) => batch.delete(doc.ref)));
 }
+async function deleteStaleRecommendations(uid, currentRecommendationIds) {
+    const existing = await db
+        .collection(`users/${uid}/${recommendationsCollection}`)
+        .get();
+    const staleDocs = existing.docs.filter((doc) => !currentRecommendationIds.has(doc.id));
+    if (staleDocs.length === 0)
+        return;
+    await commitBatches(staleDocs.map((doc) => (batch) => batch.delete(doc.ref)));
+}
 async function refreshRecommendations(uid, profile) {
     const tokens = musicTokens(profile);
-    await deleteExistingRecommendations(uid);
-    if (tokens.length === 0)
+    if (tokens.length === 0) {
+        await deleteExistingRecommendations(uid);
         return;
+    }
     const snapshots = await Promise.all(tokens.map((token) => db
         .collection(recommendationIndexCollection)
         .doc(token.key)
@@ -215,6 +225,7 @@ async function refreshRecommendations(uid, profile) {
         .sort((a, b) => b.score - a.score)
         .slice(0, maxStoredRecommendations);
     const generatedAt = firestore_2.Timestamp.now();
+    const recommendationIds = new Set(recommendations.map((recommendation) => recommendation.uid));
     await commitBatches(recommendations.map((recommendation, index) => (batch) => {
         batch.set(db.doc(`users/${uid}/${recommendationsCollection}/${recommendation.uid}`), {
             userId: recommendation.uid,
@@ -225,6 +236,7 @@ async function refreshRecommendations(uid, profile) {
             generatedAt,
         });
     }));
+    await deleteStaleRecommendations(uid, recommendationIds);
     v2_1.logger.info('refreshRecommendations: generated recommendations', {
         uid,
         candidateCount: candidates.size,

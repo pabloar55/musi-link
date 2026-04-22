@@ -252,11 +252,26 @@ async function deleteExistingRecommendations(uid: string): Promise<void> {
   );
 }
 
+async function deleteStaleRecommendations(
+  uid: string,
+  currentRecommendationIds: Set<string>,
+): Promise<void> {
+  const existing = await db
+    .collection(`users/${uid}/${recommendationsCollection}`)
+    .get();
+  const staleDocs = existing.docs.filter((doc) => !currentRecommendationIds.has(doc.id));
+  if (staleDocs.length === 0) return;
+
+  await commitBatches(staleDocs.map((doc) => (batch) => batch.delete(doc.ref)));
+}
+
 async function refreshRecommendations(uid: string, profile: UserMusicProfile): Promise<void> {
   const tokens = musicTokens(profile);
-  await deleteExistingRecommendations(uid);
 
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) {
+    await deleteExistingRecommendations(uid);
+    return;
+  }
 
   const snapshots = await Promise.all(tokens.map((token) =>
     db
@@ -288,6 +303,7 @@ async function refreshRecommendations(uid: string, profile: UserMusicProfile): P
     .slice(0, maxStoredRecommendations);
 
   const generatedAt = Timestamp.now();
+  const recommendationIds = new Set(recommendations.map((recommendation) => recommendation.uid));
   await commitBatches(recommendations.map((recommendation, index) => (batch) => {
     batch.set(
       db.doc(`users/${uid}/${recommendationsCollection}/${recommendation.uid}`),
@@ -301,6 +317,7 @@ async function refreshRecommendations(uid: string, profile: UserMusicProfile): P
       },
     );
   }));
+  await deleteStaleRecommendations(uid, recommendationIds);
 
   logger.info('refreshRecommendations: generated recommendations', {
     uid,
