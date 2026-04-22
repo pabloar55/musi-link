@@ -64,9 +64,15 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
 
     if (hasError && relationship == null) return const SizedBox.shrink();
 
-    if (!isLoading &&
+    final shouldClearOptimisticStatus =
+        !isLoading &&
         _optimisticStatus != null &&
-        relationship?.status == _optimisticStatus) {
+        relationship != null &&
+        (relationship.status == _optimisticStatus ||
+            (_optimisticStatus == RelationshipStatus.requestSent &&
+                relationship.status == RelationshipStatus.friends));
+
+    if (shouldClearOptimisticStatus) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => setState(() => _optimisticStatus = null),
       );

@@ -65,6 +65,7 @@ class FakeTransaction extends Fake implements Transaction {
   updates = [];
   final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>> sets =
       [];
+  final List<DocumentReference<Object?>> deletes = [];
   bool getCalled = false;
 
   @override
@@ -99,6 +100,12 @@ class FakeTransaction extends Fake implements Transaction {
         Map<String, dynamic>.from(data as Map),
       ),
     );
+    return this;
+  }
+
+  @override
+  Transaction delete(DocumentReference<Object?> documentReference) {
+    deletes.add(documentReference);
     return this;
   }
 }

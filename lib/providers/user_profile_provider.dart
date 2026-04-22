@@ -37,9 +37,9 @@ final compatibilityProvider = FutureProvider.family<DiscoveryResult, AppUser>((
       .getCompatibilityWith(myUser, user);
 });
 
-final relationshipProvider = FutureProvider.family<RelationshipResult, String>((
+final relationshipProvider = StreamProvider.family<RelationshipResult, String>((
   ref,
   userUid,
 ) {
-  return ref.read(friendServiceProvider).getRelationship(userUid);
+  return ref.read(friendServiceProvider).watchRelationship(userUid);
 });

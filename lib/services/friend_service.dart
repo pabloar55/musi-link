@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/services/authenticated_service.dart';
@@ -77,9 +79,17 @@ class FriendService with AuthenticatedService {
       // check-then-act race without a collection query.
       final docRef = _requestsRef.doc(docId);
       final limiterRef = _rateLimitsRef.doc(currentUid);
+      final currentUserRef = _usersRef.doc(currentUid);
       await _firestore.runTransaction((tx) async {
+        final currentUserSnap = await tx.get(currentUserRef);
+        final friends = List<String>.from(
+          currentUserSnap.data()?['friends'] as List? ?? [],
+        );
+        if (friends.contains(receiverUid)) return;
+
         final snapshot = await tx.get(docRef);
         if (snapshot.exists) return;
+
         final limiterSnap = await tx.get(limiterRef);
         tx.set(docRef, {
           ...request.toFirestore(),
@@ -141,7 +151,16 @@ class FriendService with AuthenticatedService {
   /// Cancela (elimina) una solicitud de amistad enviada.
   Future<void> cancelRequest(String requestId) async {
     try {
-      await _requestsRef.doc(requestId).delete();
+      await _firestore.runTransaction((tx) async {
+        final docRef = _requestsRef.doc(requestId);
+        final snapshot = await tx.get(docRef);
+        if (!snapshot.exists ||
+            snapshot.data()?['senderId'] != currentUid ||
+            snapshot.data()?['status'] != FriendRequestStatus.pending.name) {
+          return;
+        }
+        tx.delete(docRef);
+      });
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -252,6 +271,44 @@ class FriendService with AuthenticatedService {
       await reportError(e, stack);
       rethrow;
     }
+  }
+
+  /// Escucha en tiempo real la relacin con [otherUid].
+  Stream<RelationshipResult> watchRelationship(String otherUid) {
+    late final StreamController<void> trigger;
+    final subscriptions = <StreamSubscription<Object?>>[];
+
+    trigger = StreamController<void>(
+      onListen: () {
+        void notify(Object? _) => trigger.add(null);
+
+        subscriptions.add(_usersRef.doc(currentUid).snapshots().listen(notify));
+        subscriptions.add(
+          _requestsRef
+              .doc('${currentUid}_$otherUid')
+              .snapshots()
+              .listen(notify),
+        );
+        subscriptions.add(
+          _requestsRef
+              .doc('${otherUid}_$currentUid')
+              .snapshots()
+              .listen(notify),
+        );
+        trigger.add(null);
+      },
+      onCancel: () async {
+        for (final subscription in subscriptions) {
+          await subscription.cancel();
+        }
+      },
+    );
+
+    return trigger.stream
+        .asyncMap((_) {
+          return getRelationship(otherUid);
+        })
+        .distinct((a, b) => a.status == b.status && a.requestId == b.requestId);
   }
 
   // ─── Eliminar cuenta ────────────────────────────────────

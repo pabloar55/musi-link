@@ -85,29 +85,29 @@ void main() {
       expect(result.sharedGenreNames, isEmpty);
     });
 
-    test('1 artista en comun = 14 puntos', () {
+    test('1 de 2 artistas en comun = 35 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['Queen', 'Radiohead'],
         myGenreNames: [],
         otherUser: createUser(topArtistNames: ['Queen', 'Bad Bunny']),
       );
 
-      expect(result.score, 14.0);
+      expect(result.score, 35.0);
       expect(result.sharedArtistNames, ['Queen']);
     });
 
-    test('1 genero en comun = 6 puntos', () {
+    test('1 de 2 generos en comun = 15 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: [],
         myGenreNames: ['rock', 'jazz'],
         otherUser: createUser(topGenreNames: ['rock', 'reggaeton']),
       );
 
-      expect(result.score, 6.0);
+      expect(result.score, 15.0);
       expect(result.sharedGenreNames, ['rock']);
     });
 
-    test('3 artistas + 2 generos = 42 + 12 = 54 puntos', () {
+    test('3 de 4 artistas + 2 de 3 generos = 73 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['Queen', 'Radiohead', 'Muse', 'Coldplay'],
         myGenreNames: ['rock', 'alternative', 'pop'],
@@ -117,12 +117,12 @@ void main() {
         ),
       );
 
-      expect(result.score, 54.0);
+      expect(result.score, 73.0);
       expect(result.sharedArtistNames.length, 3);
       expect(result.sharedGenreNames.length, 2);
     });
 
-    test('maximo de artistas (5+) se limita a 70 puntos', () {
+    test('todos los artistas en comun aportan 70 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
         myGenreNames: [],
@@ -134,7 +134,7 @@ void main() {
       expect(result.score, 70.0);
     });
 
-    test('maximo de generos (5+) se limita a 30 puntos', () {
+    test('todos los generos en comun aportan 30 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: [],
         myGenreNames: ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7'],
@@ -158,6 +158,22 @@ void main() {
 
       expect(result.score, 100.0);
     });
+
+    test(
+      '3 artistas y 1 genero identicos en perfiles pequenos = 100 puntos',
+      () {
+        final result = MusicProfileService.calculateCompatibility(
+          myArtistNames: ['A1', 'A2', 'A3'],
+          myGenreNames: ['rock'],
+          otherUser: createUser(
+            topArtistNames: ['A1', 'A2', 'A3'],
+            topGenreNames: ['rock'],
+          ),
+        );
+
+        expect(result.score, 100.0);
+      },
+    );
 
     test('el resultado incluye el usuario correcto', () {
       final otherUser = createUser(
@@ -224,10 +240,12 @@ void main() {
       required List<MockQueryDocumentSnapshot> recommendationDocs,
       required List<MockQueryDocumentSnapshot> userDocs,
     }) {
-      when(() => mockRecommendationLimitQuery.get())
-          .thenAnswer((_) async => buildSnapshot(recommendationDocs));
-      when(() => mockUsersByIdQuery.get())
-          .thenAnswer((_) async => buildSnapshot(userDocs));
+      when(
+        () => mockRecommendationLimitQuery.get(),
+      ).thenAnswer((_) async => buildSnapshot(recommendationDocs));
+      when(
+        () => mockUsersByIdQuery.get(),
+      ).thenAnswer((_) async => buildSnapshot(userDocs));
     }
 
     setUp(() {
@@ -252,16 +270,18 @@ void main() {
       stubMyUserDoc();
       when(() => mockMyDocRef.update(any())).thenAnswer((_) async {});
 
-      when(() => mockMyDocRef.collection('recommendations'))
-          .thenReturn(mockRecommendationsRef);
-      when(() => mockRecommendationsRef.orderBy('score', descending: true))
-          .thenReturn(mockRecommendationOrderQuery);
-      when(() => mockRecommendationOrderQuery.limit(any()))
-          .thenReturn(mockRecommendationLimitQuery);
-      when(() => mockUsersRef.where(
-            any(),
-            whereIn: any(named: 'whereIn'),
-          )).thenReturn(mockUsersByIdQuery);
+      when(
+        () => mockMyDocRef.collection('recommendations'),
+      ).thenReturn(mockRecommendationsRef);
+      when(
+        () => mockRecommendationsRef.orderBy('score', descending: true),
+      ).thenReturn(mockRecommendationOrderQuery);
+      when(
+        () => mockRecommendationOrderQuery.limit(any()),
+      ).thenReturn(mockRecommendationLimitQuery);
+      when(
+        () => mockUsersRef.where(any(), whereIn: any(named: 'whereIn')),
+      ).thenReturn(mockUsersByIdQuery);
 
       service = MusicProfileService(
         MockSpotifyGetStats(),
@@ -271,39 +291,45 @@ void main() {
     });
 
     group('getDiscoveryUsers', () {
-      test('more than 20 stored recommendations sets hasMoreDiscoveryUsers true',
-          () async {
-        final recommendations = List.generate(
-          25,
-          (i) => buildRecommendationDoc('user$i', score: 100 - i.toDouble()),
-        );
-        final users = List.generate(25, (i) => buildUserDoc('user$i'));
-        stubStoredRecommendations(
-          recommendationDocs: recommendations,
-          userDocs: users,
-        );
+      test(
+        'more than 20 stored recommendations sets hasMoreDiscoveryUsers true',
+        () async {
+          final recommendations = List.generate(
+            25,
+            (i) => buildRecommendationDoc('user$i', score: 100 - i.toDouble()),
+          );
+          final users = List.generate(25, (i) => buildUserDoc('user$i'));
+          stubStoredRecommendations(
+            recommendationDocs: recommendations,
+            userDocs: users,
+          );
 
-        final results = await service.getDiscoveryUsers();
+          final results = await service.getDiscoveryUsers();
 
-        expect(results.length, 20);
-        expect(service.hasMoreDiscoveryUsers, isTrue);
-      });
+          expect(results.length, 20);
+          expect(service.hasMoreDiscoveryUsers, isTrue);
+        },
+      );
 
-      test('less than 20 stored recommendations sets hasMoreDiscoveryUsers false',
-          () async {
-        final recommendations =
-            List.generate(15, (i) => buildRecommendationDoc('user$i'));
-        final users = List.generate(15, (i) => buildUserDoc('user$i'));
-        stubStoredRecommendations(
-          recommendationDocs: recommendations,
-          userDocs: users,
-        );
+      test(
+        'less than 20 stored recommendations sets hasMoreDiscoveryUsers false',
+        () async {
+          final recommendations = List.generate(
+            15,
+            (i) => buildRecommendationDoc('user$i'),
+          );
+          final users = List.generate(15, (i) => buildUserDoc('user$i'));
+          stubStoredRecommendations(
+            recommendationDocs: recommendations,
+            userDocs: users,
+          );
 
-        final results = await service.getDiscoveryUsers();
+          final results = await service.getDiscoveryUsers();
 
-        expect(results.length, 15);
-        expect(service.hasMoreDiscoveryUsers, isFalse);
-      });
+          expect(results.length, 15);
+          expect(service.hasMoreDiscoveryUsers, isFalse);
+        },
+      );
 
       test('empty recommendation collection returns empty discovery', () async {
         stubStoredRecommendations(recommendationDocs: [], userDocs: []);
@@ -320,10 +346,7 @@ void main() {
           buildRecommendationDoc('other1'),
           buildRecommendationDoc('other2'),
         ];
-        final users = [
-          buildUserDoc('other1'),
-          buildUserDoc('other2'),
-        ];
+        final users = [buildUserDoc('other1'), buildUserDoc('other2')];
         stubStoredRecommendations(
           recommendationDocs: recommendations,
           userDocs: users,
@@ -350,10 +373,7 @@ void main() {
             sharedGenreNames: [],
           ),
         ];
-        final users = [
-          buildUserDoc('other1'),
-          buildUserDoc('other2'),
-        ];
+        final users = [buildUserDoc('other1'), buildUserDoc('other2')];
         stubStoredRecommendations(
           recommendationDocs: recommendations,
           userDocs: users,
@@ -369,8 +389,10 @@ void main() {
       });
 
       test('second call without forceRefresh serves in-memory cache', () async {
-        final recommendations =
-            List.generate(5, (i) => buildRecommendationDoc('user$i'));
+        final recommendations = List.generate(
+          5,
+          (i) => buildRecommendationDoc('user$i'),
+        );
         final users = List.generate(5, (i) => buildUserDoc('user$i'));
         stubStoredRecommendations(
           recommendationDocs: recommendations,
@@ -384,22 +406,26 @@ void main() {
         verify(() => mockUsersByIdQuery.get()).called(1);
       });
 
-      test('forceRefresh invalidates cache and reads recommendations again',
-          () async {
-        final recommendations =
-            List.generate(5, (i) => buildRecommendationDoc('user$i'));
-        final users = List.generate(5, (i) => buildUserDoc('user$i'));
-        stubStoredRecommendations(
-          recommendationDocs: recommendations,
-          userDocs: users,
-        );
+      test(
+        'forceRefresh invalidates cache and reads recommendations again',
+        () async {
+          final recommendations = List.generate(
+            5,
+            (i) => buildRecommendationDoc('user$i'),
+          );
+          final users = List.generate(5, (i) => buildUserDoc('user$i'));
+          stubStoredRecommendations(
+            recommendationDocs: recommendations,
+            userDocs: users,
+          );
 
-        await service.getDiscoveryUsers(forceRefresh: true);
-        await service.getDiscoveryUsers(forceRefresh: true);
+          await service.getDiscoveryUsers(forceRefresh: true);
+          await service.getDiscoveryUsers(forceRefresh: true);
 
-        verify(() => mockRecommendationLimitQuery.get()).called(2);
-        verify(() => mockUsersByIdQuery.get()).called(2);
-      });
+          verify(() => mockRecommendationLimitQuery.get()).called(2);
+          verify(() => mockUsersByIdQuery.get()).called(2);
+        },
+      );
     });
 
     group('loadMoreDiscoveryUsers', () {
@@ -410,25 +436,32 @@ void main() {
         expect(hasMore, isFalse);
       });
 
-      test('when total <= pageSize, loadMore does not expand results', () async {
-        final recommendations =
-            List.generate(5, (i) => buildRecommendationDoc('user$i'));
-        final users = List.generate(5, (i) => buildUserDoc('user$i'));
-        stubStoredRecommendations(
-          recommendationDocs: recommendations,
-          userDocs: users,
-        );
-        await service.getDiscoveryUsers();
+      test(
+        'when total <= pageSize, loadMore does not expand results',
+        () async {
+          final recommendations = List.generate(
+            5,
+            (i) => buildRecommendationDoc('user$i'),
+          );
+          final users = List.generate(5, (i) => buildUserDoc('user$i'));
+          stubStoredRecommendations(
+            recommendationDocs: recommendations,
+            userDocs: users,
+          );
+          await service.getDiscoveryUsers();
 
-        final (results, hasMore) = await service.loadMoreDiscoveryUsers();
+          final (results, hasMore) = await service.loadMoreDiscoveryUsers();
 
-        expect(results.length, 5);
-        expect(hasMore, isFalse);
-      });
+          expect(results.length, 5);
+          expect(hasMore, isFalse);
+        },
+      );
 
       test('returns next page from recommendation cache', () async {
-        final recommendations =
-            List.generate(25, (i) => buildRecommendationDoc('user$i'));
+        final recommendations = List.generate(
+          25,
+          (i) => buildRecommendationDoc('user$i'),
+        );
         final users = List.generate(25, (i) => buildUserDoc('user$i'));
         stubStoredRecommendations(
           recommendationDocs: recommendations,
@@ -446,8 +479,10 @@ void main() {
       });
 
       test('multiple loadMore calls page correctly from cache', () async {
-        final recommendations =
-            List.generate(50, (i) => buildRecommendationDoc('user$i'));
+        final recommendations = List.generate(
+          50,
+          (i) => buildRecommendationDoc('user$i'),
+        );
         final users = List.generate(50, (i) => buildUserDoc('user$i'));
         stubStoredRecommendations(
           recommendationDocs: recommendations,

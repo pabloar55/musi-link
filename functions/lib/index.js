@@ -161,11 +161,17 @@ function calculateRecommendation(myProfile, candidate) {
     const sharedGenreNames = candidate.topGenreNames.filter((genre) => myGenres.has(genre));
     if (sharedArtistNames.length === 0 && sharedGenreNames.length === 0)
         return null;
-    const artistScore = Math.min(sharedArtistNames.length * 14, 70);
-    const genreScore = Math.min(sharedGenreNames.length * 6, 30);
+    const comparableArtistCount = Math.min(myProfile.topArtistNames.length, candidate.topArtistNames.length);
+    const comparableGenreCount = Math.min(myProfile.topGenreNames.length, candidate.topGenreNames.length);
+    const artistScore = comparableArtistCount === 0
+        ? 0
+        : (sharedArtistNames.length / comparableArtistCount) * 70;
+    const genreScore = comparableGenreCount === 0
+        ? 0
+        : (sharedGenreNames.length / comparableGenreCount) * 30;
     return {
         uid: candidate.uid,
-        score: artistScore + genreScore,
+        score: Math.round(artistScore + genreScore),
         sharedArtistNames,
         sharedGenreNames,
     };

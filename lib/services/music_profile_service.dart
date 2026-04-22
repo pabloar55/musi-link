@@ -274,12 +274,24 @@ class MusicProfileService with AuthenticatedService {
         .intersection(otherUser.topGenreNames.toSet())
         .toList();
 
-    final artistScore = (sharedArtists.length * 14.0).clamp(0.0, 70.0);
-    final genreScore = (sharedGenres.length * 6.0).clamp(0.0, 30.0);
+    final comparableArtistCount =
+        myArtistNames.length < otherUser.topArtistNames.length
+        ? myArtistNames.length
+        : otherUser.topArtistNames.length;
+    final comparableGenreCount =
+        myGenreNames.length < otherUser.topGenreNames.length
+        ? myGenreNames.length
+        : otherUser.topGenreNames.length;
+    final artistScore = comparableArtistCount == 0
+        ? 0.0
+        : (sharedArtists.length / comparableArtistCount) * 70.0;
+    final genreScore = comparableGenreCount == 0
+        ? 0.0
+        : (sharedGenres.length / comparableGenreCount) * 30.0;
 
     return DiscoveryResult(
       user: otherUser,
-      score: artistScore + genreScore,
+      score: (artistScore + genreScore).roundToDouble(),
       sharedArtistNames: sharedArtists,
       sharedGenreNames: sharedGenres,
     );

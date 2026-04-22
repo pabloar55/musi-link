@@ -43,11 +43,22 @@ void main() {
         final fakeTransaction = FakeTransaction();
         mockFirestore.fakeTransaction = fakeTransaction;
 
+        final mockCurrentUserDoc = MockDocumentReference();
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        final mockCurrentUserSnap = MockDocumentSnapshot();
+        when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
+
         final mockDocSnap = MockDocumentSnapshot();
         when(() => mockDocSnap.exists).thenReturn(false);
         final mockRateLimitSnap = MockDocumentSnapshot();
         when(() => mockRateLimitSnap.data()).thenReturn({});
-        fakeTransaction.getResults.addAll([mockDocSnap, mockRateLimitSnap]);
+        fakeTransaction.getResults.addAll([
+          mockCurrentUserSnap,
+          mockDocSnap,
+          mockRateLimitSnap,
+        ]);
 
         final mockDocRef = MockDocumentReference();
         when(() => mockRequestsRef.doc(any())).thenReturn(mockDocRef);
@@ -74,6 +85,32 @@ void main() {
         expect(limiterData['lastFriendRequestAt'], isA<FieldValue>());
         expect(limiterData['friendRequestWindowStart'], isA<FieldValue>());
         expect(limiterData['friendRequestCount'], 1);
+      });
+
+      test('no crea solicitud si ya son amigos', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockCurrentUserDoc = MockDocumentReference();
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        final mockCurrentUserSnap = MockDocumentSnapshot();
+        when(() => mockCurrentUserSnap.data()).thenReturn({
+          'friends': ['receiver_uid'],
+        });
+        fakeTransaction.getResults.add(mockCurrentUserSnap);
+
+        final mockRequestDoc = MockDocumentReference();
+        when(() => mockRequestsRef.doc(any())).thenReturn(mockRequestDoc);
+        final mockRateLimitDocRef = MockDocumentReference();
+        when(
+          () => mockRateLimitsRef.doc('current_uid'),
+        ).thenReturn(mockRateLimitDocRef);
+
+        await friendService.sendRequest('receiver_uid');
+
+        expect(fakeTransaction.sets, isEmpty);
       });
 
       test('propaga error si Firestore falla', () async {
@@ -147,14 +184,45 @@ void main() {
     });
 
     group('cancelRequest', () {
-      test('elimina el documento del request', () async {
+      test(
+        'elimina el documento solo si sigue pendiente y enviado por usuario actual',
+        () async {
+          final fakeTransaction = FakeTransaction();
+          mockFirestore.fakeTransaction = fakeTransaction;
+
+          final mockDocRef = MockDocumentReference();
+          when(() => mockRequestsRef.doc('req_123')).thenReturn(mockDocRef);
+
+          final mockRequestSnap = MockDocumentSnapshot();
+          when(() => mockRequestSnap.exists).thenReturn(true);
+          when(
+            () => mockRequestSnap.data(),
+          ).thenReturn({'senderId': 'current_uid', 'status': 'pending'});
+          fakeTransaction.getResult = mockRequestSnap;
+
+          await friendService.cancelRequest('req_123');
+
+          expect(fakeTransaction.deletes, [mockDocRef]);
+        },
+      );
+
+      test('no elimina una solicitud que ya no esta pendiente', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
         final mockDocRef = MockDocumentReference();
         when(() => mockRequestsRef.doc('req_123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.delete()).thenAnswer((_) async {});
+
+        final mockRequestSnap = MockDocumentSnapshot();
+        when(() => mockRequestSnap.exists).thenReturn(true);
+        when(
+          () => mockRequestSnap.data(),
+        ).thenReturn({'senderId': 'current_uid', 'status': 'accepted'});
+        fakeTransaction.getResult = mockRequestSnap;
 
         await friendService.cancelRequest('req_123');
 
-        verify(() => mockDocRef.delete()).called(1);
+        expect(fakeTransaction.deletes, isEmpty);
       });
     });
 
