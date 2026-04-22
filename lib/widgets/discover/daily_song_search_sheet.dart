@@ -12,7 +12,8 @@ class DailySongSearchSheet extends ConsumerStatefulWidget {
   const DailySongSearchSheet({super.key});
 
   @override
-  ConsumerState<DailySongSearchSheet> createState() => _DailySongSearchSheetState();
+  ConsumerState<DailySongSearchSheet> createState() =>
+      _DailySongSearchSheetState();
 }
 
 class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
@@ -42,7 +43,9 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
     }
 
     setState(() => _loading = true);
-    final results = await ref.read(spotifyStatsProvider).searchTracks(query);
+    final results = await ref
+        .read(musicCatalogServiceProvider)
+        .searchTracks(query);
     if (mounted) {
       setState(() {
         _results = results;
@@ -79,7 +82,7 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: l10n.chatSearchSpotify,
+                  hintText: l10n.chatSearchSong,
                   prefixIcon: const Icon(LucideIcons.search),
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
@@ -88,7 +91,9 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
                 onChanged: _onSearchChanged,
               ),
@@ -97,47 +102,47 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _results.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchController.text.isEmpty
-                                ? l10n.chatTypeToSearch
-                                : l10n.chatNoResults,
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withAlpha(120),
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: _results.length,
-                          itemBuilder: (context, index) {
-                            final track = _results[index];
-                            return ListTile(
-                              leading: track.imageUrl.isNotEmpty
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: CachedNetworkImage(
-                                        imageUrl: track.imageUrl,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : const Icon(LucideIcons.music, size: 40),
-                              title: Text(
-                                track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                track.artist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () => Navigator.of(context).pop(track),
-                            );
-                          },
+                  ? Center(
+                      child: Text(
+                        _searchController.text.isEmpty
+                            ? l10n.chatTypeToSearch
+                            : l10n.chatNoResults,
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withAlpha(120),
                         ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: _results.length,
+                      itemBuilder: (context, index) {
+                        final track = _results[index];
+                        return ListTile(
+                          leading: track.imageUrl.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: CachedNetworkImage(
+                                    imageUrl: track.imageUrl,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : const Icon(LucideIcons.music, size: 40),
+                          title: Text(
+                            track.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            track.artist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => Navigator.of(context).pop(track),
+                        );
+                      },
+                    ),
             ),
           ],
         );
