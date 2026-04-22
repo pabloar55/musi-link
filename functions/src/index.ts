@@ -172,6 +172,10 @@ function indexUserRef(token: MusicToken, uid: string): admin.firestore.DocumentR
     .doc(uid);
 }
 
+function userDocRef(uid: string): admin.firestore.DocumentReference {
+  return db.collection('users').doc(uid);
+}
+
 async function commitBatches(
   operations: Array<(batch: admin.firestore.WriteBatch) => void>,
 ): Promise<void> {
@@ -267,9 +271,11 @@ async function deleteStaleRecommendations(
 
 async function refreshRecommendations(uid: string, profile: UserMusicProfile): Promise<void> {
   const tokens = musicTokens(profile);
+  const generatedAt = Timestamp.now();
 
   if (tokens.length === 0) {
     await deleteExistingRecommendations(uid);
+    await userDocRef(uid).update({ recommendationsGeneratedAt: generatedAt });
     return;
   }
 
@@ -302,7 +308,6 @@ async function refreshRecommendations(uid: string, profile: UserMusicProfile): P
     .sort((a, b) => b.score - a.score)
     .slice(0, maxStoredRecommendations);
 
-  const generatedAt = Timestamp.now();
   const recommendationIds = new Set(recommendations.map((recommendation) => recommendation.uid));
   await commitBatches(recommendations.map((recommendation, index) => (batch) => {
     batch.set(
@@ -318,6 +323,7 @@ async function refreshRecommendations(uid: string, profile: UserMusicProfile): P
     );
   }));
   await deleteStaleRecommendations(uid, recommendationIds);
+  await userDocRef(uid).update({ recommendationsGeneratedAt: generatedAt });
 
   logger.info('refreshRecommendations: generated recommendations', {
     uid,

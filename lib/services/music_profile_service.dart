@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -40,7 +42,7 @@ class MusicProfileService with AuthenticatedService {
   static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
   static const _recommendationLimit = 100;
-  static const _recommendationRefreshRetryDelay = Duration(seconds: 2);
+  static const _recommendationRefreshTimeout = Duration(seconds: 60);
 
   bool get hasMoreDiscoveryUsers =>
       _cachedResults != null && _displayedCount < _cachedResults!.length;
@@ -133,11 +135,7 @@ class MusicProfileService with AuthenticatedService {
         await _requestRecommendationRefresh();
       }
 
-      var results = await _fetchStoredRecommendations() ?? [];
-      if (forceRefresh && results.isEmpty) {
-        await Future<void>.delayed(_recommendationRefreshRetryDelay);
-        results = await _fetchStoredRecommendations() ?? [];
-      }
+      final results = await _fetchStoredRecommendations() ?? [];
       _cachedResults = results;
       _cacheTime = DateTime.now();
       _displayedCount = results.length.clamp(0, _pageSize);
@@ -150,9 +148,28 @@ class MusicProfileService with AuthenticatedService {
 
   Future<void> _requestRecommendationRefresh() async {
     try {
-      await _usersRef.doc(currentUid).update({
+      final userRef = _usersRef.doc(currentUid);
+      await userRef.update({
         'recommendationsRefreshRequestedAt': FieldValue.serverTimestamp(),
       });
+
+      await userRef
+          .snapshots()
+          .where((snapshot) {
+            final data = snapshot.data();
+            final requestedAt =
+                data?['recommendationsRefreshRequestedAt'] as Timestamp?;
+            final generatedAt =
+                data?['recommendationsGeneratedAt'] as Timestamp?;
+            return requestedAt != null &&
+                generatedAt != null &&
+                generatedAt.compareTo(requestedAt) >= 0;
+          })
+          .first
+          .timeout(_recommendationRefreshTimeout);
+    } on TimeoutException {
+      // Keep the previous recommendations visible if the refresh completion
+      // signal is delayed by network conditions or a slow Cloud Function.
     } catch (e, stack) {
       await reportError(e, stack);
     }
