@@ -11,8 +11,8 @@ import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/services/notification_service.dart';
 import 'package:musi_link/services/last_fm_service.dart';
+import 'package:musi_link/services/music_catalog_service.dart';
 import 'package:musi_link/services/spotify_cloud_service.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
 import 'package:musi_link/services/storage_service.dart';
 import 'package:musi_link/services/user_service.dart';
 
@@ -103,9 +103,9 @@ final Provider<LastFmService> lastFmServiceProvider = Provider<LastFmService>((
   return LastFmService(apiKey: const String.fromEnvironment('LASTFM_API_KEY'));
 });
 
-final Provider<SpotifyGetStats> spotifyStatsProvider =
-    Provider<SpotifyGetStats>((ref) {
-      return SpotifyGetStats(
+final Provider<MusicCatalogService> musicCatalogServiceProvider =
+    Provider<MusicCatalogService>((ref) {
+      return MusicCatalogService(
         ref.watch(spotifyClientServiceProvider),
         ref.watch(lastFmServiceProvider),
       );
@@ -114,7 +114,7 @@ final Provider<SpotifyGetStats> spotifyStatsProvider =
 final Provider<MusicProfileService> musicProfileServiceProvider =
     Provider<MusicProfileService>((ref) {
       return MusicProfileService(
-        ref.watch(spotifyStatsProvider),
+        ref.watch(musicCatalogServiceProvider),
         firestore: ref.watch(firebaseFirestoreProvider),
         auth: ref.watch(firebaseAuthProvider),
       );

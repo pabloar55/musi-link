@@ -4,14 +4,9 @@ import 'package:musi_link/models/track.dart' as app;
 import 'package:musi_link/services/last_fm_service.dart';
 import 'package:musi_link/services/spotify_cloud_service.dart';
 
-/// Lanzada cuando no hay conexión y tampoco hay datos en caché local.
-class OfflineNoDataException implements Exception {
-  const OfflineNoDataException();
-}
-
-/// Estadísticas de Spotify vía Client Credentials + Last.fm para similares.
-class SpotifyGetStats {
-  SpotifyGetStats(this._client, this._lastFm);
+/// Búsqueda de catálogo musical y cálculo local del perfil musical manual.
+class MusicCatalogService {
+  MusicCatalogService(this._client, this._lastFm);
 
   final SpotifyCloudService _client;
   final LastFmService _lastFm;

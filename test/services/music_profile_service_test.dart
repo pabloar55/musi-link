@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/music_profile_service.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/music_catalog_service.dart';
 
 import '../helpers/mocks.dart';
 
-class MockSpotifyGetStats extends Mock implements SpotifyGetStats {}
+class MockMusicCatalogService extends Mock implements MusicCatalogService {}
 
 AppUser createUser({
   String uid = 'other',
@@ -284,7 +284,7 @@ void main() {
       ).thenReturn(mockUsersByIdQuery);
 
       service = MusicProfileService(
-        MockSpotifyGetStats(),
+        MockMusicCatalogService(),
         firestore: mockFirestore,
         auth: mockAuth,
       );

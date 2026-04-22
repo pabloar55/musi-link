@@ -118,7 +118,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discoverNoUsersHint =>
-      'Au fur et à mesure que d\'autres utilisateurs connectent leur Spotify, ils apparaîtront ici';
+      'Au fur et à mesure que d\'autres utilisateurs créent leur profil musical, ils apparaîtront ici';
 
   @override
   String get navDiscover => 'Découvrir';
@@ -143,9 +143,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get searchTypeToSearch => 'Tapez un nom pour rechercher';
-
-  @override
-  String get searchSpotifyConnected => 'Spotify connecté';
 
   @override
   String get profileTitle => 'Profil musical';
@@ -176,7 +173,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatWriteMessage => 'Écrire un message...';
 
   @override
-  String get chatSearchSpotify => 'Rechercher une chanson sur Spotify...';
+  String get chatSearchSong => 'Rechercher une chanson...';
 
   @override
   String get chatShareSong => 'Partager une chanson';
@@ -408,7 +405,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingStatsDesc =>
-      'Explorez vos titres, artistes et genres préférés sur Spotify. Voyez comment vos goûts évoluent au fil du temps.';
+      'Créez votre propre top d\'artistes et de genres. Découvrez comment vos goûts se comparent à ceux des autres.';
 
   @override
   String get onboardingDailySongTitle => 'Chanson du jour';
@@ -422,7 +419,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingChatDesc =>
-      'Lancez des conversations et partagez des chansons directement depuis Spotify. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
+      'Lancez des conversations et partagez des chansons. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
 
   @override
   String get onboardingFriendsTitle => 'Créez votre groupe';
@@ -498,7 +495,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'Cette action supprimera définitivement votre compte, tous vos messages, vos données Spotify et vos informations de profil. Cette action est irréversible.';
+      'Cette action supprimera définitivement votre compte, tous vos messages, vos données musicales et vos informations de profil. Cette action est irréversible.';
 
   @override
   String get deleteAccountConfirm => 'Supprimer';
@@ -538,21 +535,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données Spotify : identifiant utilisateur Spotify, photo de profil, artistes, genres et titres les plus écoutés, et titre en cours de lecture — synchronisés via l\'API Spotify avec votre autorisation explicite.\n\n• Données sociales : messages, chansons partagées, chanson du jour, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d\'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.';
+      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d\'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Utilisation de vos données';
 
   @override
   String get privacyS3Body =>
-      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Intégration Spotify : affichage et comparaison de votre profil musical. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Analyses : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).';
+      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Analyses : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).';
 
   @override
   String get privacyS4Title => '4. Services tiers';
 
   @override
   String get privacyS4Body =>
-      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase Firestore, Crashlytics et Analytics — Google LLC. Vos données de profil, messages et événements d\'utilisation sont stockés sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Les photos de profil sont stockées sur des serveurs situés aux États-Unis dans le cadre de clauses contractuelles types (Art. 46 RGPD).\n\n• Cloud Functions — Google LLC. Vos données de messages et demandes d\'amitié sont traitées sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Spotify — Spotify AB. Utilisé uniquement pour lire vos données musicales avec votre autorisation.';
+      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase Firestore, Crashlytics et Analytics — Google LLC. Vos données de profil, messages et événements d\'utilisation sont stockés sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Les photos de profil sont stockées sur des serveurs situés aux États-Unis dans le cadre de clauses contractuelles types (Art. 46 RGPD).\n\n• Cloud Functions — Google LLC. Vos données de messages et demandes d\'amitié sont traitées sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Spotify et Last.fm. Utilisés comme fournisseurs de catalogue musical pour la recherche d\'artistes/chansons et les suggestions d\'artistes. Aucune connexion à un compte Spotify n\'est requise.';
 
   @override
   String get privacyS5Title => '5. Conservation et suppression des données';
@@ -594,5 +591,5 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS10Body =>
-      'Les photos de profil sont stockées dans Google Firebase Storage avec des serveurs situés aux États-Unis. En utilisant l\'application, vous autorisez explicitement ce transfert international de données d\'images. Google a mis en place les mesures techniques et organisationnelles nécessaires en vertu des Clauses Contractuelles Types approuvées par la Commission Européenne (Art. 46 RGPD) pour garantir un niveau de protection adéquat équivalent à celui de l\'UE.\n\nVos données personnelles, messages et données Spotify sont stockés sur des serveurs situés dans la région européenne (europe-southwest1), au sein de l\'UE.';
+      'Les photos de profil sont stockées dans Google Firebase Storage avec des serveurs situés aux États-Unis. En utilisant l\'application, vous autorisez explicitement ce transfert international de données d\'images. Google a mis en place les mesures techniques et organisationnelles nécessaires en vertu des Clauses Contractuelles Types approuvées par la Commission Européenne (Art. 46 RGPD) pour garantir un niveau de protection adéquat équivalent à celui de l\'UE.\n\nVos données personnelles, messages et données de profil musical sont stockés sur des serveurs situés dans la région européenne (europe-southwest1), au sein de l\'UE.';
 }

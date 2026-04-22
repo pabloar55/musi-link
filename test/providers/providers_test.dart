@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/providers/shared_preferences_provider.dart';
 import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/services/chat_service.dart';

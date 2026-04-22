@@ -301,7 +301,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoverNoUsersHint.
   ///
   /// In en, this message translates to:
-  /// **'As more users connect their Spotify, they will appear here'**
+  /// **'As more users create their music profile, they will appear here'**
   String get discoverNoUsersHint;
 
   /// No description provided for @navDiscover.
@@ -351,12 +351,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type a name to search'**
   String get searchTypeToSearch;
-
-  /// No description provided for @searchSpotifyConnected.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotify connected'**
-  String get searchSpotifyConnected;
 
   /// No description provided for @profileTitle.
   ///
@@ -412,11 +406,11 @@ abstract class AppLocalizations {
   /// **'Write a message...'**
   String get chatWriteMessage;
 
-  /// No description provided for @chatSearchSpotify.
+  /// No description provided for @chatSearchSong.
   ///
   /// In en, this message translates to:
-  /// **'Search song on Spotify...'**
-  String get chatSearchSpotify;
+  /// **'Search song...'**
+  String get chatSearchSong;
 
   /// No description provided for @chatShareSong.
   ///
@@ -823,7 +817,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingStatsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.'**
+  /// **'Create your own top artists and genres. See how your taste compares with other people.'**
   String get onboardingStatsDesc;
 
   /// No description provided for @onboardingDailySongTitle.
@@ -847,7 +841,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingChatDesc.
   ///
   /// In en, this message translates to:
-  /// **'Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.'**
+  /// **'Start conversations and share songs. Talk about the music you love with people who get it.'**
   String get onboardingChatDesc;
 
   /// No description provided for @onboardingFriendsTitle.
@@ -991,7 +985,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountBody.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.'**
+  /// **'This will permanently delete your account, all your messages, music data and profile information. This action cannot be undone.'**
   String get deleteAccountBody;
 
   /// No description provided for @deleteAccountConfirm.
@@ -1063,7 +1057,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify\'s API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.'**
+  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.'**
   String get privacyS2Body;
 
   /// No description provided for @privacyS3Title.
@@ -1075,7 +1069,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS3Body.
   ///
   /// In en, this message translates to:
-  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).'**
+  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).'**
   String get privacyS3Body;
 
   /// No description provided for @privacyS4Title.
@@ -1087,7 +1081,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS4Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.'**
+  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify and Last.fm. Used as music catalogue providers for artist/song search and artist suggestions. No Spotify account connection is required.'**
   String get privacyS4Body;
 
   /// No description provided for @privacyS5Title.
@@ -1159,7 +1153,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS10Body.
   ///
   /// In en, this message translates to:
-  /// **'Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and Spotify data are stored on servers located in the European region (europe-southwest1), within the EU.'**
+  /// **'Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and music profile data are stored on servers located in the European region (europe-southwest1), within the EU.'**
   String get privacyS10Body;
 }
 

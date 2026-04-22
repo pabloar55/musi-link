@@ -44,7 +44,9 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
     }
 
     setState(() => _loading = true);
-    final results = await ref.read(spotifyStatsProvider).searchTracks(query);
+    final results = await ref
+        .read(musicCatalogServiceProvider)
+        .searchTracks(query);
     if (mounted) {
       setState(() {
         _results = results;
@@ -80,7 +82,7 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: AppLocalizations.of(context)!.chatSearchSpotify,
+                  hintText: AppLocalizations.of(context)!.chatSearchSong,
                   prefixIcon: const Icon(LucideIcons.search),
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest,
@@ -89,7 +91,9 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
                 onChanged: _onSearchChanged,
               ),
@@ -98,47 +102,47 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _results.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchController.text.isEmpty
-                                ? AppLocalizations.of(context)!.chatTypeToSearch
-                                : AppLocalizations.of(context)!.chatNoResults,
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withAlpha(120),
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: _results.length,
-                          itemBuilder: (context, index) {
-                            final track = _results[index];
-                            return ListTile(
-                              leading: track.imageUrl.isNotEmpty
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: CachedNetworkImage(
-                                        imageUrl: track.imageUrl,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : const Icon(LucideIcons.music, size: 40),
-                              title: Text(
-                                track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                track.artist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () => widget.onTrackSelected(track),
-                            );
-                          },
+                  ? Center(
+                      child: Text(
+                        _searchController.text.isEmpty
+                            ? AppLocalizations.of(context)!.chatTypeToSearch
+                            : AppLocalizations.of(context)!.chatNoResults,
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withAlpha(120),
                         ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: _results.length,
+                      itemBuilder: (context, index) {
+                        final track = _results[index];
+                        return ListTile(
+                          leading: track.imageUrl.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: CachedNetworkImage(
+                                    imageUrl: track.imageUrl,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : const Icon(LucideIcons.music, size: 40),
+                          title: Text(
+                            track.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            track.artist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => widget.onTrackSelected(track),
+                        );
+                      },
+                    ),
             ),
           ],
         );

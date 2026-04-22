@@ -7,19 +7,19 @@ import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/services/authenticated_service.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/music_catalog_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
 class MusicProfileService with AuthenticatedService {
   MusicProfileService(
-    this._spotifyGetStats, {
+    this._musicCatalogService, {
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
   }) : _firestore = firestore,
        _auth = auth;
 
-  final SpotifyGetStats _spotifyGetStats;
+  final MusicCatalogService _musicCatalogService;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
@@ -58,7 +58,7 @@ class MusicProfileService with AuthenticatedService {
   ) async {
     try {
       final artists = selectedArtists.take(15).toList();
-      final genres = _spotifyGetStats.getTopGenresFromArtists(artists, 10);
+      final genres = _musicCatalogService.getTopGenresFromArtists(artists, 10);
 
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),

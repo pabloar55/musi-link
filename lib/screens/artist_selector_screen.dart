@@ -44,7 +44,9 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     if (widget.isEditMode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadExistingArtists());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _loadExistingArtists(),
+      );
     }
   }
 
@@ -84,7 +86,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   Future<void> _search(String query) async {
     try {
       final results = await ref
-          .read(spotifyStatsProvider)
+          .read(musicCatalogServiceProvider)
           .searchArtists(query, limit: 20);
       if (!mounted) return;
       setState(() {
@@ -103,7 +105,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   Future<void> _loadSuggestions() async {
     if (_selected.isEmpty) return;
     try {
-      final service = ref.read(spotifyStatsProvider);
+      final service = ref.read(musicCatalogServiceProvider);
       final results = await Future.wait(
         _selected.map((a) => service.getRelatedArtists(a.name)),
       );
@@ -162,7 +164,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   Future<void> _enrichFromSpotify(Artist artist) async {
     try {
       final results = await ref
-          .read(spotifyStatsProvider)
+          .read(musicCatalogServiceProvider)
           .searchArtists(artist.name, limit: 1);
       if (!mounted || results.isEmpty) return;
       final enriched = results.first;
@@ -194,18 +196,16 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         if (!mounted) return;
         context.pop();
       } else {
-        ref.read(appRouterNotifierProvider).setArtistsSelected(
-              onboardingDone: onboardingDone,
-            );
+        ref
+            .read(appRouterNotifierProvider)
+            .setArtistsSelected(onboardingDone: onboardingDone);
       }
     } catch (e, st) {
       reportError(e, st).ignore();
       if (!mounted) return;
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.genericError)),
+        SnackBar(content: Text(AppLocalizations.of(context)!.genericError)),
       );
     }
   }
@@ -228,21 +228,23 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
               ),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                  24, widget.isEditMode ? 8 : 24, 24, 0),
+                24,
+                widget.isEditMode ? 8 : 24,
+                24,
+                0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l10n.artistSelectorTitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.artistSelectorSubtitle(
-                        _minArtists, _selected.length),
+                    l10n.artistSelectorSubtitle(_minArtists, _selected.length),
                     style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
@@ -325,9 +327,12 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     }
     if (_searchResults.isEmpty) {
       return Center(
-        child: Text(l10n.artistSelectorNoResults,
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        child: Text(
+          l10n.artistSelectorNoResults,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       );
     }
     return _artistList(_searchResults);
@@ -342,7 +347,8 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
             l10n.artistSelectorEmpty,
             textAlign: TextAlign.center,
             style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
@@ -435,9 +441,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
             backgroundImage: artist.imageUrl.isNotEmpty
                 ? CachedNetworkImageProvider(artist.imageUrl)
                 : null,
-            child: artist.imageUrl.isEmpty
-                ? const Icon(Icons.person)
-                : null,
+            child: artist.imageUrl.isEmpty ? const Icon(Icons.person) : null,
           ),
           title: Text(artist.name),
           subtitle: artist.genres.isNotEmpty
@@ -448,10 +452,14 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                 )
               : null,
           trailing: isSelected
-              ? Icon(Icons.check_circle,
-                  color: Theme.of(context).colorScheme.primary)
-              : Icon(Icons.add_circle_outline,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ? Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary,
+                )
+              : Icon(
+                  Icons.add_circle_outline,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           onTap: () => _toggleArtist(artist),
         );
       },
