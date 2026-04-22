@@ -60,37 +60,45 @@ class MockWriteBatch extends Mock implements WriteBatch {}
 /// que registra las llamadas para verificar en los tests.
 class FakeTransaction extends Fake implements Transaction {
   DocumentSnapshot<Map<String, dynamic>>? getResult;
+  final List<DocumentSnapshot<Map<String, dynamic>>> getResults = [];
   final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>>
-      updates = [];
-  final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>>
-      sets = [];
+  updates = [];
+  final List<MapEntry<DocumentReference<Object?>, Map<String, dynamic>>> sets =
+      [];
   bool getCalled = false;
 
   @override
   Future<DocumentSnapshot<T>> get<T extends Object?>(
-      DocumentReference<T> documentReference) async {
+    DocumentReference<T> documentReference,
+  ) async {
     getCalled = true;
+    if (getResults.isNotEmpty) {
+      return getResults.removeAt(0) as DocumentSnapshot<T>;
+    }
     return getResult! as DocumentSnapshot<T>;
   }
 
   @override
   Transaction update(
-      DocumentReference<Object?> documentReference,
-      Map<Object, Object?> data) {
+    DocumentReference<Object?> documentReference,
+    Map<Object, Object?> data,
+  ) {
     updates.add(MapEntry(documentReference, Map<String, dynamic>.from(data)));
     return this;
   }
 
   @override
   Transaction set<T>(
-      DocumentReference<T> documentReference,
-      T data, [
-      SetOptions? options,
+    DocumentReference<T> documentReference,
+    T data, [
+    SetOptions? options,
   ]) {
-    sets.add(MapEntry(
-      documentReference as DocumentReference<Object?>,
-      Map<String, dynamic>.from(data as Map),
-    ));
+    sets.add(
+      MapEntry(
+        documentReference as DocumentReference<Object?>,
+        Map<String, dynamic>.from(data as Map),
+      ),
+    );
     return this;
   }
 }

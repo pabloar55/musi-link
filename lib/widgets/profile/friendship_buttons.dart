@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -8,7 +10,7 @@ import 'package:musi_link/widgets/skeleton_loader.dart';
 class FriendshipButtons extends StatefulWidget {
   final AsyncValue<RelationshipResult> value;
   final VoidCallback onStartChat;
-  final VoidCallback onSendRequest;
+  final Future<void> Function() onSendRequest;
   final void Function(String requestId) onAcceptRequest;
   final void Function(String requestId) onRejectRequest;
   final void Function(String requestId) onCancelRequest;
@@ -34,9 +36,13 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
   /// para evitar el spinner mientras Firestore confirma la operación.
   RelationshipStatus? _optimisticStatus;
 
-  void _handleSendRequest() {
+  Future<void> _handleSendRequest() async {
     setState(() => _optimisticStatus = RelationshipStatus.requestSent);
-    widget.onSendRequest();
+    try {
+      await widget.onSendRequest();
+    } catch (_) {
+      if (mounted) setState(() => _optimisticStatus = null);
+    }
   }
 
   void _handleCancelRequest(String requestId) {
@@ -66,7 +72,8 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
       );
     }
 
-    final status = _optimisticStatus ?? relationship?.status ?? RelationshipStatus.none;
+    final status =
+        _optimisticStatus ?? relationship?.status ?? RelationshipStatus.none;
     final requestId = relationship?.requestId;
 
     switch (status) {
@@ -134,7 +141,7 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
 
       case RelationshipStatus.none:
         return FilledButton.icon(
-          onPressed: _handleSendRequest,
+          onPressed: () => unawaited(_handleSendRequest()),
           icon: const Icon(LucideIcons.userPlus),
           label: Text(l10n.profileAddFriend),
         );

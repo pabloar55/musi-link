@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -29,30 +30,58 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string on session loss — _isOwnProfile then evaluates to
   /// false (safe: shows the other-user view, actions are gated by GoRouter).
-  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
-  bool get _isOwnProfile => widget.user.uid == _currentUid && _currentUid.isNotEmpty;
+  String get _currentUid =>
+      ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  bool get _isOwnProfile =>
+      widget.user.uid == _currentUid && _currentUid.isNotEmpty;
 
   Future<void> _startChat() async {
-    final chat =
-        await ref.read(chatServiceProvider).getOrCreateChat(widget.user.uid);
+    final chat = await ref
+        .read(chatServiceProvider)
+        .getOrCreateChat(widget.user.uid);
     if (!mounted) return;
-    unawaited(context.push(
-      Uri(path: '/chat', queryParameters: {
-        'chatId': chat.id,
-        'otherUserName': widget.user.displayName,
-        'otherUserId': widget.user.uid,
-      }).toString(),
-    ));
+    unawaited(
+      context.push(
+        Uri(
+          path: '/chat',
+          queryParameters: {
+            'chatId': chat.id,
+            'otherUserName': widget.user.displayName,
+            'otherUserId': widget.user.uid,
+          },
+        ).toString(),
+      ),
+    );
   }
 
   Future<void> _sendRequest() async {
-    await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
-    if (!mounted) return;
-    ref.invalidate(relationshipProvider(widget.user.uid));
+    try {
+      await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
+      if (!mounted) return;
+      ref.invalidate(relationshipProvider(widget.user.uid));
+    } on FirebaseException catch (e) {
+      if (mounted) _showWriteError(e);
+      rethrow;
+    } catch (_) {
+      if (mounted) _showWriteError(null);
+      rethrow;
+    }
+  }
+
+  void _showWriteError(FirebaseException? error) {
+    final l10n = AppLocalizations.of(context)!;
+    final message = error?.code == 'permission-denied'
+        ? l10n.authErrorTooManyRequests
+        : l10n.genericError;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _acceptRequest(String requestId) async {
-    await ref.read(friendServiceProvider).acceptRequest(requestId, widget.user.uid);
+    await ref
+        .read(friendServiceProvider)
+        .acceptRequest(requestId, widget.user.uid);
     if (!mounted) return;
     ref.invalidate(relationshipProvider(widget.user.uid));
   }
@@ -88,8 +117,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final user = ref.watch(userStreamProvider(widget.user.uid)).asData?.value ?? widget.user;
-    final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
+    final user =
+        ref.watch(userStreamProvider(widget.user.uid)).asData?.value ??
+        widget.user;
+    final hasMusicalData =
+        user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -116,10 +148,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             if (!_isOwnProfile)
               Builder(
                 builder: (context) {
-                  final compatibilityValue =
-                      ref.watch(compatibilityProvider(widget.user));
-                  final relationshipValue =
-                      ref.watch(relationshipProvider(widget.user.uid));
+                  final compatibilityValue = ref.watch(
+                    compatibilityProvider(widget.user),
+                  );
+                  final relationshipValue = ref.watch(
+                    relationshipProvider(widget.user.uid),
+                  );
 
                   return Column(
                     children: [

@@ -10,24 +10,27 @@ import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
 class ChatService with AuthenticatedService {
-  ChatService({required FirebaseFirestore firestore, required FirebaseAuth auth})
-      : _firestore = firestore,
-        _auth = auth;
+  ChatService({
+    required FirebaseFirestore firestore,
+    required FirebaseAuth auth,
+  }) : _firestore = firestore,
+       _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
   @override
   FirebaseAuth get auth => _auth;
-  late final CollectionReference<Map<String, dynamic>> _chatsRef =
-      _firestore.collection(FirestoreCollections.chats);
+  late final CollectionReference<Map<String, dynamic>> _chatsRef = _firestore
+      .collection(FirestoreCollections.chats);
+  late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
+      _firestore.collection(FirestoreCollections.rateLimits);
 
   // Cache por otherUid: evita re-query al abrir el mismo chat varias veces.
   final Map<String, Chat> _chatByOtherUid = {};
 
   /// Limpia la caché en memoria. Llamar al hacer logout.
   void clearCache() => _chatByOtherUid.clear();
-
 
   // ─── Chats ────────────────────────────────────────────────
 
@@ -91,8 +94,7 @@ class ChatService with AuthenticatedService {
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) =>
-            snapshot.docs.map(Chat.fromFirestore).toList());
+        .map((snapshot) => snapshot.docs.map(Chat.fromFirestore).toList());
   }
 
   static const int _deleteBatchSize = 499;
@@ -100,13 +102,13 @@ class ChatService with AuthenticatedService {
   /// Elimina un chat y todos sus mensajes.
   Future<void> deleteChat(String chatId) async {
     try {
-      final messagesRef =
-          _chatsRef.doc(chatId).collection(FirestoreCollections.messages);
+      final messagesRef = _chatsRef
+          .doc(chatId)
+          .collection(FirestoreCollections.messages);
 
       // Paginar el borrado para no superar el límite de 500 ops por batch.
       while (true) {
-        final snapshot =
-            await messagesRef.limit(_deleteBatchSize).get();
+        final snapshot = await messagesRef.limit(_deleteBatchSize).get();
         if (snapshot.docs.isEmpty) break;
 
         final batch = _firestore.batch();
@@ -130,6 +132,27 @@ class ChatService with AuthenticatedService {
 
   /// Envía un mensaje de texto en un chat.
   static const int maxMessageBytes = 2000;
+  static const Duration _messageRateLimitWindow = Duration(seconds: 10);
+
+  Map<String, Object?> _nextMessageRateLimit(
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
+    final data = snap.data() ?? const <String, dynamic>{};
+    final windowStart = data['messageWindowStart'] as Timestamp?;
+    final count = (data['messageCount'] as int?) ?? 0;
+    final shouldReset =
+        windowStart == null ||
+        DateTime.now().difference(windowStart.toDate()) >
+            _messageRateLimitWindow;
+
+    return {
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'messageWindowStart': shouldReset
+          ? FieldValue.serverTimestamp()
+          : windowStart,
+      'messageCount': shouldReset ? 1 : count + 1,
+    };
+  }
 
   Future<void> sendMessage(
     String chatId,
@@ -149,20 +172,31 @@ class ChatService with AuthenticatedService {
         timestamp: now,
       );
 
-      final batch = _firestore.batch();
+      final chatRef = _chatsRef.doc(chatId);
+      final msgRef = chatRef.collection(FirestoreCollections.messages).doc();
+      final limiterRef = _rateLimitsRef.doc(currentUid);
 
-      // Añadir el mensaje a la subcolección
-      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
-      batch.set(msgRef, message.toFirestore());
+      await _firestore.runTransaction((tx) async {
+        final limiterSnap = await tx.get(limiterRef);
 
-      // Actualizar último mensaje e incrementar el contador del destinatario
-      batch.update(_chatsRef.doc(chatId), {
-        'lastMessage': trimmed,
-        'lastMessageTime': Timestamp.fromDate(now),
-        'unreadCounts.$otherUid': FieldValue.increment(1),
+        // Añadir el mensaje a la subcolección
+        tx.set(msgRef, {
+          ...message.toFirestore(),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        // Actualizar último mensaje e incrementar el contador del destinatario
+        tx.update(chatRef, {
+          'lastMessage': trimmed,
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'unreadCounts.$otherUid': FieldValue.increment(1),
+        });
+        tx.set(
+          limiterRef,
+          _nextMessageRateLimit(limiterSnap),
+          SetOptions(merge: true),
+        );
       });
-
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -181,10 +215,12 @@ class ChatService with AuthenticatedService {
         .limit(messagesPageSize)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) => snapshot.docs.reversed
-            .map(Message.fromFirestore)
-            .whereType<Message>()
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs.reversed
+              .map(Message.fromFirestore)
+              .whereType<Message>()
+              .toList(),
+        );
   }
 
   /// Carga mensajes anteriores a [before] para paginación inversa.
@@ -262,18 +298,29 @@ class ChatService with AuthenticatedService {
         trackData: track,
       );
 
-      final batch = _firestore.batch();
+      final chatRef = _chatsRef.doc(chatId);
+      final msgRef = chatRef.collection(FirestoreCollections.messages).doc();
+      final limiterRef = _rateLimitsRef.doc(currentUid);
 
-      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
-      batch.set(msgRef, message.toFirestore());
+      await _firestore.runTransaction((tx) async {
+        final limiterSnap = await tx.get(limiterRef);
 
-      batch.update(_chatsRef.doc(chatId), {
-        'lastMessage': '🎵 ${track.title}',
-        'lastMessageTime': Timestamp.fromDate(now),
-        'unreadCounts.$otherUid': FieldValue.increment(1),
+        tx.set(msgRef, {
+          ...message.toFirestore(),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        tx.update(chatRef, {
+          'lastMessage': '🎵 ${track.title}',
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'unreadCounts.$otherUid': FieldValue.increment(1),
+        });
+        tx.set(
+          limiterRef,
+          _nextMessageRateLimit(limiterSnap),
+          SetOptions(merge: true),
+        );
       });
-
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -284,18 +331,24 @@ class ChatService with AuthenticatedService {
   /// Usa una transacción para evitar race conditions cuando varios
   /// usuarios reaccionan al mismo mensaje simultáneamente.
   Future<void> toggleReaction(
-      String chatId, String messageId, String emoji) async {
+    String chatId,
+    String messageId,
+    String emoji,
+  ) async {
     try {
-      final msgRef =
-          _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc(messageId);
+      final msgRef = _chatsRef
+          .doc(chatId)
+          .collection(FirestoreCollections.messages)
+          .doc(messageId);
 
       await _firestore.runTransaction((transaction) async {
         final doc = await transaction.get(msgRef);
         if (!doc.exists) return;
 
         final data = doc.data()!;
-        final reactions =
-            Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
+        final reactions = Map<String, dynamic>.from(
+          data['reactions'] as Map? ?? {},
+        );
 
         // Remove any existing reaction from this user on a different emoji
         for (final key in reactions.keys.toList()) {

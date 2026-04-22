@@ -1,6 +1,6 @@
 import 'dart:async';
 
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +34,8 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
 
   /// UID of the authenticated user from the Riverpod provider.
   /// If empty (session lost), searchUsers will return no results safely.
-  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  String get _currentUid =>
+      ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   void dispose() {
@@ -70,14 +71,16 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     });
 
     try {
-      final users = await ref.read(userServiceProvider)
+      final users = await ref
+          .read(userServiceProvider)
           .searchUsers(query, excludeUid: _currentUid);
 
       // Cargar relaciones para todos los resultados
       final relationships = <String, RelationshipResult>{};
       for (final user in users) {
-        relationships[user.uid] =
-            await ref.read(friendServiceProvider).getRelationship(user.uid);
+        relationships[user.uid] = await ref
+            .read(friendServiceProvider)
+            .getRelationship(user.uid);
       }
 
       if (mounted) {
@@ -100,13 +103,29 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   }
 
   Future<void> _sendRequest(String uid) async {
-    await ref.read(friendServiceProvider).sendRequest(uid);
-    if (!mounted) return;
-    // Refrescar solo este usuario
-    final rel = await ref.read(friendServiceProvider).getRelationship(uid);
-    if (mounted) {
-      setState(() => _relationships[uid] = rel);
+    try {
+      await ref.read(friendServiceProvider).sendRequest(uid);
+      if (!mounted) return;
+      // Refrescar solo este usuario
+      final rel = await ref.read(friendServiceProvider).getRelationship(uid);
+      if (mounted) {
+        setState(() => _relationships[uid] = rel);
+      }
+    } on FirebaseException catch (e) {
+      if (mounted) _showWriteError(e);
+    } catch (_) {
+      if (mounted) _showWriteError(null);
     }
+  }
+
+  void _showWriteError(FirebaseException? error) {
+    final l10n = AppLocalizations.of(context)!;
+    final message = error?.code == 'permission-denied'
+        ? l10n.authErrorTooManyRequests
+        : l10n.genericError;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _cancelRequest(String uid, String requestId) async {
@@ -130,7 +149,9 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   Future<void> _refreshRelationships() async {
     for (final user in _results) {
       try {
-        final rel = await ref.read(friendServiceProvider).getRelationship(user.uid);
+        final rel = await ref
+            .read(friendServiceProvider)
+            .getRelationship(user.uid);
         if (mounted) {
           setState(() => _relationships[user.uid] = rel);
         }
@@ -146,9 +167,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.searchTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.searchTitle)),
       body: Column(
         children: [
           // Barra de búsqueda
@@ -178,8 +197,10 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               onChanged: _onSearchChanged,
             ),
@@ -190,59 +211,63 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
             child: _isLoading
                 ? SkeletonShimmer(
                     child: ListView(
-                      children:
-                          List.generate(5, (_) => const SkeletonListTile()),
+                      children: List.generate(
+                        5,
+                        (_) => const SkeletonListTile(),
+                      ),
                     ),
                   )
                 : _hasError
-                    ? Center(
-                        child: Text(
-                          l10n.genericError,
-                          style: TextStyle(
-                            color: colorScheme.error,
-                          ),
-                        ),
-                      )
-                    : _results.isEmpty
-                        ? Center(
-                            child: Text(
-                              _hasSearched
-                                  ? l10n.searchNoResults
-                                  : l10n.searchTypeToSearch,
-                              style: TextStyle(
-                                color: colorScheme.onSurface.withAlpha(120),
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _results.length,
-                            itemBuilder: (context, index) {
-                              final user = _results[index];
-                              final photoUrl = user.photoUrl;
-                              final rel = _relationships[user.uid];
+                ? Center(
+                    child: Text(
+                      l10n.genericError,
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  )
+                : _results.isEmpty
+                ? Center(
+                    child: Text(
+                      _hasSearched
+                          ? l10n.searchNoResults
+                          : l10n.searchTypeToSearch,
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withAlpha(120),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _results.length,
+                    itemBuilder: (context, index) {
+                      final user = _results[index];
+                      final photoUrl = user.photoUrl;
+                      final rel = _relationships[user.uid];
 
-                              return ListTile(
-                                leading: UserCircleAvatar(
-                                  photoUrl: photoUrl,
-                                  name: user.displayName,
+                      return ListTile(
+                        leading: UserCircleAvatar(
+                          photoUrl: photoUrl,
+                          name: user.displayName,
+                        ),
+                        title: Text(user.displayName),
+                        subtitle: user.topArtistNames.isNotEmpty
+                            ? Text(
+                                user.topArtistNames.take(2).join(', '),
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontSize: 12,
                                 ),
-                                title: Text(user.displayName),
-                                subtitle: user.topArtistNames.isNotEmpty
-                                    ? Text(
-                                        user.topArtistNames.take(2).join(', '),
-                                        style: TextStyle(
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontSize: 12,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      )
-                                    : null,
-                                trailing: _buildTrailingAction(
-                                    user, rel, colorScheme, l10n),
-                                onTap: () => _openProfile(user),
-                              );
-                            },
-                          ),
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : null,
+                        trailing: _buildTrailingAction(
+                          user,
+                          rel,
+                          colorScheme,
+                          l10n,
+                        ),
+                        onTap: () => _openProfile(user),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -256,7 +281,10 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
     AppLocalizations l10n,
   ) {
     if (rel == null) {
-      return Icon(LucideIcons.chevronRight, color: colorScheme.onSurfaceVariant);
+      return Icon(
+        LucideIcons.chevronRight,
+        color: colorScheme.onSurfaceVariant,
+      );
     }
 
     switch (rel.status) {
@@ -265,7 +293,10 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
 
       case RelationshipStatus.requestSent:
         return IconButton(
-          icon: Icon(LucideIcons.hourglass, color: colorScheme.onSurfaceVariant),
+          icon: Icon(
+            LucideIcons.hourglass,
+            color: colorScheme.onSurfaceVariant,
+          ),
           tooltip: l10n.friendsRequestSent,
           onPressed: () {
             if (rel.requestId != null) {

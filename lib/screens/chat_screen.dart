@@ -1,6 +1,6 @@
 import 'dart:async';
 
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +51,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string if session was lost — message bubbles fall back to
   /// always showing "other" side, which is safe for the UI.
-  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  String get _currentUid =>
+      ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
 
   @override
   void initState() {
@@ -61,14 +62,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) _activeChatNotifier.setChat(widget.chatId);
     });
     _messagesStream = ref.read(chatServiceProvider).getMessages(widget.chatId);
-    _otherUserFuture = ref.read(userServiceProvider).getUser(widget.otherUserId);
+    _otherUserFuture = ref
+        .read(userServiceProvider)
+        .getUser(widget.otherUserId);
 
     _messagesSubscription = _messagesStream.listen((streamMessages) {
       if (!mounted) return;
       final isFirst = _isInitialLoading;
-      final latestTimestamp =
-          streamMessages.isEmpty ? null : streamMessages.last.timestamp;
-      final hasNewMessages = latestTimestamp != null &&
+      final latestTimestamp = streamMessages.isEmpty
+          ? null
+          : streamMessages.last.timestamp;
+      final hasNewMessages =
+          latestTimestamp != null &&
           (_lastSeenTimestamp == null ||
               latestTimestamp.isAfter(_lastSeenTimestamp!));
       setState(() {
@@ -90,7 +95,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
       if (hasNewMessages) {
         _lastSeenTimestamp = latestTimestamp;
-        unawaited(ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId));
+        unawaited(
+          ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId),
+        );
         _scrollToBottom();
       }
     });
@@ -142,14 +149,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // Capturar posición justo antes de modificar la lista para que el
       // delta refleje exactamente cuánto contenido se añade arriba.
-      final oldOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+      final oldOffset = _scrollController.hasClients
+          ? _scrollController.offset
+          : 0.0;
       final oldExtent = _scrollController.hasClients
           ? _scrollController.position.maxScrollExtent
           : 0.0;
 
       final existingIds = _allMessages.map((m) => m.id).toSet();
-      final newMessages =
-          older.where((m) => !existingIds.contains(m.id)).toList();
+      final newMessages = older
+          .where((m) => !existingIds.contains(m.id))
+          .toList();
 
       setState(() {
         _isLoadingMore = false;
@@ -174,14 +184,44 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
 
     _messageController.clear();
-    await ref.read(chatServiceProvider).sendMessage(
-      widget.chatId,
-      text,
-      otherUid: widget.otherUserId,
-    );
+    try {
+      await ref
+          .read(chatServiceProvider)
+          .sendMessage(widget.chatId, text, otherUid: widget.otherUserId);
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      if (_messageController.text.isEmpty) {
+        _messageController.text = text;
+        _messageController.selection = TextSelection.collapsed(
+          offset: text.length,
+        );
+      }
+      _showWriteError(e);
+      return;
+    } catch (_) {
+      if (!mounted) return;
+      if (_messageController.text.isEmpty) {
+        _messageController.text = text;
+        _messageController.selection = TextSelection.collapsed(
+          offset: text.length,
+        );
+      }
+      _showWriteError(null);
+      return;
+    }
 
     // Scroll al final tras enviar
     _scrollToBottom();
+  }
+
+  void _showWriteError(FirebaseException? error) {
+    final l10n = AppLocalizations.of(context)!;
+    final message = error?.code == 'permission-denied'
+        ? l10n.authErrorTooManyRequests
+        : l10n.genericError;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _scrollToBottom() {
@@ -204,12 +244,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (_) => TrackSearchSheet(
         onTrackSelected: (track) async {
           Navigator.of(context).pop();
-          await ref.read(chatServiceProvider).sendTrackMessage(
-            widget.chatId,
-            track,
-            otherUid: widget.otherUserId,
-          );
-          _scrollToBottom();
+          try {
+            await ref
+                .read(chatServiceProvider)
+                .sendTrackMessage(
+                  widget.chatId,
+                  track,
+                  otherUid: widget.otherUserId,
+                );
+            _scrollToBottom();
+          } on FirebaseException catch (e) {
+            if (mounted) _showWriteError(e);
+          } catch (_) {
+            if (mounted) _showWriteError(null);
+          }
         },
       ),
     );
@@ -244,18 +292,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  UserCircleAvatar(
-                    photoUrl: photoUrl,
-                    name: name,
-                    radius: 16,
-                  ),
+                  UserCircleAvatar(photoUrl: photoUrl, name: name, radius: 16),
                   const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      name,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  Flexible(child: Text(name, overflow: TextOverflow.ellipsis)),
                 ],
               );
             },
@@ -265,9 +304,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: Column(
         children: [
           // Lista de mensajes
-          Expanded(
-            child: _buildMessageList(colorScheme, l10n),
-          ),
+          Expanded(child: _buildMessageList(colorScheme, l10n)),
           _buildInputBar(colorScheme),
         ],
       ),
@@ -371,7 +408,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     borderSide: BorderSide.none,
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
                 onSubmitted: (_) => _sendMessage(),
               ),

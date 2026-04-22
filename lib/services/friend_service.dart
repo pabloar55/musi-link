@@ -17,19 +17,45 @@ class RelationshipResult {
 
 /// Servicio para gestionar solicitudes de amistad y amigos en Firestore.
 class FriendService with AuthenticatedService {
-  FriendService({required FirebaseFirestore firestore, required FirebaseAuth auth})
-      : _firestore = firestore,
-        _auth = auth;
+  FriendService({
+    required FirebaseFirestore firestore,
+    required FirebaseAuth auth,
+  }) : _firestore = firestore,
+       _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
   @override
   FirebaseAuth get auth => _auth;
-  late final CollectionReference<Map<String, dynamic>> _requestsRef =
-      _firestore.collection(FirestoreCollections.friendRequests);
-  late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _requestsRef = _firestore
+      .collection(FirestoreCollections.friendRequests);
+  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
+      .collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
+      _firestore.collection(FirestoreCollections.rateLimits);
+
+  static const Duration _friendRequestRateLimitWindow = Duration(minutes: 10);
+
+  Map<String, Object?> _nextFriendRequestRateLimit(
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
+    final data = snap.data() ?? const <String, dynamic>{};
+    final windowStart = data['friendRequestWindowStart'] as Timestamp?;
+    final count = (data['friendRequestCount'] as int?) ?? 0;
+    final shouldReset =
+        windowStart == null ||
+        DateTime.now().difference(windowStart.toDate()) >
+            _friendRequestRateLimitWindow;
+
+    return {
+      'lastFriendRequestAt': FieldValue.serverTimestamp(),
+      'friendRequestWindowStart': shouldReset
+          ? FieldValue.serverTimestamp()
+          : windowStart,
+      'friendRequestCount': shouldReset ? 1 : count + 1,
+    };
+  }
 
   // ─── Solicitudes ────────────────────────────────────────
 
@@ -50,10 +76,21 @@ class FriendService with AuthenticatedService {
       // Atomic read-then-write on the deterministic doc ID eliminates the
       // check-then-act race without a collection query.
       final docRef = _requestsRef.doc(docId);
+      final limiterRef = _rateLimitsRef.doc(currentUid);
       await _firestore.runTransaction((tx) async {
         final snapshot = await tx.get(docRef);
         if (snapshot.exists) return;
-        tx.set(docRef, request.toFirestore());
+        final limiterSnap = await tx.get(limiterRef);
+        tx.set(docRef, {
+          ...request.toFirestore(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        tx.set(
+          limiterRef,
+          _nextFriendRequestRateLimit(limiterSnap),
+          SetOptions(merge: true),
+        );
       });
     } catch (e, stack) {
       await reportError(e, stack);
@@ -121,8 +158,9 @@ class FriendService with AuthenticatedService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) =>
-            snapshot.docs.map(FriendRequest.fromFirestore).toList());
+        .map(
+          (snapshot) => snapshot.docs.map(FriendRequest.fromFirestore).toList(),
+        );
   }
 
   /// Stream de solicitudes de amistad enviadas pendientes.
@@ -133,8 +171,9 @@ class FriendService with AuthenticatedService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) =>
-            snapshot.docs.map(FriendRequest.fromFirestore).toList());
+        .map(
+          (snapshot) => snapshot.docs.map(FriendRequest.fromFirestore).toList(),
+        );
   }
 
   /// Stream de la lista de amigos del usuario actual.
@@ -148,8 +187,7 @@ class FriendService with AuthenticatedService {
           if (data == null) return <String>[];
           return List<String>.from(data['friends'] as List? ?? []);
         })
-        .distinct((a, b) =>
-            a.length == b.length && a.toSet().containsAll(b));
+        .distinct((a, b) => a.length == b.length && a.toSet().containsAll(b));
   }
 
   // ─── Consultas ──────────────────────────────────────────
@@ -190,18 +228,23 @@ class FriendService with AuthenticatedService {
       final sent = results[1] as QuerySnapshot<Map<String, dynamic>>;
       final received = results[2] as QuerySnapshot<Map<String, dynamic>>;
 
-      final friends =
-          List<String>.from(userDoc.data()?['friends'] as List? ?? []);
+      final friends = List<String>.from(
+        userDoc.data()?['friends'] as List? ?? [],
+      );
       if (friends.contains(otherUid)) {
         return const RelationshipResult(RelationshipStatus.friends);
       }
       if (sent.docs.isNotEmpty) {
         return RelationshipResult(
-            RelationshipStatus.requestSent, sent.docs.first.id);
+          RelationshipStatus.requestSent,
+          sent.docs.first.id,
+        );
       }
       if (received.docs.isNotEmpty) {
         return RelationshipResult(
-            RelationshipStatus.requestReceived, received.docs.first.id);
+          RelationshipStatus.requestReceived,
+          received.docs.first.id,
+        );
       }
 
       return const RelationshipResult(RelationshipStatus.none);
@@ -224,7 +267,10 @@ class FriendService with AuthenticatedService {
       );
       const batchSize = 400;
       for (var i = 0; i < friends.length; i += batchSize) {
-        final chunk = friends.sublist(i, (i + batchSize).clamp(0, friends.length));
+        final chunk = friends.sublist(
+          i,
+          (i + batchSize).clamp(0, friends.length),
+        );
         final batch = _firestore.batch();
         for (final friendUid in chunk) {
           batch.update(_usersRef.doc(friendUid), {
@@ -235,16 +281,17 @@ class FriendService with AuthenticatedService {
       }
 
       // Eliminar todas las solicitudes de amistad (enviadas y recibidas)
-      final sent = await _requestsRef
-          .where('senderId', isEqualTo: uid)
-          .get();
+      final sent = await _requestsRef.where('senderId', isEqualTo: uid).get();
       final received = await _requestsRef
           .where('receiverId', isEqualTo: uid)
           .get();
       final allDocs = [...sent.docs, ...received.docs];
       const requestBatchSize = 400;
       for (var i = 0; i < allDocs.length; i += requestBatchSize) {
-        final chunk = allDocs.sublist(i, (i + requestBatchSize).clamp(0, allDocs.length));
+        final chunk = allDocs.sublist(
+          i,
+          (i + requestBatchSize).clamp(0, allDocs.length),
+        );
         final batch = _firestore.batch();
         for (final doc in chunk) {
           batch.delete(doc.reference);
