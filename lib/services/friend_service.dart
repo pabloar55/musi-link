@@ -303,27 +303,64 @@ class FriendService with AuthenticatedService {
 
   /// Escucha en tiempo real la relacin con [otherUid].
   Stream<RelationshipResult> watchRelationship(String otherUid) {
-    late final StreamController<void> trigger;
+    late final StreamController<RelationshipResult> controller;
     final subscriptions = <StreamSubscription<Object?>>[];
+    DocumentSnapshot<Map<String, dynamic>>? userDoc;
+    DocumentSnapshot<Map<String, dynamic>>? sentDoc;
+    DocumentSnapshot<Map<String, dynamic>>? receivedDoc;
 
-    trigger = StreamController<void>(
+    RelationshipResult relationshipFromSnapshots() {
+      final friends = List<String>.from(
+        userDoc?.data()?['friends'] as List? ?? [],
+      );
+      if (friends.contains(otherUid)) {
+        return const RelationshipResult(RelationshipStatus.friends);
+      }
+
+      if (sentDoc?.data()?['status'] == FriendRequestStatus.pending.name) {
+        return RelationshipResult(RelationshipStatus.requestSent, sentDoc!.id);
+      }
+
+      if (receivedDoc?.data()?['status'] == FriendRequestStatus.pending.name) {
+        return RelationshipResult(
+          RelationshipStatus.requestReceived,
+          receivedDoc!.id,
+        );
+      }
+
+      return const RelationshipResult(RelationshipStatus.none);
+    }
+
+    void emitRelationship() {
+      if (!controller.isClosed) controller.add(relationshipFromSnapshots());
+    }
+
+    controller = StreamController<RelationshipResult>(
       onListen: () {
-        void notify(Object? _) => trigger.add(null);
-
-        subscriptions.add(_usersRef.doc(currentUid).snapshots().listen(notify));
+        subscriptions.add(
+          _usersRef.doc(currentUid).snapshots().listen((snapshot) {
+            userDoc = snapshot;
+            emitRelationship();
+          }),
+        );
         subscriptions.add(
           _requestsRef
               .doc('${currentUid}_$otherUid')
               .snapshots()
-              .listen(notify),
+              .listen((snapshot) {
+                sentDoc = snapshot;
+                emitRelationship();
+              }),
         );
         subscriptions.add(
           _requestsRef
               .doc('${otherUid}_$currentUid')
               .snapshots()
-              .listen(notify),
+              .listen((snapshot) {
+                receivedDoc = snapshot;
+                emitRelationship();
+              }),
         );
-        trigger.add(null);
       },
       onCancel: () async {
         for (final subscription in subscriptions) {
@@ -332,10 +369,7 @@ class FriendService with AuthenticatedService {
       },
     );
 
-    return trigger.stream
-        .asyncMap((_) {
-          return getRelationship(otherUid);
-        })
+    return controller.stream
         .distinct((a, b) => a.status == b.status && a.requestId == b.requestId);
   }
 
