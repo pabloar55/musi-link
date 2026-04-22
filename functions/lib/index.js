@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onFriendRequestAccepted = exports.onFriendRequest = exports.onUserMusicProfileChanged = exports.onNewMessage = exports.searchSpotifyTracks = exports.searchSpotifyArtists = void 0;
+exports.onFriendRequestAccepted = exports.onFriendRequest = exports.onUserMusicProfileChanged = exports.onUserMusicProfileCreated = exports.onNewMessage = exports.searchSpotifyTracks = exports.searchSpotifyArtists = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-functions/v2/firestore");
 const v2_1 = require("firebase-functions/v2");
@@ -17,6 +17,7 @@ const maxRecommendationInputArtists = 10;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
 const maxStoredRecommendations = 100;
+const maxReciprocalRecommendationUsers = 100;
 const defaultLocale = 'en';
 const supportedLocales = new Set(['en', 'es', 'fr']);
 const notificationText = {
@@ -41,7 +42,10 @@ tag) {
             token,
             notification,
             data,
-            android: Object.assign({ priority: 'high' }, (tag ? { notification: { tag } } : {})),
+            android: {
+                priority: 'high',
+                ...(tag ? { notification: { tag } } : {}),
+            },
             apns: { payload: { aps: { sound: 'default' } } },
         });
     }
@@ -56,7 +60,7 @@ tag) {
     }
 }
 function preferredLocale(data) {
-    const locale = data === null || data === void 0 ? void 0 : data.preferredLocale;
+    const locale = data?.preferredLocale;
     if (typeof locale !== 'string')
         return defaultLocale;
     const languageCode = locale.toLowerCase().split(/[-_]/)[0];
@@ -74,8 +78,8 @@ function stringList(value) {
 }
 function readMusicProfile(data) {
     return {
-        topArtistNames: stringList(data === null || data === void 0 ? void 0 : data.topArtistNames).slice(0, maxRecommendationInputArtists),
-        topGenreNames: stringList(data === null || data === void 0 ? void 0 : data.topGenreNames).slice(0, maxRecommendationInputGenres),
+        topArtistNames: stringList(data?.topArtistNames).slice(0, maxRecommendationInputArtists),
+        topGenreNames: stringList(data?.topGenreNames).slice(0, maxRecommendationInputGenres),
     };
 }
 function sameStringList(left, right) {
@@ -86,6 +90,14 @@ function sameStringList(left, right) {
 function musicProfileChanged(before, after) {
     return !sameStringList(before.topArtistNames, after.topArtistNames) ||
         !sameStringList(before.topGenreNames, after.topGenreNames);
+}
+function timestampMillis(value) {
+    return value instanceof firestore_2.Timestamp ? value.toMillis() : undefined;
+}
+function recommendationRefreshRequested(before, after) {
+    const beforeMillis = timestampMillis(before?.recommendationsRefreshRequestedAt);
+    const afterMillis = timestampMillis(after?.recommendationsRefreshRequestedAt);
+    return afterMillis !== undefined && afterMillis !== beforeMillis;
 }
 function tokenKey(type, value) {
     return `${type}_${Buffer.from(value.toLowerCase(), 'utf8').toString('base64url')}`;
@@ -213,11 +225,84 @@ async function refreshRecommendations(uid, profile) {
         recommendationCount: recommendations.length,
     });
 }
+async function matchingCandidateProfiles(uid, profiles) {
+    const tokenMap = new Map();
+    profiles
+        .flatMap((profile) => musicTokens(profile))
+        .forEach((token) => tokenMap.set(token.key, token));
+    const tokens = [...tokenMap.values()];
+    if (tokens.length === 0)
+        return new Map();
+    const snapshots = await Promise.all(tokens.map((token) => db
+        .collection(recommendationIndexCollection)
+        .doc(token.key)
+        .collection('users')
+        .orderBy('updatedAt', 'desc')
+        .limit(maxIndexUsersPerToken)
+        .get()));
+    const candidates = new Map();
+    for (const snapshot of snapshots) {
+        for (const doc of snapshot.docs) {
+            if (doc.id === uid || candidates.has(doc.id))
+                continue;
+            const data = doc.data();
+            candidates.set(doc.id, {
+                uid: doc.id,
+                topArtistNames: stringList(data.topArtistNames),
+                topGenreNames: stringList(data.topGenreNames),
+            });
+            if (candidates.size >= maxReciprocalRecommendationUsers)
+                return candidates;
+        }
+    }
+    return candidates;
+}
+async function updateReciprocalRecommendations(uid, profile, candidates) {
+    const generatedAt = firestore_2.Timestamp.now();
+    await commitBatches([...candidates.values()].map((candidate) => (batch) => {
+        const recommendation = calculateRecommendation(candidate, {
+            uid,
+            topArtistNames: profile.topArtistNames,
+            topGenreNames: profile.topGenreNames,
+        });
+        const ref = db.doc(`users/${candidate.uid}/${recommendationsCollection}/${uid}`);
+        if (recommendation === null) {
+            batch.delete(ref);
+            return;
+        }
+        batch.set(ref, {
+            userId: uid,
+            score: recommendation.score,
+            sharedArtistNames: recommendation.sharedArtistNames,
+            sharedGenreNames: recommendation.sharedGenreNames,
+            rank: 0,
+            generatedAt,
+        });
+    }));
+    v2_1.logger.info('updateReciprocalRecommendations: updated candidates', {
+        uid,
+        candidateCount: candidates.size,
+    });
+}
+async function rebuildMusicRecommendations(uid, before, after, options = {}) {
+    const profileChanged = musicProfileChanged(before, after);
+    const forceSelfRefresh = options.forceSelfRefresh === true;
+    if (!profileChanged && !forceSelfRefresh)
+        return;
+    const reciprocalCandidates = profileChanged || forceSelfRefresh
+        ? await matchingCandidateProfiles(uid, [before, after])
+        : new Map();
+    if (profileChanged || forceSelfRefresh)
+        await updateRecommendationIndex(uid, before, after);
+    await refreshRecommendations(uid, after);
+    if (profileChanged || forceSelfRefresh) {
+        await updateReciprocalRecommendations(uid, after, reciprocalCandidates);
+    }
+}
 // ── Función 1 — Nuevo mensaje ─────────────────────────────────────────────────
 exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{chatId}/messages/{messageId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b, _c, _d;
     try {
-        const message = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
+        const message = event.data?.data();
         if (!message)
             return;
         const chatId = event.params.chatId;
@@ -236,11 +321,11 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
             db.doc(`users/${recipientId}`).get(),
             db.doc(`users/${senderId}`).get(),
         ]);
-        const fcmToken = (_b = recipientSnap.data()) === null || _b === void 0 ? void 0 : _b.fcmToken;
-        const senderName = (_c = senderSnap.data()) === null || _c === void 0 ? void 0 : _c.displayName;
+        const fcmToken = recipientSnap.data()?.fcmToken;
+        const senderName = senderSnap.data()?.displayName;
         if (!fcmToken || !senderName)
             return;
-        await sendNotification(recipientId, fcmToken, { title: senderName, body: (_d = message.text) !== null && _d !== void 0 ? _d : '📎' }, {
+        await sendNotification(recipientId, fcmToken, { title: senderName, body: message.text ?? '📎' }, {
             type: 'new_message',
             chatId,
             otherUserId: senderId,
@@ -253,18 +338,35 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
     }
 });
 // ── Función 2 — Recomendaciones musicales ─────────────────────────────────────
-// Rebuilds the current user's recommendation list when their music taste changes.
-// Cost is bounded by 20 tokens * 80 index docs plus <= 100 recommendation writes.
-exports.onUserMusicProfileChanged = (0, firestore_1.onDocumentUpdated)({ document: 'users/{userId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b;
+// Rebuilds recommendation lists when a user's music taste changes.
+// The changed user's full list is rebuilt, and matching existing users get a
+// reciprocal recommendation upsert/delete so discovery does not wait for them
+// to edit their own profile.
+exports.onUserMusicProfileCreated = (0, firestore_1.onDocumentCreated)({ document: 'users/{userId}', region: 'europe-southwest1' }, async (event) => {
     try {
-        const before = readMusicProfile((_a = event.data) === null || _a === void 0 ? void 0 : _a.before.data());
-        const after = readMusicProfile((_b = event.data) === null || _b === void 0 ? void 0 : _b.after.data());
-        if (!musicProfileChanged(before, after))
-            return;
-        const uid = event.params.userId;
-        await updateRecommendationIndex(uid, before, after);
-        await refreshRecommendations(uid, after);
+        const after = readMusicProfile(event.data?.data());
+        await rebuildMusicRecommendations(event.params.userId, {
+            topArtistNames: [],
+            topGenreNames: [],
+        }, after);
+    }
+    catch (error) {
+        v2_1.logger.error('onUserMusicProfileCreated: unhandled error', {
+            userId: event.params.userId,
+            error,
+        });
+        throw error;
+    }
+});
+exports.onUserMusicProfileChanged = (0, firestore_1.onDocumentUpdated)({ document: 'users/{userId}', region: 'europe-southwest1' }, async (event) => {
+    try {
+        const beforeData = event.data?.before.data();
+        const afterData = event.data?.after.data();
+        const before = readMusicProfile(beforeData);
+        const after = readMusicProfile(afterData);
+        await rebuildMusicRecommendations(event.params.userId, before, after, {
+            forceSelfRefresh: recommendationRefreshRequested(beforeData, afterData),
+        });
     }
     catch (error) {
         v2_1.logger.error('onUserMusicProfileChanged: unhandled error', {
@@ -276,9 +378,8 @@ exports.onUserMusicProfileChanged = (0, firestore_1.onDocumentUpdated)({ documen
 });
 // ── Función 3 — Nueva solicitud de amistad ────────────────────────────────────
 exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend_requests/{requestId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b;
     try {
-        const request = (_a = event.data) === null || _a === void 0 ? void 0 : _a.data();
+        const request = event.data?.data();
         if (!request)
             return;
         if (request.status !== 'pending')
@@ -290,8 +391,8 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
             db.doc(`users/${senderId}`).get(),
         ]);
         const receiver = receiverSnap.data();
-        const fcmToken = receiver === null || receiver === void 0 ? void 0 : receiver.fcmToken;
-        const senderName = (_b = senderSnap.data()) === null || _b === void 0 ? void 0 : _b.displayName;
+        const fcmToken = receiver?.fcmToken;
+        const senderName = senderSnap.data()?.displayName;
         if (!fcmToken || !senderName)
             return;
         const locale = preferredLocale(receiver);
@@ -304,10 +405,9 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
 });
 // ── Función 4 — Solicitud de amistad aceptada ─────────────────────────────────
 exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document: 'friend_requests/{requestId}', region: 'europe-southwest1' }, async (event) => {
-    var _a, _b, _c;
     try {
-        const before = (_a = event.data) === null || _a === void 0 ? void 0 : _a.before.data();
-        const after = (_b = event.data) === null || _b === void 0 ? void 0 : _b.after.data();
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
         if (!before || !after)
             return;
         if (before.status !== 'pending' || after.status !== 'accepted')
@@ -319,8 +419,8 @@ exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document:
             db.doc(`users/${receiverId}`).get(),
         ]);
         const sender = senderSnap.data();
-        const fcmToken = sender === null || sender === void 0 ? void 0 : sender.fcmToken;
-        const accepterName = (_c = receiverSnap.data()) === null || _c === void 0 ? void 0 : _c.displayName;
+        const fcmToken = sender?.fcmToken;
+        const accepterName = receiverSnap.data()?.displayName;
         if (!fcmToken || !accepterName)
             return;
         const locale = preferredLocale(sender);

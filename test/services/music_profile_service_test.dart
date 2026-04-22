@@ -250,6 +250,7 @@ void main() {
       when(() => mockFirestore.collection(any())).thenReturn(mockUsersRef);
 
       stubMyUserDoc();
+      when(() => mockMyDocRef.update(any())).thenAnswer((_) async {});
 
       when(() => mockMyDocRef.collection('recommendations'))
           .thenReturn(mockRecommendationsRef);

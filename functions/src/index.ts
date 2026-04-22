@@ -18,6 +18,7 @@ const maxRecommendationInputArtists = 10;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
 const maxStoredRecommendations = 100;
+const maxReciprocalRecommendationUsers = 100;
 
 type TokenType = 'artist' | 'genre';
 type SupportedLocale = 'en' | 'es' | 'fr';
@@ -129,6 +130,19 @@ function musicProfileChanged(
 ): boolean {
   return !sameStringList(before.topArtistNames, after.topArtistNames) ||
     !sameStringList(before.topGenreNames, after.topGenreNames);
+}
+
+function timestampMillis(value: unknown): number | undefined {
+  return value instanceof Timestamp ? value.toMillis() : undefined;
+}
+
+function recommendationRefreshRequested(
+  before: admin.firestore.DocumentData | undefined,
+  after: admin.firestore.DocumentData | undefined,
+): boolean {
+  const beforeMillis = timestampMillis(before?.recommendationsRefreshRequestedAt);
+  const afterMillis = timestampMillis(after?.recommendationsRefreshRequestedAt);
+  return afterMillis !== undefined && afterMillis !== beforeMillis;
 }
 
 function tokenKey(type: TokenType, value: string): string {
@@ -289,6 +303,100 @@ async function refreshRecommendations(uid: string, profile: UserMusicProfile): P
   });
 }
 
+async function matchingCandidateProfiles(
+  uid: string,
+  profiles: UserMusicProfile[],
+): Promise<Map<string, CandidateProfile>> {
+  const tokenMap = new Map<string, MusicToken>();
+  profiles
+    .flatMap((profile) => musicTokens(profile))
+    .forEach((token) => tokenMap.set(token.key, token));
+
+  const tokens = [...tokenMap.values()];
+  if (tokens.length === 0) return new Map();
+
+  const snapshots = await Promise.all(tokens.map((token) =>
+    db
+      .collection(recommendationIndexCollection)
+      .doc(token.key)
+      .collection('users')
+      .orderBy('updatedAt', 'desc')
+      .limit(maxIndexUsersPerToken)
+      .get(),
+  ));
+
+  const candidates = new Map<string, CandidateProfile>();
+  for (const snapshot of snapshots) {
+    for (const doc of snapshot.docs) {
+      if (doc.id === uid || candidates.has(doc.id)) continue;
+      const data = doc.data();
+      candidates.set(doc.id, {
+        uid: doc.id,
+        topArtistNames: stringList(data.topArtistNames),
+        topGenreNames: stringList(data.topGenreNames),
+      });
+      if (candidates.size >= maxReciprocalRecommendationUsers) return candidates;
+    }
+  }
+
+  return candidates;
+}
+
+async function updateReciprocalRecommendations(
+  uid: string,
+  profile: UserMusicProfile,
+  candidates: Map<string, CandidateProfile>,
+): Promise<void> {
+  const generatedAt = Timestamp.now();
+  await commitBatches([...candidates.values()].map((candidate) => (batch) => {
+    const recommendation = calculateRecommendation(candidate, {
+      uid,
+      topArtistNames: profile.topArtistNames,
+      topGenreNames: profile.topGenreNames,
+    });
+    const ref = db.doc(`users/${candidate.uid}/${recommendationsCollection}/${uid}`);
+
+    if (recommendation === null) {
+      batch.delete(ref);
+      return;
+    }
+
+    batch.set(ref, {
+      userId: uid,
+      score: recommendation.score,
+      sharedArtistNames: recommendation.sharedArtistNames,
+      sharedGenreNames: recommendation.sharedGenreNames,
+      rank: 0,
+      generatedAt,
+    });
+  }));
+
+  logger.info('updateReciprocalRecommendations: updated candidates', {
+    uid,
+    candidateCount: candidates.size,
+  });
+}
+
+async function rebuildMusicRecommendations(
+  uid: string,
+  before: UserMusicProfile,
+  after: UserMusicProfile,
+  options: { forceSelfRefresh?: boolean } = {},
+): Promise<void> {
+  const profileChanged = musicProfileChanged(before, after);
+  const forceSelfRefresh = options.forceSelfRefresh === true;
+  if (!profileChanged && !forceSelfRefresh) return;
+
+  const reciprocalCandidates = profileChanged || forceSelfRefresh
+    ? await matchingCandidateProfiles(uid, [before, after])
+    : new Map<string, CandidateProfile>();
+  if (profileChanged || forceSelfRefresh) await updateRecommendationIndex(uid, before, after);
+  await refreshRecommendations(uid, after);
+  if (profileChanged || forceSelfRefresh) {
+    await updateReciprocalRecommendations(uid, after, reciprocalCandidates);
+  }
+}
+
 // ── Función 1 — Nuevo mensaje ─────────────────────────────────────────────────
 
 export const onNewMessage = onDocumentCreated(
@@ -340,19 +448,40 @@ export const onNewMessage = onDocumentCreated(
 
 // ── Función 2 — Recomendaciones musicales ─────────────────────────────────────
 
-// Rebuilds the current user's recommendation list when their music taste changes.
-// Cost is bounded by 20 tokens * 80 index docs plus <= 100 recommendation writes.
+// Rebuilds recommendation lists when a user's music taste changes.
+// The changed user's full list is rebuilt, and matching existing users get a
+// reciprocal recommendation upsert/delete so discovery does not wait for them
+// to edit their own profile.
+export const onUserMusicProfileCreated = onDocumentCreated(
+  { document: 'users/{userId}', region: 'europe-southwest1' },
+  async (event) => {
+    try {
+      const after = readMusicProfile(event.data?.data());
+      await rebuildMusicRecommendations(event.params.userId, {
+        topArtistNames: [],
+        topGenreNames: [],
+      }, after);
+    } catch (error) {
+      logger.error('onUserMusicProfileCreated: unhandled error', {
+        userId: event.params.userId,
+        error,
+      });
+      throw error;
+    }
+  },
+);
+
 export const onUserMusicProfileChanged = onDocumentUpdated(
   { document: 'users/{userId}', region: 'europe-southwest1' },
   async (event) => {
     try {
-      const before = readMusicProfile(event.data?.before.data());
-      const after = readMusicProfile(event.data?.after.data());
-      if (!musicProfileChanged(before, after)) return;
-
-      const uid = event.params.userId;
-      await updateRecommendationIndex(uid, before, after);
-      await refreshRecommendations(uid, after);
+      const beforeData = event.data?.before.data();
+      const afterData = event.data?.after.data();
+      const before = readMusicProfile(beforeData);
+      const after = readMusicProfile(afterData);
+      await rebuildMusicRecommendations(event.params.userId, before, after, {
+        forceSelfRefresh: recommendationRefreshRequested(beforeData, afterData),
+      });
     } catch (error) {
       logger.error('onUserMusicProfileChanged: unhandled error', {
         userId: event.params.userId,

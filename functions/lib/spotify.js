@@ -11,7 +11,7 @@ let cachedToken = null;
 let tokenExpiresAt = 0;
 async function getSpotifyToken(clientId, clientSecret) {
     const now = Date.now();
-    if (cachedToken && now < tokenExpiresAt - 60000)
+    if (cachedToken && now < tokenExpiresAt - 60_000)
         return cachedToken;
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
     const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -33,10 +33,9 @@ async function getSpotifyToken(clientId, clientSecret) {
 }
 // ── Function 1 — Search artists ───────────────────────────────────────────────
 exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret] }, async (request) => {
-    var _a, _b;
     if (!request.auth)
         throw new https_1.HttpsError('unauthenticated', 'Login required');
-    const query = (_b = (_a = request.data.query) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : '';
+    const query = request.data.query?.trim() ?? '';
     const limit = Math.min(Number(request.data.limit) || 20, 50);
     if (!query)
         return [];
@@ -53,22 +52,18 @@ exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1'
         throw new https_1.HttpsError('internal', 'Spotify search failed');
     }
     const data = await res.json();
-    return data.artists.items.map((item) => {
-        var _a, _b, _c, _d, _e, _f;
-        return ({
-            name: (_a = item.name) !== null && _a !== void 0 ? _a : 'Unknown Artist',
-            imageUrl: (_d = (_c = (_b = item.images) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.url) !== null && _d !== void 0 ? _d : '',
-            genres: (_e = item.genres) !== null && _e !== void 0 ? _e : [],
-            spotifyId: (_f = item.id) !== null && _f !== void 0 ? _f : null,
-        });
-    });
+    return data.artists.items.map((item) => ({
+        name: item.name ?? 'Unknown Artist',
+        imageUrl: item.images?.[0]?.url ?? '',
+        genres: item.genres ?? [],
+        spotifyId: item.id ?? null,
+    }));
 });
 // ── Function 2 — Search tracks ────────────────────────────────────────────────
 exports.searchSpotifyTracks = (0, https_1.onCall)({ region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret] }, async (request) => {
-    var _a, _b;
     if (!request.auth)
         throw new https_1.HttpsError('unauthenticated', 'Login required');
-    const query = (_b = (_a = request.data.query) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : '';
+    const query = request.data.query?.trim() ?? '';
     const limit = Math.min(Number(request.data.limit) || 20, 50);
     if (!query)
         return [];
@@ -85,14 +80,11 @@ exports.searchSpotifyTracks = (0, https_1.onCall)({ region: 'europe-southwest1',
         throw new https_1.HttpsError('internal', 'Spotify search failed');
     }
     const data = await res.json();
-    return data.tracks.items.map((item) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        return ({
-            title: (_a = item.name) !== null && _a !== void 0 ? _a : 'Unknown',
-            artist: (_d = (_c = (_b = item.artists) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.name) !== null && _d !== void 0 ? _d : 'Unknown Artist',
-            imageUrl: (_h = (_g = (_f = (_e = item.album) === null || _e === void 0 ? void 0 : _e.images) === null || _f === void 0 ? void 0 : _f[0]) === null || _g === void 0 ? void 0 : _g.url) !== null && _h !== void 0 ? _h : '',
-            spotifyUrl: item.id ? `https://open.spotify.com/track/${item.id}` : '',
-        });
-    });
+    return data.tracks.items.map((item) => ({
+        title: item.name ?? 'Unknown',
+        artist: item.artists?.[0]?.name ?? 'Unknown Artist',
+        imageUrl: item.album?.images?.[0]?.url ?? '',
+        spotifyUrl: item.id ? `https://open.spotify.com/track/${item.id}` : '',
+    }));
 });
 //# sourceMappingURL=spotify.js.map

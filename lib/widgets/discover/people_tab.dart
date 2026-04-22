@@ -63,8 +63,7 @@ class _PeopleTabState extends State<PeopleTab> {
       return SkeletonShimmer(
         child: ListView(
           padding: const EdgeInsets.only(top: 8, bottom: 16),
-          children:
-              List.generate(4, (_) => const SkeletonDiscoveryCard()),
+          children: List.generate(4, (_) => const SkeletonDiscoveryCard()),
         ),
       );
     }
@@ -79,37 +78,46 @@ class _PeopleTabState extends State<PeopleTab> {
     }
 
     if (widget.results.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                LucideIcons.searchX,
-                size: 64,
-                color: colorScheme.onSurfaceVariant.withAlpha(128),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.discoverNoUsers,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: colorScheme.onSurfaceVariant,
+      return RefreshIndicator(
+        onRefresh: widget.onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.55,
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.searchX,
+                      size: 64,
+                      color: colorScheme.onSurfaceVariant.withAlpha(128),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.discoverNoUsers,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.discoverNoUsersHint,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant.withAlpha(180),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.discoverNoUsersHint,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant.withAlpha(180),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
@@ -118,6 +126,7 @@ class _PeopleTabState extends State<PeopleTab> {
       onRefresh: widget.onRefresh,
       child: ListView.builder(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 8, bottom: 16),
         itemCount: widget.results.length + (widget.hasMore ? 1 : 0),
         itemBuilder: (context, index) {

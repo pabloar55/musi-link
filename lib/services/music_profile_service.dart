@@ -14,8 +14,8 @@ class MusicProfileService with AuthenticatedService {
     this._spotifyGetStats, {
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
-  })  : _firestore = firestore,
-        _auth = auth;
+  }) : _firestore = firestore,
+       _auth = auth;
 
   final SpotifyGetStats _spotifyGetStats;
   final FirebaseFirestore _firestore;
@@ -24,8 +24,8 @@ class MusicProfileService with AuthenticatedService {
   @override
   FirebaseAuth get auth => _auth;
 
-  late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
+      .collection(FirestoreCollections.users);
 
   List<DiscoveryResult>? _cachedResults;
   int _displayedCount = 0;
@@ -40,6 +40,7 @@ class MusicProfileService with AuthenticatedService {
   static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
   static const _recommendationLimit = 100;
+  static const _recommendationRefreshRetryDelay = Duration(seconds: 2);
 
   bool get hasMoreDiscoveryUsers =>
       _cachedResults != null && _displayedCount < _cachedResults!.length;
@@ -128,16 +129,32 @@ class MusicProfileService with AuthenticatedService {
         return [];
       }
 
-      final results = await _fetchStoredRecommendations() ?? [];
+      if (forceRefresh) {
+        await _requestRecommendationRefresh();
+      }
+
+      var results = await _fetchStoredRecommendations() ?? [];
+      if (forceRefresh && results.isEmpty) {
+        await Future<void>.delayed(_recommendationRefreshRetryDelay);
+        results = await _fetchStoredRecommendations() ?? [];
+      }
       _cachedResults = results;
       _cacheTime = DateTime.now();
       _displayedCount = results.length.clamp(0, _pageSize);
-      return List<DiscoveryResult>.unmodifiable(
-        results.take(_displayedCount),
-      );
+      return List<DiscoveryResult>.unmodifiable(results.take(_displayedCount));
     } catch (e, stack) {
       await reportError(e, stack);
       return [];
+    }
+  }
+
+  Future<void> _requestRecommendationRefresh() async {
+    try {
+      await _usersRef.doc(currentUid).update({
+        'recommendationsRefreshRequestedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e, stack) {
+      await reportError(e, stack);
     }
   }
 
@@ -146,8 +163,10 @@ class MusicProfileService with AuthenticatedService {
       return (List<DiscoveryResult>.unmodifiable(_cachedResults ?? []), false);
     }
 
-    _displayedCount =
-        (_displayedCount + _pageSize).clamp(0, _cachedResults!.length);
+    _displayedCount = (_displayedCount + _pageSize).clamp(
+      0,
+      _cachedResults!.length,
+    );
     return (
       List<DiscoveryResult>.unmodifiable(_cachedResults!.take(_displayedCount)),
       _displayedCount < _cachedResults!.length,
@@ -198,23 +217,29 @@ class MusicProfileService with AuthenticatedService {
         if (user == null) continue;
         if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
 
-        results.add(DiscoveryResult(
-          user: user,
-          score: ((data['score'] as num?) ?? 0).toDouble(),
-          sharedArtistNames: (data['sharedArtistNames'] as List<dynamic>?)
-                  ?.map((value) => value.toString())
-                  .toList() ??
-              const [],
-          sharedGenreNames: (data['sharedGenreNames'] as List<dynamic>?)
-                  ?.map((value) => value.toString())
-                  .toList() ??
-              const [],
-        ));
+        results.add(
+          DiscoveryResult(
+            user: user,
+            score: ((data['score'] as num?) ?? 0).toDouble(),
+            sharedArtistNames:
+                (data['sharedArtistNames'] as List<dynamic>?)
+                    ?.map((value) => value.toString())
+                    .toList() ??
+                const [],
+            sharedGenreNames:
+                (data['sharedGenreNames'] as List<dynamic>?)
+                    ?.map((value) => value.toString())
+                    .toList() ??
+                const [],
+          ),
+        );
       }
 
       return results.isEmpty ? null : results;
     } on FirebaseException catch (e) {
-      if (options?.source == Source.cache && e.code == 'unavailable') return null;
+      if (options?.source == Source.cache && e.code == 'unavailable') {
+        return null;
+      }
       await reportError(e, StackTrace.current);
       return null;
     } catch (_) {
