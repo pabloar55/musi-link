@@ -16,6 +16,8 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
+  static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   final _formKey =
       GlobalKey<
         FormState
@@ -181,10 +183,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           prefixIcon: const Icon(LucideIcons.mail),
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          final email = value?.trim() ?? '';
+                          if (email.isEmpty) {
                             return l10n.authEnterEmail;
                           }
-                          if (!value.contains('@')) {
+                          if (!_emailRegex.hasMatch(email)) {
                             return l10n.authInvalidEmail;
                           }
                           return null;

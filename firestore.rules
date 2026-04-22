@@ -81,8 +81,10 @@ service cloud.firestore {
 
     // ─── Chats ──────────────────────────────────────────
     function validReactionList(reactions, participants, index) {
-      let users = reactions[reactions.keys()[index]];
-      return users is list
+      let key = reactions.keys()[index];
+      let users = reactions[key];
+      return key.toUtf8().size() <= 32
+        && users is list
         && users.size() <= participants.size()
         && users.hasOnly(participants)
         && users.toSet().size() == users.size();
@@ -272,7 +274,7 @@ service cloud.firestore {
           && request.resource.data.timestamp == request.time
           && messageRateLimitAllows(request.auth.uid)
           && request.resource.data.text is string
-          && request.resource.data.text.size() <= 2000;
+          && request.resource.data.text.toUtf8().size() <= 2000;
 
         // Solo se permite actualizar 'read' o 'reactions'
         allow update: if request.auth != null
