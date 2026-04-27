@@ -147,6 +147,7 @@ class FriendService with AuthenticatedService {
         final receiverId = (requestDoc.data()?['receiverId'] ?? currentUid)
             .toString();
         final inverseRef = _requestsRef.doc('${receiverId}_$senderId');
+        final inverseSnap = await tx.get(inverseRef);
 
         tx.update(requestRef, {
           'status': FriendRequestStatus.accepted.name,
@@ -158,7 +159,7 @@ class FriendService with AuthenticatedService {
         tx.update(_usersRef.doc(otherUid), {
           'friends': FieldValue.arrayUnion([currentUid]),
         });
-        tx.delete(inverseRef);
+        if (inverseSnap.exists) tx.delete(inverseRef);
       });
     } catch (e, stack) {
       await reportError(e, stack);
