@@ -16,8 +16,8 @@ class UserService {
 
   static const int _maxCacheSize = 200;
   static const _userCacheTtl = Duration(minutes: 10);
-  final LinkedHashMap<String, ({AppUser user, DateTime cachedAt})>
-      _userCache = LinkedHashMap();
+  final LinkedHashMap<String, ({AppUser user, DateTime cachedAt})> _userCache =
+      LinkedHashMap();
 
   void clearCache() => _userCache.clear();
 
@@ -54,10 +54,16 @@ class UserService {
   /// Obtiene el perfil de un usuario por su UID.
   /// Resultado cacheado en memoria por [_userCacheTtl] para evitar reads
   /// repetidas desde discovery, chats y amigos.
-  Future<AppUser?> getUser(String uid) async {
-    final cached = _getFromCache(uid);
-    if (cached != null) {
-      return cached.user;
+  Future<AppUser?> getUser(
+    String uid, {
+    bool reportErrors = true,
+    bool bypassCache = false,
+  }) async {
+    if (!bypassCache) {
+      final cached = _getFromCache(uid);
+      if (cached != null) {
+        return cached.user;
+      }
     }
     try {
       final doc = await _usersRef.doc(uid).get();
@@ -68,7 +74,9 @@ class UserService {
       }
       return user;
     } catch (e, stack) {
-      await reportError(e, stack);
+      if (reportErrors) {
+        await reportError(e, stack);
+      }
       rethrow;
     }
   }

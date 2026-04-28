@@ -559,8 +559,8 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'{count} added · drag to reorder (min. {min})'**
-  String artistSelectorSubtitle(int min, int count);
+  /// **'{count} artists · the more you add, the better your matches'**
+  String artistSelectorSubtitle(int count);
 
   /// No description provided for @artistSelectorSearchHint.
   ///
@@ -573,6 +573,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get artistSelectorContinue;
+
+  /// No description provided for @artistSelectorContinueLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least 4 artists to continue'**
+  String get artistSelectorContinueLocked;
 
   /// No description provided for @artistSelectorNoResults.
   ///
@@ -591,6 +597,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suggested'**
   String get artistSelectorSuggested;
+
+  /// No description provided for @artistSelectorStageBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get artistSelectorStageBasic;
+
+  /// No description provided for @artistSelectorStageGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get artistSelectorStageGood;
+
+  /// No description provided for @artistSelectorStageGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great'**
+  String get artistSelectorStageGreat;
+
+  /// No description provided for @artistSelectorStageExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert'**
+  String get artistSelectorStageExpert;
+
+  /// No description provided for @artistSelectorStageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more to improve your recommendations'**
+  String get artistSelectorStageHint;
 
   /// No description provided for @menuProfile.
   ///

@@ -106,18 +106,23 @@
   "socialUser": "User",
 
   "artistSelectorTitle": "Your Top Artists",
-  "artistSelectorSubtitle": "{count} added · drag to reorder (min. {min})",
+  "artistSelectorSubtitle": "{count} artists · the more you add, the better your matches",
   "@artistSelectorSubtitle": {
     "placeholders": {
-      "min": { "type": "int" },
       "count": { "type": "int" }
     }
   },
   "artistSelectorSearchHint": "Search artists...",
   "artistSelectorContinue": "Continue",
+  "artistSelectorContinueLocked": "Add at least 4 artists to continue",
   "artistSelectorNoResults": "No artists found",
   "artistSelectorEmpty": "Search for your favourite artists to get started",
   "artistSelectorSuggested": "Suggested",
+  "artistSelectorStageBasic": "Basic",
+  "artistSelectorStageGood": "Good",
+  "artistSelectorStageGreat": "Great",
+  "artistSelectorStageExpert": "Expert",
+  "artistSelectorStageHint": "Add more to improve your recommendations",
 
   "menuProfile": "My profile",
   "menuAccountOptions": "Account options",

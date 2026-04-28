@@ -57,8 +57,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     try {
       // Cold-start: capturar notificación que abrió la app
-      final initialMessage =
-          await FirebaseMessaging.instance.getInitialMessage();
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
       if (initialMessage != null) {
         ref
             .read(pendingNotificationProvider.notifier)
@@ -68,11 +68,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final prefs = await SharedPreferences.getInstance();
 
       // Comprobar si el usuario ya tiene artistas seleccionados en Firestore
-      final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
+      final authUser = ref.read(firebaseAuthProvider).currentUser;
+      final uid = authUser?.uid;
       bool artistsSelected = false;
       if (uid != null) {
         try {
-          final user = await ref.read(userServiceProvider).getUser(uid);
+          await authUser?.getIdToken();
+          final user = await ref
+              .read(userServiceProvider)
+              .getUser(uid, reportErrors: false);
           artistsSelected = user != null && user.topArtistNames.isNotEmpty;
         } catch (_) {}
       }
@@ -80,13 +84,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // Si ya tiene artistas en Firestore, completó el onboarding en algún
       // momento. Usar eso como fuente de verdad por encima de SharedPreferences
       // (que se borra al reinstalar la app).
-      final onboardingDone = artistsSelected ||
+      final onboardingDone =
+          artistsSelected ||
           (prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false);
 
       // Usuarios que ya completaron el onboarding antes de que existiera
       // el paso de foto de perfil saltan ese paso automáticamente.
       // Nuevos usuarios lo verán tras completar el onboarding de slides.
-      final photoSetupDone = onboardingDone ||
+      final photoSetupDone =
+          onboardingDone ||
           (prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false);
       if (onboardingDone &&
           !(prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false)) {
@@ -101,34 +107,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await minSplash;
 
       if (mounted) {
-        ref.read(appRouterNotifierProvider).setInitialized(
-          artistsSelected: artistsSelected,
-          onboardingDone: onboardingDone,
-          photoSetupDone: photoSetupDone,
-          // Callback para re-consultar Firestore tras un login posterior
-          // (ej. usuario que reinstala la app y vuelve a iniciar sesión).
-          fetchUserState: (loginUid) async {
-            final profile = await userService.getUser(loginUid);
-            final hasArtists =
-                profile != null && profile.topArtistNames.isNotEmpty;
-            // Si ya tiene artistas, necesariamente completó el onboarding y foto.
-            return (
-              artistsSelected: hasArtists,
-              onboardingDone: hasArtists,
-              photoSetupDone: hasArtists,
+        ref
+            .read(appRouterNotifierProvider)
+            .setInitialized(
+              artistsSelected: artistsSelected,
+              onboardingDone: onboardingDone,
+              photoSetupDone: photoSetupDone,
+              // Callback para re-consultar Firestore tras un login posterior
+              // (ej. usuario que reinstala la app y vuelve a iniciar sesión).
+              fetchUserState: (loginUid) async {
+                final profile = await userService.getUser(
+                  loginUid,
+                  reportErrors: false,
+                );
+                final hasArtists =
+                    profile != null && profile.topArtistNames.isNotEmpty;
+                // Si ya tiene artistas, necesariamente completó el onboarding y foto.
+                return (
+                  artistsSelected: hasArtists,
+                  onboardingDone: hasArtists,
+                  photoSetupDone: hasArtists,
+                );
+              },
             );
-          },
-        );
       }
     } catch (e, st) {
       reportError(e, st).ignore();
       await minSplash;
       if (mounted) {
-        ref.read(appRouterNotifierProvider).setInitialized(
-          artistsSelected: false,
-          onboardingDone: false,
-          photoSetupDone: false,
-        );
+        ref
+            .read(appRouterNotifierProvider)
+            .setInitialized(
+              artistsSelected: false,
+              onboardingDone: false,
+              photoSetupDone: false,
+            );
       }
     }
   }

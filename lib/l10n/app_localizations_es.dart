@@ -253,8 +253,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get artistSelectorTitle => 'Tus Top Artistas';
 
   @override
-  String artistSelectorSubtitle(int min, int count) {
-    return '$count añadidos · arrastra para reordenar (mín. $min)';
+  String artistSelectorSubtitle(int count) {
+    return '$count artistas · cuantos más, mejor compatibilidad';
   }
 
   @override
@@ -264,6 +264,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get artistSelectorContinue => 'Continuar';
 
   @override
+  String get artistSelectorContinueLocked =>
+      'Añade al menos 4 artistas para continuar';
+
+  @override
   String get artistSelectorNoResults => 'No se encontraron artistas';
 
   @override
@@ -271,6 +275,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get artistSelectorSuggested => 'Sugeridos';
+
+  @override
+  String get artistSelectorStageBasic => 'Básico';
+
+  @override
+  String get artistSelectorStageGood => 'Bueno';
+
+  @override
+  String get artistSelectorStageGreat => 'Genial';
+
+  @override
+  String get artistSelectorStageExpert => 'Experto';
+
+  @override
+  String get artistSelectorStageHint =>
+      'Añade más para mejorar tus recomendaciones';
 
   @override
   String get menuProfile => 'Mi perfil';

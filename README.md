@@ -14,7 +14,7 @@
 
 ## Tecnologías
 
-- **Framework:** Flutter SDK ^3.10.1 (Dart)
+- **Framework:** Flutter SDK ^3.11.5 (Dart)
 - **Backend:** Firebase (Auth, Firestore, Cloud Functions, Storage, Analytics, Crashlytics, FCM)
 - **Búsqueda musical:** Catálogo de Spotify vía Cloud Functions (sin OAuth de usuario — búsqueda pública únicamente)
 - **Internacionalización:** `flutter_localizations` + `intl` (EN, ES, FR)

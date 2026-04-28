@@ -86,18 +86,23 @@
   "socialUser": "Utilisateur",
 
   "artistSelectorTitle": "Vos Top Artistes",
-  "artistSelectorSubtitle": "{count} ajoutés · glisser pour réorganiser (min. {min})",
+  "artistSelectorSubtitle": "{count} artistes · plus vous en ajoutez, meilleure est la compatibilité",
   "@artistSelectorSubtitle": {
     "placeholders": {
-      "min": { "type": "int" },
       "count": { "type": "int" }
     }
   },
   "artistSelectorSearchHint": "Rechercher des artistes...",
   "artistSelectorContinue": "Continuer",
+  "artistSelectorContinueLocked": "Ajoutez au moins 4 artistes pour continuer",
   "artistSelectorNoResults": "Aucun artiste trouvé",
   "artistSelectorEmpty": "Recherchez vos artistes préférés pour commencer",
   "artistSelectorSuggested": "Suggérés",
+  "artistSelectorStageBasic": "Basique",
+  "artistSelectorStageGood": "Bien",
+  "artistSelectorStageGreat": "Super",
+  "artistSelectorStageExpert": "Expert",
+  "artistSelectorStageHint": "Ajoutez-en plus pour améliorer vos recommandations",
 
   "menuProfile": "Mon profil",
   "menuAccountOptions": "Options du compte",
