@@ -43,6 +43,10 @@ class MusicProfileService with AuthenticatedService {
   static const _pageSize = 20;
   static const _recommendationLimit = 100;
   static const _recommendationRefreshTimeout = Duration(seconds: 60);
+  static const _artistScoreWeight = 70.0;
+  static const _genreScoreWeight = 30.0;
+  static const _artistEvidenceTarget = 7.0;
+  static const _genreEvidenceTarget = 4.0;
 
   bool get hasMoreDiscoveryUsers =>
       _cachedResults != null && _displayedCount < _cachedResults!.length;
@@ -281,30 +285,33 @@ class MusicProfileService with AuthenticatedService {
     required List<String> myGenreNames,
     required AppUser otherUser,
   }) {
-    final sharedArtists = myArtistNames
-        .toSet()
-        .intersection(otherUser.topArtistNames.toSet())
+    final myUniqueArtistNames = _uniqueMusicNames(myArtistNames);
+    final otherUniqueArtistNames = _uniqueMusicNames(otherUser.topArtistNames);
+    final myUniqueGenreNames = _uniqueMusicNames(myGenreNames);
+    final otherUniqueGenreNames = _uniqueMusicNames(otherUser.topGenreNames);
+    final myArtists = myUniqueArtistNames.map(_normalizedMusicKey).toSet();
+    final myGenres = myUniqueGenreNames.map(_normalizedMusicKey).toSet();
+    final sharedArtists = otherUniqueArtistNames
+        .where((artist) => myArtists.contains(_normalizedMusicKey(artist)))
+        .toList();
+    final sharedGenres = otherUniqueGenreNames
+        .where((genre) => myGenres.contains(_normalizedMusicKey(genre)))
         .toList();
 
-    final sharedGenres = myGenreNames
-        .toSet()
-        .intersection(otherUser.topGenreNames.toSet())
-        .toList();
-
-    final comparableArtistCount =
-        myArtistNames.length < otherUser.topArtistNames.length
-        ? myArtistNames.length
-        : otherUser.topArtistNames.length;
-    final comparableGenreCount =
-        myGenreNames.length < otherUser.topGenreNames.length
-        ? myGenreNames.length
-        : otherUser.topGenreNames.length;
-    final artistScore = comparableArtistCount == 0
-        ? 0.0
-        : (sharedArtists.length / comparableArtistCount) * 70.0;
-    final genreScore = comparableGenreCount == 0
-        ? 0.0
-        : (sharedGenres.length / comparableGenreCount) * 30.0;
+    final artistScore = _similarityScore(
+      sharedCount: sharedArtists.length,
+      leftCount: myUniqueArtistNames.length,
+      rightCount: otherUniqueArtistNames.length,
+      evidenceTarget: _artistEvidenceTarget,
+      weight: _artistScoreWeight,
+    );
+    final genreScore = _similarityScore(
+      sharedCount: sharedGenres.length,
+      leftCount: myUniqueGenreNames.length,
+      rightCount: otherUniqueGenreNames.length,
+      evidenceTarget: _genreEvidenceTarget,
+      weight: _genreScoreWeight,
+    );
 
     return DiscoveryResult(
       user: otherUser,
@@ -312,5 +319,35 @@ class MusicProfileService with AuthenticatedService {
       sharedArtistNames: sharedArtists,
       sharedGenreNames: sharedGenres,
     );
+  }
+
+  static String _normalizedMusicKey(String value) => value.trim().toLowerCase();
+
+  static List<String> _uniqueMusicNames(List<String> values) {
+    final namesByKey = <String, String>{};
+    for (final value in values) {
+      final trimmed = value.trim();
+      final key = _normalizedMusicKey(trimmed);
+      if (key.isNotEmpty && !namesByKey.containsKey(key)) {
+        namesByKey[key] = trimmed;
+      }
+    }
+    return namesByKey.values.toList(growable: false);
+  }
+
+  static double _similarityScore({
+    required int sharedCount,
+    required int leftCount,
+    required int rightCount,
+    required double evidenceTarget,
+    required double weight,
+  }) {
+    if (sharedCount == 0) return 0.0;
+
+    final comparableCount = leftCount < rightCount ? leftCount : rightCount;
+    final coverage = comparableCount == 0 ? 0.0 : sharedCount / comparableCount;
+    final evidence = (sharedCount / evidenceTarget).clamp(0.0, 1.0);
+    final similarity = coverage > evidence ? coverage : evidence;
+    return similarity * weight;
   }
 }

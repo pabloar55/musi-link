@@ -122,6 +122,114 @@ void main() {
       expect(result.sharedGenreNames.length, 2);
     });
 
+    test('5 artistas compartidos en perfiles grandes puntuan alto', () {
+      final result = MusicProfileService.calculateCompatibility(
+        myArtistNames: [
+          'A1',
+          'A2',
+          'A3',
+          'A4',
+          'A5',
+          'A6',
+          'A7',
+          'A8',
+          'A9',
+          'A10',
+          'A11',
+          'A12',
+          'A13',
+          'A14',
+          'A15',
+        ],
+        myGenreNames: [],
+        otherUser: createUser(
+          topArtistNames: [
+            'A1',
+            'A2',
+            'A3',
+            'A4',
+            'A5',
+            'B6',
+            'B7',
+            'B8',
+            'B9',
+            'B10',
+            'B11',
+            'B12',
+            'B13',
+            'B14',
+            'B15',
+          ],
+        ),
+      );
+
+      expect(result.score, 50.0);
+      expect(result.sharedArtistNames, ['A1', 'A2', 'A3', 'A4', 'A5']);
+    });
+
+    test('5 artistas y 2 generos compartidos dan compatibilidad solida', () {
+      final result = MusicProfileService.calculateCompatibility(
+        myArtistNames: [
+          'A1',
+          'A2',
+          'A3',
+          'A4',
+          'A5',
+          'A6',
+          'A7',
+          'A8',
+          'A9',
+          'A10',
+          'A11',
+          'A12',
+          'A13',
+          'A14',
+          'A15',
+        ],
+        myGenreNames: [
+          'rock',
+          'pop',
+          'jazz',
+          'metal',
+          'folk',
+          'indie',
+          'soul',
+          'punk',
+        ],
+        otherUser: createUser(
+          topArtistNames: [
+            'A1',
+            'A2',
+            'A3',
+            'A4',
+            'A5',
+            'B6',
+            'B7',
+            'B8',
+            'B9',
+            'B10',
+            'B11',
+            'B12',
+            'B13',
+            'B14',
+            'B15',
+          ],
+          topGenreNames: [
+            'rock',
+            'pop',
+            'classical',
+            'electronic',
+            'hip hop',
+            'latin',
+            'blues',
+            'ambient',
+          ],
+        ),
+      );
+
+      expect(result.score, 65.0);
+    });
+
     test('todos los artistas en comun aportan 70 puntos', () {
       final result = MusicProfileService.calculateCompatibility(
         myArtistNames: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
@@ -199,6 +307,21 @@ void main() {
       );
 
       expect(result.score, 0.0);
+    });
+
+    test('normaliza mayusculas, espacios y duplicados al comparar', () {
+      final result = MusicProfileService.calculateCompatibility(
+        myArtistNames: [' Radiohead ', 'RADIOHEAD', 'Queen'],
+        myGenreNames: [' Rock ', 'rock', 'jazz'],
+        otherUser: createUser(
+          topArtistNames: ['radiohead', 'queen', 'Muse'],
+          topGenreNames: ['rock', 'pop'],
+        ),
+      );
+
+      expect(result.score, 85.0);
+      expect(result.sharedArtistNames, ['radiohead', 'queen']);
+      expect(result.sharedGenreNames, ['rock']);
     });
   });
 

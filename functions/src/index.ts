@@ -14,11 +14,15 @@ const messaging = admin.messaging();
 
 const recommendationIndexCollection = 'music_recommendation_index';
 const recommendationsCollection = 'recommendations';
-const maxRecommendationInputArtists = 10;
+const maxRecommendationInputArtists = 15;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
 const maxStoredRecommendations = 100;
 const maxReciprocalRecommendationUsers = 100;
+const artistScoreWeight = 70;
+const genreScoreWeight = 30;
+const artistEvidenceTarget = 7;
+const genreEvidenceTarget = 4;
 
 type TokenType = 'artist' | 'genre';
 type SupportedLocale = 'en' | 'es' | 'fr';
@@ -149,6 +153,35 @@ function tokenKey(type: TokenType, value: string): string {
   return `${type}_${Buffer.from(value.toLowerCase(), 'utf8').toString('base64url')}`;
 }
 
+function normalizedMusicKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function uniqueMusicNames(values: string[]): string[] {
+  const namesByKey = new Map<string, string>();
+  for (const value of values) {
+    const trimmed = value.trim();
+    const key = normalizedMusicKey(trimmed);
+    if (key.length > 0 && !namesByKey.has(key)) namesByKey.set(key, trimmed);
+  }
+  return [...namesByKey.values()];
+}
+
+function similarityScore(
+  sharedCount: number,
+  leftCount: number,
+  rightCount: number,
+  evidenceTarget: number,
+  weight: number,
+): number {
+  if (sharedCount === 0) return 0;
+
+  const comparableCount = Math.min(leftCount, rightCount);
+  const coverage = comparableCount === 0 ? 0 : sharedCount / comparableCount;
+  const evidence = Math.min(sharedCount / evidenceTarget, 1);
+  return Math.max(coverage, evidence) * weight;
+}
+
 function musicTokens(profile: UserMusicProfile): MusicToken[] {
   return [
     ...profile.topArtistNames.map((value) => ({
@@ -221,21 +254,33 @@ function calculateRecommendation(
   myProfile: UserMusicProfile,
   candidate: CandidateProfile,
 ): RecommendationResult | null {
-  const myArtists = new Set(myProfile.topArtistNames);
-  const myGenres = new Set(myProfile.topGenreNames);
-  const sharedArtistNames = candidate.topArtistNames.filter((artist) => myArtists.has(artist));
-  const sharedGenreNames = candidate.topGenreNames.filter((genre) => myGenres.has(genre));
+  const myArtistNames = uniqueMusicNames(myProfile.topArtistNames);
+  const candidateArtistNames = uniqueMusicNames(candidate.topArtistNames);
+  const myGenreNames = uniqueMusicNames(myProfile.topGenreNames);
+  const candidateGenreNames = uniqueMusicNames(candidate.topGenreNames);
+  const myArtists = new Set(myArtistNames.map(normalizedMusicKey));
+  const myGenres = new Set(myGenreNames.map(normalizedMusicKey));
+  const sharedArtistNames = candidateArtistNames.filter((artist) =>
+    myArtists.has(normalizedMusicKey(artist)));
+  const sharedGenreNames = candidateGenreNames.filter((genre) =>
+    myGenres.has(normalizedMusicKey(genre)));
 
   if (sharedArtistNames.length === 0 && sharedGenreNames.length === 0) return null;
 
-  const comparableArtistCount = Math.min(myProfile.topArtistNames.length, candidate.topArtistNames.length);
-  const comparableGenreCount = Math.min(myProfile.topGenreNames.length, candidate.topGenreNames.length);
-  const artistScore = comparableArtistCount === 0
-    ? 0
-    : (sharedArtistNames.length / comparableArtistCount) * 70;
-  const genreScore = comparableGenreCount === 0
-    ? 0
-    : (sharedGenreNames.length / comparableGenreCount) * 30;
+  const artistScore = similarityScore(
+    sharedArtistNames.length,
+    myArtistNames.length,
+    candidateArtistNames.length,
+    artistEvidenceTarget,
+    artistScoreWeight,
+  );
+  const genreScore = similarityScore(
+    sharedGenreNames.length,
+    myGenreNames.length,
+    candidateGenreNames.length,
+    genreEvidenceTarget,
+    genreScoreWeight,
+  );
 
   return {
     uid: candidate.uid,
