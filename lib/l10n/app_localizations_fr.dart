@@ -258,7 +258,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String artistSelectorSubtitle(int count) {
-    return '$count artistes · plus vous en ajoutez, meilleure est la compatibilité';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count artistes · plus vous en ajoutez, meilleure est la compatibilité',
+      one: '1 artiste · plus vous en ajoutez, meilleure est la compatibilité',
+    );
+    return '$_temp0';
   }
 
   @override

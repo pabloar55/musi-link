@@ -196,6 +196,7 @@ class ArtistSelectorScreen extends ConsumerStatefulWidget {
 
 class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   final _scrollController = ScrollController();
 
   List<Artist> _searchResults = [];
@@ -246,6 +247,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -424,6 +426,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final showSearch = _searchController.text.trim().isNotEmpty;
+    final isKeyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
       body: SafeArea(
@@ -431,38 +434,56 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.isEditMode)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: BackButton(onPressed: () => context.pop()),
+              Visibility(
+                visible: !isKeyboardVisible,
+                maintainState: true,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: BackButton(onPressed: () => context.pop()),
+                ),
               ),
             Padding(
               padding: EdgeInsets.fromLTRB(
                 24,
-                widget.isEditMode ? 8 : 24,
+                isKeyboardVisible ? 12 : (widget.isEditMode ? 8 : 24),
                 24,
                 0,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.artistSelectorTitle,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Visibility(
+                    visible: !isKeyboardVisible,
+                    maintainState: true,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.artistSelectorTitle,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.artistSelectorSubtitle(_selected.length),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _ProfileProgressBar(
+                          count: _selected.length,
+                          l10n: l10n,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.artistSelectorSubtitle(_selected.length),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _ProfileProgressBar(count: _selected.length, l10n: l10n),
-                  const SizedBox(height: 16),
                   TextField(
+                    focusNode: _searchFocusNode,
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: l10n.artistSelectorSearchHint,
@@ -483,33 +504,40 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                       ),
                     ),
                   ),
+                  if (_suggestions.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    _buildSuggestedArtistsRow(l10n),
+                  ],
                 ],
               ),
             ),
 
             Expanded(child: _buildArtistContent(l10n, showSearch)),
 
-            // Continue button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  onPressed: (_selected.length >= _minArtists && !_isSaving)
-                      ? _save
-                      : null,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          _selected.length >= _minArtists
-                              ? l10n.artistSelectorContinue
-                              : l10n.artistSelectorContinueLocked,
-                        ),
+            Visibility(
+              visible: !isKeyboardVisible,
+              maintainState: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: (_selected.length >= _minArtists && !_isSaving)
+                        ? _save
+                        : null,
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _selected.length >= _minArtists
+                                ? l10n.artistSelectorContinue
+                                : l10n.artistSelectorContinueLocked,
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -521,12 +549,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
 
   Widget _buildArtistContent(AppLocalizations l10n, bool showSearch) {
     final hasSelectedArtists = _selected.isNotEmpty;
-    final isKeyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final canShowSuggestions = !isKeyboardVisible || !hasSelectedArtists;
-    final hasSecondaryContent =
-        showSearch ||
-        _selected.isEmpty ||
-        (canShowSuggestions && _suggestions.isNotEmpty);
+    final hasSecondaryContent = showSearch || _selected.isEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -554,7 +577,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
             Expanded(
               child: showSearch
                   ? _buildSearchResults(l10n)
-                  : _buildSuggestions(l10n),
+                  : _buildEmptySelectedState(l10n),
             ),
           );
         }
@@ -590,41 +613,51 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     return _artistList(_searchResults);
   }
 
-  Widget _buildSuggestions(AppLocalizations l10n) {
-    if (_selected.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(
-            l10n.artistSelectorEmpty,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+  Widget _buildEmptySelectedState(AppLocalizations l10n) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          l10n.artistSelectorEmpty,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-      );
-    }
-    if (_suggestions.isEmpty) return const SizedBox.shrink();
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Widget _buildSuggestedArtistsRow(AppLocalizations l10n) {
+    return SizedBox(
+      height: 40,
+      child: Row(
         children: [
-          Text(
-            l10n.artistSelectorSuggested,
-            style: Theme.of(context).textTheme.titleSmall,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 96),
+            child: Text(
+              l10n.artistSelectorSuggested,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _suggestions.map((artist) {
-              return ActionChip(
-                label: Text(artist.name),
-                onPressed: () => _toggleArtist(artist),
-              );
-            }).toList(),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _suggestions.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final artist = _suggestions[i];
+                return ActionChip(
+                  label: Text(artist.name),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _toggleArtist(artist),
+                );
+              },
+            ),
           ),
         ],
       ),

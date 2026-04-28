@@ -86,7 +86,7 @@
   "socialUser": "Usuario",
 
   "artistSelectorTitle": "Tus Top Artistas",
-  "artistSelectorSubtitle": "{count} artistas · cuantos más, mejor compatibilidad",
+  "artistSelectorSubtitle": "{count, plural, =1{1 artista · cuantos más, mejor compatibilidad} other{{count} artistas · cuantos más, mejor compatibilidad}}",
   "@artistSelectorSubtitle": {
     "placeholders": {
       "count": { "type": "int" }

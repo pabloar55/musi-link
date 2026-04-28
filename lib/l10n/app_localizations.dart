@@ -559,7 +559,7 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'{count} artists · the more you add, the better your matches'**
+  /// **'{count, plural, =1{1 artist · the more you add, the better your matches} other{{count} artists · the more you add, the better your matches}}'**
   String artistSelectorSubtitle(int count);
 
   /// No description provided for @artistSelectorSearchHint.
