@@ -151,7 +151,8 @@ class _ProfileProgressBar extends StatelessWidget {
                 final i = entry.key;
                 final stage = entry.value;
                 final isLast = i == _stages.length - 1;
-                final isPast = _stages.indexOf(stage) < _stages.indexOf(current);
+                final isPast =
+                    _stages.indexOf(stage) < _stages.indexOf(current);
                 // Cada segmento ocupa 1/_stages.length del rango visual total.
                 final segFill = (t * _stages.length - i).clamp(0.0, 1.0);
 
@@ -164,7 +165,9 @@ class _ProfileProgressBar extends StatelessWidget {
                         children: [
                           Container(
                             height: 6,
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                           ),
                           FractionallySizedBox(
                             widthFactor: segFill,
@@ -209,6 +212,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   List<Artist> _searchResults = [];
   List<Artist> _suggestions = [];
   final List<Artist> _selected = [];
+  GlobalKey<AnimatedListState> _suggestionsListKey = GlobalKey();
   List<String> _originalArtistKeys = [];
 
   bool _isSearching = false;
@@ -312,7 +316,10 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         }
         if (merged.length >= 20) break;
       }
-      setState(() => _suggestions = merged);
+      setState(() {
+        _suggestions = merged;
+        _suggestionsListKey = GlobalKey();
+      });
     } catch (_) {}
   }
 
@@ -420,7 +427,9 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           userService.clearCache();
           container.invalidate(currentUserProvider);
         })
-        .catchError((e, StackTrace st) { reportError(e, st).ignore(); });
+        .catchError((e, StackTrace st) {
+          reportError(e, st).ignore();
+        });
   }
 
   Future<void> _save() async {
@@ -466,130 +475,130 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         if (!didPop && widget.isEditMode) _saveAndPop();
       },
       child: Scaffold(
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Visibility(
-              visible: !isKeyboardVisible,
-              maintainState: true,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  widget.isEditMode ? 4 : 24,
-                  widget.isEditMode ? 8 : 24,
-                  24,
-                  0,
-                ),
-                child: Row(
-                  children: [
-                    if (widget.isEditMode)
-                      BackButton(onPressed: _saveAndPop),
-                    Text(
-                      l10n.artistSelectorTitle,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                isKeyboardVisible ? 12 : (widget.isEditMode ? 4 : 8),
-                24,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Visibility(
-                    visible: !isKeyboardVisible,
-                    maintainState: true,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.artistSelectorSubtitle(_selected.length),
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _ProfileProgressBar(
-                          count: _selected.length,
-                          l10n: l10n,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                  TextField(
-                    focusNode: _searchFocusNode,
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: l10n.artistSelectorSearchHint,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchResults = []);
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  if (_suggestions.isNotEmpty)
-                    const SizedBox(height: 10),
-                ],
-              ),
-            ),
-            if (_suggestions.isNotEmpty)
-              _buildSuggestedArtistsRow(l10n),
-
-            Expanded(child: _buildArtistContent(l10n, showSearch)),
-
-            if (!widget.isEditMode)
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Visibility(
                 visible: !isKeyboardVisible,
                 maintainState: true,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: (_selected.length >= _minArtists && !_isSaving)
-                          ? _save
-                          : null,
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              _selected.length >= _minArtists
-                                  ? l10n.artistSelectorContinue
-                                  : l10n.artistSelectorContinueLocked,
-                            ),
-                    ),
+                  padding: EdgeInsets.fromLTRB(
+                    widget.isEditMode ? 4 : 24,
+                    widget.isEditMode ? 8 : 24,
+                    24,
+                    0,
+                  ),
+                  child: Row(
+                    children: [
+                      if (widget.isEditMode) BackButton(onPressed: _saveAndPop),
+                      Text(
+                        l10n.artistSelectorTitle,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ),
               ),
-          ],
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  isKeyboardVisible ? 12 : (widget.isEditMode ? 4 : 8),
+                  24,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Visibility(
+                      visible: !isKeyboardVisible,
+                      maintainState: true,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.artistSelectorSubtitle(_selected.length),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _ProfileProgressBar(
+                            count: _selected.length,
+                            l10n: l10n,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                    TextField(
+                      focusNode: _searchFocusNode,
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: l10n.artistSelectorSearchHint,
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchResults = []);
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    if (_suggestions.isNotEmpty) const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+              if (_suggestions.isNotEmpty) _buildSuggestedArtistsRow(l10n),
+
+              Expanded(child: _buildArtistContent(l10n, showSearch)),
+
+              if (!widget.isEditMode)
+                Visibility(
+                  visible: !isKeyboardVisible,
+                  maintainState: true,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton(
+                        onPressed:
+                            (_selected.length >= _minArtists && !_isSaving)
+                            ? _save
+                            : null,
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(
+                                _selected.length >= _minArtists
+                                    ? l10n.artistSelectorContinue
+                                    : l10n.artistSelectorContinueLocked,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -675,6 +684,45 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     );
   }
 
+  void _onSuggestionTap(Artist artist, int index) {
+    if (_selected.length >= _maxArtists) return;
+
+    _suggestions.removeAt(index);
+    _suggestionsListKey.currentState?.removeItem(
+      index,
+      (context, animation) => _buildAnimatingChip(artist, animation),
+      duration: const Duration(milliseconds: 180),
+    );
+
+    setState(() {
+      _selected.add(artist);
+      _searchResults.removeWhere((a) => _artistKey(a) == _artistKey(artist));
+    });
+    if (artist.imageUrl.isEmpty) _enrichFromSpotify(artist);
+    _searchController.clear();
+    _loadSuggestions();
+  }
+
+  Widget _buildAnimatingChip(Artist artist, Animation<double> animation) {
+    return FadeTransition(
+      opacity: animation,
+      child: SizeTransition(
+        sizeFactor: animation,
+        axis: Axis.horizontal,
+        axisAlignment: -1,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ActionChip(
+            label: Text(artist.name),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            onPressed: null,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSuggestedArtistsRow(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,20 +737,28 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         const SizedBox(height: 6),
         SizedBox(
           height: 34,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            itemCount: _suggestions.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              final artist = _suggestions[i];
-              return ActionChip(
-                label: Text(artist.name),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _toggleArtist(artist),
-              );
-            },
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              splashFactory: NoSplash.splashFactory,
+            ),
+            child: AnimatedList(
+              key: _suggestionsListKey,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              initialItemCount: _suggestions.length,
+              itemBuilder: (_, i, animation) {
+                final artist = _suggestions[i];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ActionChip(
+                    label: Text(artist.name),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _onSuggestionTap(artist, i),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
