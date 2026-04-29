@@ -202,6 +202,7 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                   vertical: 10,
                 ),
               ),
+              autofocus: true,
               onChanged: _onSearchChanged,
             ),
           ),
