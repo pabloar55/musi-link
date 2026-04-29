@@ -433,19 +433,33 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.isEditMode)
-              Visibility(
-                visible: !isKeyboardVisible,
-                maintainState: true,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                  child: BackButton(onPressed: () => context.pop()),
+            Visibility(
+              visible: !isKeyboardVisible,
+              maintainState: true,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  widget.isEditMode ? 4 : 24,
+                  widget.isEditMode ? 8 : 24,
+                  24,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    if (widget.isEditMode)
+                      BackButton(onPressed: () => context.pop()),
+                    Text(
+                      l10n.artistSelectorTitle,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
+            ),
             Padding(
               padding: EdgeInsets.fromLTRB(
                 24,
-                isKeyboardVisible ? 12 : (widget.isEditMode ? 8 : 24),
+                isKeyboardVisible ? 12 : (widget.isEditMode ? 4 : 8),
                 24,
                 0,
               ),
@@ -458,12 +472,6 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          l10n.artistSelectorTitle,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
                         Text(
                           l10n.artistSelectorSubtitle(_selected.length),
                           style: TextStyle(
@@ -629,22 +637,17 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   }
 
   Widget _buildSuggestedArtistsRow(AppLocalizations l10n) {
-    return SizedBox(
-      height: 40,
-      child: Row(
-        children: [
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 96),
-            child: Text(
-              l10n.artistSelectorSuggested,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ListView.separated(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.artistSelectorSuggested,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 34,
+          child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _suggestions.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -660,8 +663,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildRankedItem(Artist artist, int index) {
