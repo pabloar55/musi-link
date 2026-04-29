@@ -387,15 +387,20 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   }
 
   void _saveAndPop() {
-    if (mounted) context.pop();
     final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
-    if (uid == null || _selected.length < _minArtists) return;
-    ref
-        .read(musicProfileServiceProvider)
-        .saveManualArtists(uid, _selected)
+    final musicProfileService = ref.read(musicProfileServiceProvider);
+    final userService = ref.read(userServiceProvider);
+    final container = ProviderScope.containerOf(context);
+    final selected = List<Artist>.from(_selected);
+
+    if (mounted) context.pop();
+
+    if (uid == null || selected.length < _minArtists) return;
+    musicProfileService
+        .saveManualArtists(uid, selected)
         .then((_) {
-          ref.read(userServiceProvider).clearCache();
-          ref.invalidate(currentUserProvider);
+          userService.clearCache();
+          container.invalidate(currentUserProvider);
         })
         .catchError((e, StackTrace st) { reportError(e, st).ignore(); });
   }
