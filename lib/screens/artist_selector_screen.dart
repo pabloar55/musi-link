@@ -512,13 +512,13 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                       ),
                     ),
                   ),
-                  if (_suggestions.isNotEmpty) ...[
+                  if (_suggestions.isNotEmpty)
                     const SizedBox(height: 10),
-                    _buildSuggestedArtistsRow(l10n),
-                  ],
                 ],
               ),
             ),
+            if (_suggestions.isNotEmpty)
+              _buildSuggestedArtistsRow(l10n),
 
             Expanded(child: _buildArtistContent(l10n, showSearch)),
 
@@ -640,30 +640,34 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.artistSelectorSuggested,
-          style: Theme.of(context).textTheme.titleSmall,
+        Padding(
+          padding: const EdgeInsets.only(left: 24),
+          child: Text(
+            l10n.artistSelectorSuggested,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
         ),
         const SizedBox(height: 6),
         SizedBox(
           height: 34,
           child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _suggestions.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final artist = _suggestions[i];
-                return ActionChip(
-                  label: Text(artist.name),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => _toggleArtist(artist),
-                );
-              },
-            ),
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: _suggestions.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final artist = _suggestions[i];
+              return ActionChip(
+                label: Text(artist.name),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _toggleArtist(artist),
+              );
+            },
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildRankedItem(Artist artist, int index) {
