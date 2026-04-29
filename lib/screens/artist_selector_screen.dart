@@ -15,7 +15,7 @@ import 'package:musi_link/screens/onboarding_screen.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ─── Stage definitions ────────────────────────────────────────────────────────
+// ─── Definición de etapas ────────────────────────────────────────────────────
 
 enum _ProfileStage { basic, good, great, expert }
 
@@ -66,7 +66,7 @@ _StageConfig _stageFor(int count) {
   return _stages.first;
 }
 
-// ─── Progress bar widget ──────────────────────────────────────────────────────
+// ─── Barra de progreso ───────────────────────────────────────────────────────
 
 class _ProfileProgressBar extends StatelessWidget {
   const _ProfileProgressBar({required this.count, required this.l10n});
@@ -75,6 +75,15 @@ class _ProfileProgressBar extends StatelessWidget {
   final AppLocalizations l10n;
 
   static const _maxCount = 50;
+
+  // Convierte el número de artistas en un progreso visual [0, 1] distribuido uniformemente entre los segmentos.
+  static double _toVisualProgress(int count) {
+    final current = _stageFor(count);
+    final idx = _stages.indexOf(current);
+    final range = current.maxCount - current.minCount;
+    final within = range > 0 ? (count - current.minCount) / range : 1.0;
+    return (idx + within) / _stages.length;
+  }
 
   String _stageLabel(_ProfileStage stage) => switch (stage) {
     _ProfileStage.basic => l10n.artistSelectorStageBasic,
@@ -132,53 +141,48 @@ class _ProfileProgressBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Row(
-          children: _stages.asMap().entries.map((entry) {
-            final i = entry.key;
-            final stage = entry.value;
-            final isLast = i == _stages.length - 1;
-            final isCurrent = stage.stage == current.stage;
-            final isPast = _stages.indexOf(stage) < _stages.indexOf(current);
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: _toVisualProgress(count)),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOut,
+          builder: (context, t, _) {
+            return Row(
+              children: _stages.asMap().entries.map((entry) {
+                final i = entry.key;
+                final stage = entry.value;
+                final isLast = i == _stages.length - 1;
+                final isPast = _stages.indexOf(stage) < _stages.indexOf(current);
+                // Cada segmento ocupa 1/_stages.length del rango visual total.
+                final segFill = (t * _stages.length - i).clamp(0.0, 1.0);
 
-            double segmentFill;
-            if (isPast) {
-              segmentFill = 1;
-            } else if (isCurrent) {
-              final range = stage.maxCount - stage.minCount;
-              final within = (count - stage.minCount).clamp(0, range);
-              segmentFill = range > 0 ? within / range : 1.0;
-            } else {
-              segmentFill = 0;
-            }
-
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: isLast ? 0 : 2),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: 6,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: isLast ? 0 : 2),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: 6,
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: segFill,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeOut,
+                              height: 6,
+                              color: isPast ? current.color : stage.color,
+                            ),
+                          ),
+                        ],
                       ),
-                      AnimatedFractionallySizedBox(
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeOut,
-                        widthFactor: segmentFill,
-                        child: Container(
-                          height: 6,
-                          color: isPast ? current.color : stage.color,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ],
     );
