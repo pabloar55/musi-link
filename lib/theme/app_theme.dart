@@ -285,12 +285,10 @@ class AppTheme {
   }
 
   static InputDecorationTheme _buildInputDecorationTheme(ColorScheme cs) {
-    final radius = BorderRadius.circular(AppTokens.radiusMD);
+    final radius = BorderRadius.circular(AppTokens.radiusLG);
     final borderColor = cs.outline;
 
     return InputDecorationTheme(
-      filled: true,
-      fillColor: cs.surfaceContainerHighest.withAlpha(80),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppTokens.spaceLG,
         vertical: AppTokens.spaceMD,
