@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -45,16 +46,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       User? user;
       if (_isLogin) {
-        user = await ref.read(authServiceProvider).signInWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        user = await ref
+            .read(authServiceProvider)
+            .signInWithEmail(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            );
       } else {
-        user = await ref.read(authServiceProvider).registerWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          displayName: _nameController.text.trim(),
-        );
+        user = await ref
+            .read(authServiceProvider)
+            .registerWithEmail(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              displayName: _nameController.text.trim(),
+            );
       }
 
       if (user == null && mounted) {
@@ -63,7 +68,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
-      if (mounted) _showError(AppLocalizations.of(context)!.authErrorUnexpected);
+      if (mounted) {
+        _showError(AppLocalizations.of(context)!.authErrorUnexpected);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -74,19 +81,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       final user = await ref.read(authServiceProvider).signInWithGoogle();
       if (user == null && mounted) {
-        _showError(AppLocalizations.of(context)!.authErrorGoogleSignIn);
+        return;
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
+    } on GoogleSignInException catch (e) {
+      if (!mounted || e.code == GoogleSignInExceptionCode.canceled) return;
+      _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
     } catch (e) {
       if (mounted) {
-        if (e.toString().contains('canceled')) {
-          // Si el usuario cancela el diálogo, no mostramos error
-          return;
-        }
-        _showError(
-          AppLocalizations.of(context)!.authErrorGoogleSignInGeneric,
-        );
+        _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

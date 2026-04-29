@@ -92,9 +92,7 @@ class AuthService {
     try {
       await _ensureGoogleInitialized();
 
-      final googleUser = _googleSignIn.supportsAuthenticate()
-          ? await _googleSignIn.authenticate()
-          : await _googleSignIn.attemptLightweightAuthentication();
+      final googleUser = await _googleSignIn.attemptLightweightAuthentication();
 
       if (googleUser == null) return null; // Usuario canceló
 
