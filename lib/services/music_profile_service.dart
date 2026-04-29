@@ -61,7 +61,7 @@ class MusicProfileService with AuthenticatedService {
     List<app.Artist> selectedArtists,
   ) async {
     try {
-      final artists = selectedArtists.take(15).toList();
+      final artists = selectedArtists.take(50).toList();
       final genres = _musicCatalogService.getTopGenresFromArtists(artists, 10);
 
       await _usersRef.doc(uid).update({

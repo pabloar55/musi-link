@@ -144,9 +144,9 @@ class _ProfileProgressBar extends StatelessWidget {
             if (isPast) {
               segmentFill = 1;
             } else if (isCurrent) {
-              final range = stage.maxCount - stage.minCount + 1;
+              final range = stage.maxCount - stage.minCount;
               final within = (count - stage.minCount).clamp(0, range);
-              segmentFill = within / range;
+              segmentFill = range > 0 ? within / range : 1.0;
             } else {
               segmentFill = 0;
             }
@@ -168,7 +168,10 @@ class _ProfileProgressBar extends StatelessWidget {
                         duration: const Duration(milliseconds: 400),
                         curve: Curves.easeOut,
                         widthFactor: segmentFill,
-                        child: Container(height: 6, color: stage.color),
+                        child: Container(
+                          height: 6,
+                          color: isPast ? current.color : stage.color,
+                        ),
                       ),
                     ],
                   ),
@@ -202,6 +205,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   List<Artist> _searchResults = [];
   List<Artist> _suggestions = [];
   final List<Artist> _selected = [];
+  List<String> _originalArtistKeys = [];
 
   bool _isSearching = false;
   bool _isSaving = false;
@@ -237,6 +241,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
       final loadedUser = user;
       setState(() {
         _selected.addAll(_dedupeArtists(loadedUser.topArtists));
+        _originalArtistKeys = _selected.map(_artistKey).toList();
       });
     } catch (e, st) {
       reportError(e, st).ignore();
@@ -386,6 +391,15 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     } catch (_) {}
   }
 
+  bool get _hasChanges {
+    final current = _selected.map(_artistKey).toList();
+    if (current.length != _originalArtistKeys.length) return true;
+    for (var i = 0; i < current.length; i++) {
+      if (current[i] != _originalArtistKeys[i]) return true;
+    }
+    return false;
+  }
+
   void _saveAndPop() {
     final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
     final musicProfileService = ref.read(musicProfileServiceProvider);
@@ -395,7 +409,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
 
     if (mounted) context.pop();
 
-    if (uid == null || selected.length < _minArtists) return;
+    if (uid == null || selected.length < _minArtists || !_hasChanges) return;
     musicProfileService
         .saveManualArtists(uid, selected)
         .then((_) {
