@@ -755,7 +755,6 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           ),
         ],
       ),
-      dense: true,
     );
   }
 

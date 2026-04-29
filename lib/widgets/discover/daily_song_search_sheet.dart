@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class DailySongSearchSheet extends ConsumerStatefulWidget {
   const DailySongSearchSheet({super.key});
@@ -100,7 +101,12 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
             ),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? SkeletonShimmer(
+                      child: ListView.builder(
+                        itemCount: 8,
+                        itemBuilder: (_, _) => const SkeletonSongTile(),
+                      ),
+                    )
                   : _results.isEmpty
                   ? Center(
                       child: Text(
@@ -118,6 +124,7 @@ class _DailySongSearchSheetState extends ConsumerState<DailySongSearchSheet> {
                       itemBuilder: (context, index) {
                         final track = _results[index];
                         return ListTile(
+                          visualDensity: const VisualDensity(vertical: -2),
                           leading: track.imageUrl.isNotEmpty
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(4),

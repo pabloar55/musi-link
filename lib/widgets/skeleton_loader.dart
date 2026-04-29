@@ -316,6 +316,34 @@ class SkeletonCompatibilityCard extends StatelessWidget {
   }
 }
 
+/// Song search tile — square album art + title + artist line.
+class SkeletonSongTile extends StatelessWidget {
+  const SkeletonSongTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          SkeletonBox(width: 48, height: 48, borderRadius: 4),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(height: 14, width: 150),
+                SizedBox(height: 6),
+                SkeletonBox(width: 110, height: 11),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Stats tile — matches TrackTile / ArtistTile layout.
 class SkeletonStatsTile extends StatelessWidget {
   const SkeletonStatsTile({super.key});
