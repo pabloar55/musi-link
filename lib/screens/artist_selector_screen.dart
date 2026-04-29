@@ -386,6 +386,20 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     } catch (_) {}
   }
 
+  void _saveAndPop() {
+    if (mounted) context.pop();
+    final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
+    if (uid == null || _selected.length < _minArtists) return;
+    ref
+        .read(musicProfileServiceProvider)
+        .saveManualArtists(uid, _selected)
+        .then((_) {
+          ref.read(userServiceProvider).clearCache();
+          ref.invalidate(currentUserProvider);
+        })
+        .catchError((e, StackTrace st) { reportError(e, st).ignore(); });
+  }
+
   Future<void> _save() async {
     if (_selected.length < _minArtists) return;
     setState(() => _isSaving = true);
@@ -404,14 +418,9 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
       if (!mounted) return;
 
-      if (widget.isEditMode) {
-        if (!mounted) return;
-        context.pop();
-      } else {
-        ref
-            .read(appRouterNotifierProvider)
-            .setArtistsSelected(onboardingDone: onboardingDone);
-      }
+      ref
+          .read(appRouterNotifierProvider)
+          .setArtistsSelected(onboardingDone: onboardingDone);
     } catch (e, st) {
       reportError(e, st).ignore();
       if (!mounted) return;
@@ -428,7 +437,12 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
     final showSearch = _searchController.text.trim().isNotEmpty;
     final isKeyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !widget.isEditMode,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && widget.isEditMode) _saveAndPop();
+      },
+      child: Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,7 +460,7 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                 child: Row(
                   children: [
                     if (widget.isEditMode)
-                      BackButton(onPressed: () => context.pop()),
+                      BackButton(onPressed: _saveAndPop),
                     Text(
                       l10n.artistSelectorTitle,
                       style: Theme.of(context).textTheme.headlineSmall
@@ -522,35 +536,37 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
 
             Expanded(child: _buildArtistContent(l10n, showSearch)),
 
-            Visibility(
-              visible: !isKeyboardVisible,
-              maintainState: true,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton(
-                    onPressed: (_selected.length >= _minArtists && !_isSaving)
-                        ? _save
-                        : null,
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            _selected.length >= _minArtists
-                                ? l10n.artistSelectorContinue
-                                : l10n.artistSelectorContinueLocked,
-                          ),
+            if (!widget.isEditMode)
+              Visibility(
+                visible: !isKeyboardVisible,
+                maintainState: true,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: (_selected.length >= _minArtists && !_isSaving)
+                          ? _save
+                          : null,
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              _selected.length >= _minArtists
+                                  ? l10n.artistSelectorContinue
+                                  : l10n.artistSelectorContinueLocked,
+                            ),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
+      ),
       ),
     );
   }
