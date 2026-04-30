@@ -79,6 +79,27 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     }
   }
 
+  Future<String> _sendCurrentUserPasswordResetEmail(User firebaseUser) async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = firebaseUser.email;
+    if (email == null || email.trim().isEmpty) {
+      return l10n.genericError;
+    }
+
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      return l10n.authPasswordResetSent;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') return l10n.authPasswordResetSent;
+      if (e.code == 'invalid-email') return l10n.authErrorInvalidEmail;
+      if (e.code == 'too-many-requests') return l10n.authErrorTooManyRequests;
+      return l10n.genericError;
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      return l10n.genericError;
+    }
+  }
+
   Future<void> _deleteAccount() async {
     final l10n = AppLocalizations.of(context)!;
 
@@ -116,7 +137,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       }
       if (!success || !mounted) return; // usuario canceló
     } else {
-      final password = await showReauthPasswordDialog(context);
+      final password = await showReauthPasswordDialog(
+        context,
+        onForgotPassword: () =>
+            _sendCurrentUserPasswordResetEmail(firebaseUser),
+      );
       if (password == null || !mounted) return; // usuario canceló
       try {
         await ref

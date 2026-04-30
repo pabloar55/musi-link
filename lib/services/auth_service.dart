@@ -82,6 +82,16 @@ class AuthService {
     }
   }
 
+  /// Envía un email de Firebase Auth para restablecer la contraseña.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
   /// Inicia sesión con Google.
   /// Si es la primera vez, crea el perfil en Firestore.
   Future<User?> signInWithGoogle() async {

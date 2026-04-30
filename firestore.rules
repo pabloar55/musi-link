@@ -3,6 +3,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isActiveUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.username != 'deleted_user';
+    }
+
     // ─── Usuarios ───────────────────────────────────────
     match /users/{userId} {
       // Cualquier usuario autenticado puede leer perfiles (necesario para búsqueda y avatares)
@@ -134,6 +139,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
         && friendRequestRateLimitAllows(request.auth.uid)
+        && isActiveUser(request.resource.data.receiverId)
         && requestId == request.resource.data.senderId + '_' + request.resource.data.receiverId
         && !exists(/databases/$(database)/documents/friend_requests/$(request.resource.data.receiverId + '_' + request.resource.data.senderId));
       // El destinatario puede aceptar/rechazar; el remitente puede actualizar para cancelar.

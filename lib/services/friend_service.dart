@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
@@ -34,6 +35,8 @@ class FriendService with AuthenticatedService {
       .collection(FirestoreCollections.friendRequests);
   late final CollectionReference<Map<String, dynamic>> _privateUsersRef =
       _firestore.collection(FirestoreCollections.userPrivate);
+  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
+      .collection(FirestoreCollections.users);
   late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
       _firestore.collection(FirestoreCollections.rateLimits);
 
@@ -82,7 +85,15 @@ class FriendService with AuthenticatedService {
       final limiterRef = _rateLimitsRef.doc(currentUid);
       final currentUserRef = _privateUsersRef.doc(currentUid);
       final receiverUserRef = _privateUsersRef.doc(receiverUid);
+      final receiverPublicRef = _usersRef.doc(receiverUid);
       await _firestore.runTransaction((tx) async {
+        final receiverPublicSnap = await tx.get(receiverPublicRef);
+        final receiverPublicData = receiverPublicSnap.data();
+        if (!receiverPublicSnap.exists ||
+            receiverPublicData?['username'] == AppUser.deletedUsername) {
+          return;
+        }
+
         final currentUserSnap = await tx.get(currentUserRef);
         final friends = List<String>.from(
           currentUserSnap.data()?['friends'] as List? ?? [],

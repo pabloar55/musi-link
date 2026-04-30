@@ -89,6 +89,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authLogin => 'Se connecter';
 
   @override
+  String get authForgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get authPasswordResetSent =>
+      'Si cet e-mail correspond à un compte avec mot de passe, nous avons envoyé un lien de réinitialisation.';
+
+  @override
   String get authErrorCouldNotAuth =>
       'Impossible de s\'authentifier. Veuillez réessayer.';
 
@@ -214,6 +221,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatShareSong => 'Partager une chanson';
+
+  @override
+  String get chatDeletedUser =>
+      'Ce compte a été supprimé. Vous ne pouvez plus envoyer de messages.';
 
   @override
   String get chatSendFirst => 'Envoyez le premier message';

@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/services/friend_service.dart';
 
 import '../helpers/mocks.dart';
@@ -56,6 +57,11 @@ void main() {
         ).thenReturn(mockReceiverUserDoc);
         final mockCurrentUserSnap = MockDocumentSnapshot();
         when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
+        final mockReceiverPublicSnap = MockDocumentSnapshot();
+        when(() => mockReceiverPublicSnap.exists).thenReturn(true);
+        when(
+          () => mockReceiverPublicSnap.data(),
+        ).thenReturn({'username': 'receiver'});
 
         final mockDocSnap = MockDocumentSnapshot();
         when(() => mockDocSnap.exists).thenReturn(false);
@@ -64,6 +70,7 @@ void main() {
         final mockRateLimitSnap = MockDocumentSnapshot();
         when(() => mockRateLimitSnap.data()).thenReturn({});
         fakeTransaction.getResults.addAll([
+          mockReceiverPublicSnap,
           mockCurrentUserSnap,
           mockInverseDocSnap,
           mockDocSnap,
@@ -119,7 +126,15 @@ void main() {
         when(() => mockCurrentUserSnap.data()).thenReturn({
           'friends': ['receiver_uid'],
         });
-        fakeTransaction.getResults.add(mockCurrentUserSnap);
+        final mockReceiverPublicSnap = MockDocumentSnapshot();
+        when(() => mockReceiverPublicSnap.exists).thenReturn(true);
+        when(
+          () => mockReceiverPublicSnap.data(),
+        ).thenReturn({'username': 'receiver'});
+        fakeTransaction.getResults.addAll([
+          mockReceiverPublicSnap,
+          mockCurrentUserSnap,
+        ]);
 
         final mockRequestDoc = MockDocumentReference();
         when(() => mockRequestsRef.doc(any())).thenReturn(mockRequestDoc);
@@ -131,6 +146,39 @@ void main() {
         await friendService.sendRequest('receiver_uid');
 
         expect(fakeTransaction.sets, isEmpty);
+      });
+
+      test('no crea solicitud hacia un usuario eliminado', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockCurrentUserDoc = MockDocumentReference();
+        final mockReceiverUserDoc = MockDocumentReference();
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        when(
+          () => mockUsersRef.doc('receiver_uid'),
+        ).thenReturn(mockReceiverUserDoc);
+
+        final mockReceiverPublicSnap = MockDocumentSnapshot();
+        when(() => mockReceiverPublicSnap.exists).thenReturn(true);
+        when(
+          () => mockReceiverPublicSnap.data(),
+        ).thenReturn({'username': AppUser.deletedUsername});
+        fakeTransaction.getResults.add(mockReceiverPublicSnap);
+
+        final mockRequestDoc = MockDocumentReference();
+        when(() => mockRequestsRef.doc(any())).thenReturn(mockRequestDoc);
+        final mockRateLimitDocRef = MockDocumentReference();
+        when(
+          () => mockRateLimitsRef.doc('current_uid'),
+        ).thenReturn(mockRateLimitDocRef);
+
+        await friendService.sendRequest('receiver_uid');
+
+        expect(fakeTransaction.sets, isEmpty);
+        expect(fakeTransaction.updates, isEmpty);
       });
 
       test(
@@ -150,6 +198,11 @@ void main() {
 
           final mockCurrentUserSnap = MockDocumentSnapshot();
           when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
+          final mockReceiverPublicSnap = MockDocumentSnapshot();
+          when(() => mockReceiverPublicSnap.exists).thenReturn(true);
+          when(
+            () => mockReceiverPublicSnap.data(),
+          ).thenReturn({'username': 'receiver'});
           final mockInverseSnap = MockDocumentSnapshot();
           when(() => mockInverseSnap.exists).thenReturn(true);
           when(() => mockInverseSnap.data()).thenReturn({
@@ -158,6 +211,7 @@ void main() {
             'status': 'pending',
           });
           fakeTransaction.getResults.addAll([
+            mockReceiverPublicSnap,
             mockCurrentUserSnap,
             mockInverseSnap,
           ]);

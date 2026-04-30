@@ -110,5 +110,17 @@ void main() {
       expect(copy.topArtistNames, original.topArtistNames);
       expect(copy.dailySong, original.dailySong);
     });
+
+    test('isDeleted detecta marcador anonimo de cuenta eliminada', () {
+      const deleted = AppUser(
+        uid: 'deleted_uid',
+        displayName: AppUser.deletedDisplayName,
+        username: AppUser.deletedUsername,
+      );
+      final active = createTestUser();
+
+      expect(deleted.isDeleted, true);
+      expect(active.isDeleted, false);
+    });
   });
 }

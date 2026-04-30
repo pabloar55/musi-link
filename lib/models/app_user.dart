@@ -4,6 +4,9 @@ import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/models/track.dart';
 
 class AppUser {
+  static const deletedDisplayName = 'Deleted user';
+  static const deletedUsername = 'deleted_user';
+
   final String uid;
   final String displayName;
   final String username;
@@ -73,6 +76,11 @@ class AppUser {
       'photoUrl': photoUrl,
     };
   }
+
+  bool get isDeleted =>
+      displayName == deletedDisplayName &&
+      username == deletedUsername &&
+      photoUrl.isEmpty;
 
   static const _unset = Object();
 

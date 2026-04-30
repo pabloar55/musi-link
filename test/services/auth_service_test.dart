@@ -201,6 +201,39 @@ void main() {
       );
     });
 
+    group('sendPasswordResetEmail', () {
+      test(
+        'envía email de restablecimiento con el email normalizado',
+        () async {
+          when(
+            () => mockAuth.sendPasswordResetEmail(email: any(named: 'email')),
+          ).thenAnswer((_) async {});
+
+          await authService.sendPasswordResetEmail('  test@test.com  ');
+
+          verify(
+            () => mockAuth.sendPasswordResetEmail(email: 'test@test.com'),
+          ).called(1);
+        },
+      );
+
+      test('propaga FirebaseAuthException', () async {
+        when(
+          () => mockAuth.sendPasswordResetEmail(email: any(named: 'email')),
+        ).thenThrow(
+          FirebaseAuthException(
+            code: 'invalid-email',
+            message: 'Invalid email',
+          ),
+        );
+
+        expect(
+          () => authService.sendPasswordResetEmail('bad-email'),
+          throwsA(isA<FirebaseAuthException>()),
+        );
+      });
+    });
+
     group('signInWithGoogle', () {
       test('devuelve null si el usuario cancela (lightweight)', () async {
         when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(false);

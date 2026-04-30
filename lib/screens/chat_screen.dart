@@ -42,6 +42,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final ActiveChatNotifier _activeChatNotifier;
   late final Future<AppUser?> _otherUserFuture;
   DateTime? _lastSeenTimestamp;
+  bool _isOtherUserDeleted = false;
 
   // Paginación: lista única de mensajes acumulados.
   List<Message> _allMessages = [];
@@ -66,6 +67,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _otherUserFuture = ref
         .read(userServiceProvider)
         .getUser(widget.otherUserId);
+    _otherUserFuture.then((user) {
+      if (!mounted) return;
+      setState(() => _isOtherUserDeleted = user?.isDeleted ?? false);
+    });
 
     _messagesSubscription = _messagesStream.listen((streamMessages) {
       if (!mounted) return;
@@ -182,6 +187,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    if (_isOtherUserDeleted) return;
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -239,6 +245,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showTrackSearch() {
+    if (_isOtherUserDeleted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -268,7 +275,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _openOtherUserProfile() async {
     final nav = GoRouter.of(context);
     final user = await _otherUserFuture;
-    if (user != null && mounted) {
+    if (user != null && !user.isDeleted && mounted) {
       unawaited(nav.push('/profile', extra: user));
     }
   }
@@ -307,7 +314,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Lista de mensajes
           Expanded(child: _buildMessageList(colorScheme, l10n)),
-          _buildInputBar(colorScheme),
+          _isOtherUserDeleted
+              ? _buildDeletedAccountBar(colorScheme, l10n)
+              : _buildInputBar(colorScheme),
         ],
       ),
     );
@@ -427,6 +436,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeletedAccountBar(
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Text(
+          l10n.chatDeletedUser,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
         ),
       ),
     );

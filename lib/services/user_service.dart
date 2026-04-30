@@ -227,8 +227,8 @@ class UserService {
     try {
       final batch = _firestore.batch();
       batch.update(_usersRef.doc(uid), {
-        'displayName': 'Deleted user',
-        'username': 'deleted_user',
+        'displayName': AppUser.deletedDisplayName,
+        'username': AppUser.deletedUsername,
         'photoUrl': '',
         'spotifyId': FieldValue.delete(),
         'topArtists': FieldValue.delete(),

@@ -36,6 +36,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       widget.user.uid == _currentUid && _currentUid.isNotEmpty;
 
   Future<void> _startChat() async {
+    if (widget.user.isDeleted) return;
     final chat = await ref
         .read(chatServiceProvider)
         .getOrCreateChat(widget.user.uid);
@@ -55,6 +56,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 
   Future<void> _sendRequest() async {
+    if (widget.user.isDeleted) return;
     try {
       await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
       if (!mounted) return;
@@ -122,6 +124,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         widget.user;
     final hasMusicalData =
         user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
+    final isDeletedProfile = user.isDeleted;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -145,7 +148,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
             const SizedBox(height: 4),
 
-            if (!_isOwnProfile)
+            if (!_isOwnProfile && !isDeletedProfile)
               Builder(
                 builder: (context) {
                   final compatibilityValue = ref.watch(

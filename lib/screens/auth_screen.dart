@@ -95,6 +95,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _sendPasswordResetEmail() async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showError(l10n.authEnterEmail);
+      return;
+    }
+    if (!_emailRegex.hasMatch(email)) {
+      _showError(l10n.authInvalidEmail);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      if (mounted) _showError(l10n.authPasswordResetSent);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'user-not-found') {
+        _showError(l10n.authPasswordResetSent);
+      } else {
+        _showError(_mapFirebaseError(e.code));
+      }
+    } catch (_) {
+      if (mounted) _showError(l10n.authErrorUnexpected);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(
       context,
@@ -149,7 +180,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                
+
                 // Formulario
                 Form(
                   key:
@@ -223,7 +254,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      if (_isLogin) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : _sendPasswordResetEmail,
+                            child: Text(l10n.authForgotPassword),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ] else
+                        const SizedBox(height: 24),
 
                       // Botón principal
                       SizedBox(

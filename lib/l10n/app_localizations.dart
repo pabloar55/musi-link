@@ -250,6 +250,18 @@ abstract class AppLocalizations {
   /// **'Log in'**
   String get authLogin;
 
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authPasswordResetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If this email has a password account, we sent you a reset link.'**
+  String get authPasswordResetSent;
+
   /// No description provided for @authErrorCouldNotAuth.
   ///
   /// In en, this message translates to:
@@ -489,6 +501,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share song'**
   String get chatShareSong;
+
+  /// No description provided for @chatDeletedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been deleted. You can no longer send messages.'**
+  String get chatDeletedUser;
 
   /// No description provided for @chatSendFirst.
   ///
