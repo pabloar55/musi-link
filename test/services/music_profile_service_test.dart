@@ -17,10 +17,7 @@ AppUser createUser({
 }) {
   return AppUser(
     uid: uid,
-    email: 'test@test.com',
     displayName: 'Test',
-    createdAt: DateTime(2025, 1, 1),
-    lastLogin: DateTime(2025, 1, 1),
     topArtistNames: topArtistNames,
     topGenreNames: topGenreNames,
   );

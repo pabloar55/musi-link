@@ -12,46 +12,63 @@ class AppRouterNotifier extends ChangeNotifier {
 
   StreamSubscription<User?>? _sub;
   bool _initialized = false;
+  bool _usernameSet = false;
   bool _artistsSelected = false;
   bool _onboardingDone = false;
   bool _photoSetupDone = false;
 
   bool get isInitialized => _initialized;
   bool get isLoggedIn => _auth.currentUser != null;
+  bool get usernameSet => _usernameSet;
   bool get artistsSelected => _artistsSelected;
   bool get onboardingDone => _onboardingDone;
   bool get photoSetupDone => _photoSetupDone;
 
-  Future<({bool artistsSelected, bool onboardingDone, bool photoSetupDone})>
+  Future<
+      ({
+        bool usernameSet,
+        bool artistsSelected,
+        bool onboardingDone,
+        bool photoSetupDone,
+      })>
       Function(String uid)? _fetchUserState;
 
   /// Llamar desde el SplashScreen una vez que la app ha terminado de
   /// inicializarse. Inicia la escucha de authStateChanges y dispara el
   /// primer redirect.
   void setInitialized({
+    required bool usernameSet,
     required bool artistsSelected,
     required bool onboardingDone,
     required bool photoSetupDone,
-    Future<({bool artistsSelected, bool onboardingDone, bool photoSetupDone})>
-            Function(String uid)?
-        fetchUserState,
+    Future<
+            ({
+              bool usernameSet,
+              bool artistsSelected,
+              bool onboardingDone,
+              bool photoSetupDone,
+            })>
+        Function(String uid)? fetchUserState,
   }) {
     _initialized = true;
+    _usernameSet = usernameSet;
     _artistsSelected = artistsSelected;
     _onboardingDone = onboardingDone;
     _photoSetupDone = photoSetupDone;
     _fetchUserState = fetchUserState;
     _sub = _auth.authStateChanges().listen((user) async {
       if (user == null) {
+        _usernameSet = false;
         _artistsSelected = false;
         _onboardingDone = false;
         _photoSetupDone = false;
         notifyListeners();
-      } else if (_fetchUserState != null && !_artistsSelected) {
+      } else if (_fetchUserState != null && !_usernameSet) {
         // Re-consultar Firestore al hacer login para evitar que usuarios
         // existentes (que reinstalaron la app) pasen por el flujo de setup.
         try {
           final state = await _fetchUserState!(user.uid);
+          _usernameSet = state.usernameSet;
           _artistsSelected = state.artistsSelected;
           _onboardingDone = state.onboardingDone;
           _photoSetupDone = state.photoSetupDone;
@@ -61,6 +78,12 @@ class AppRouterNotifier extends ChangeNotifier {
         notifyListeners();
       }
     });
+  }
+
+  /// Llamar desde UsernameSetupScreen tras guardar el username.
+  void setUsernameSet() {
+    _usernameSet = true;
+    notifyListeners();
   }
 
   /// Llamar después de seleccionar artistas para que el router re-evalúe
@@ -100,6 +123,9 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   if (!notifier.isLoggedIn) {
     return location == '/auth' ? null : '/auth';
   }
+  if (!notifier.usernameSet) {
+    return location == '/username-setup' ? null : '/username-setup';
+  }
   if (!notifier.artistsSelected) {
     return location == '/artist-select' ? null : '/artist-select';
   }
@@ -112,6 +138,7 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   // Usuario listo: evitar que se quede en pantallas de setup
   if (location == '/splash' ||
       location == '/auth' ||
+      location == '/username-setup' ||
       location == '/artist-select' ||
       location == '/onboarding' ||
       location == '/photo-setup') {

@@ -107,6 +107,42 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este email ya está registrado con contraseña. Inicia sesión con email y contraseña.';
 
   @override
+  String get authUsername => 'Nombre de usuario';
+
+  @override
+  String get authEnterUsername => 'Elige un nombre de usuario';
+
+  @override
+  String get authUsernameHint => 'letras minúsculas, números y _';
+
+  @override
+  String get authUsernameTooShort => 'Al menos 3 caracteres';
+
+  @override
+  String get authUsernameTooLong => 'Máximo 20 caracteres';
+
+  @override
+  String get authUsernameInvalidChars => 'Solo letras, números y _';
+
+  @override
+  String get authUsernameTaken => 'Este nombre de usuario ya está en uso';
+
+  @override
+  String get authUsernameAvailable => 'Disponible';
+
+  @override
+  String get authUsernameChecking => 'Comprobando...';
+
+  @override
+  String get usernameSetupTitle => 'Elige tu nombre de usuario';
+
+  @override
+  String get usernameSetupSubtitle => 'Así te encontrarán otros en MusiLink.';
+
+  @override
+  String get usernameSetupButton => 'Continuar';
+
+  @override
   String get discoverTitle => 'Descubrir personas';
 
   @override
@@ -502,6 +538,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVibration => 'Vibración';
 
   @override
+  String get settingsAnalytics => 'Analítica';
+
+  @override
   String get settingsLegal => 'Legal';
 
   @override
@@ -512,7 +551,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'Esta acción eliminará permanentemente tu cuenta, todos tus mensajes, datos musicales e información de perfil. Esta acción no se puede deshacer.';
+      'Esta acción eliminará permanentemente tu cuenta, tus mensajes, tus reacciones, tu foto, tus datos musicales y tu información de perfil. Esta acción no se puede deshacer.';
 
   @override
   String get deleteAccountConfirm => 'Eliminar';
@@ -552,14 +591,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'Recogemos y tratamos los siguientes datos personales:\n\n• Datos de cuenta: nombre, dirección de correo electrónico, foto de perfil e identificadores de inicio de sesión (mediante correo/contraseña o Google).\n\n• Datos de perfil musical: artistas principales que eliges, géneros principales inferidos, canción del día y canciones compartidas.\n\n• Datos sociales: mensajes, solicitudes de amistad y reacciones con emojis.\n\n• Datos técnicos: informes de fallos y eventos de uso anonimizados, recopilados por Firebase Crashlytics y Firebase Analytics.';
+      'Recogemos y tratamos los siguientes datos personales:\n\n• Datos de cuenta: nombre, dirección de correo electrónico, foto de perfil e identificadores de inicio de sesión (mediante correo/contraseña o Google).\n\n• Datos de perfil musical: artistas principales que eliges, géneros principales inferidos, canción del día y canciones compartidas.\n\n• Datos sociales: mensajes, solicitudes de amistad y reacciones con emojis.\n\n• Datos técnicos: informes de fallos recopilados por Firebase Crashlytics y, solo si activas la opción de analítica en Ajustes, eventos de uso mediante Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Cómo usamos tus datos';
 
   @override
   String get privacyS3Body =>
-      'Tus datos se tratan con las siguientes finalidades:\n\n• Prestación del servicio (cuenta, compatibilidad musical, descubrimiento, chat). Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Funciones de perfil musical: mostrar y comparar el gusto musical que has seleccionado. Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Estabilidad de la app: diagnóstico de errores y fallos. Base legal: interés legítimo (art. 6.1.f RGPD).\n\n• Analítica: comprender cómo se usa la app para mejorarla. Base legal: interés legítimo (art. 6.1.f RGPD).';
+      'Tus datos se tratan con las siguientes finalidades:\n\n• Prestación del servicio (cuenta, compatibilidad musical, descubrimiento, chat). Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Funciones de perfil musical: mostrar y comparar el gusto musical que has seleccionado. Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Estabilidad de la app: diagnóstico de errores y fallos. Base legal: interés legítimo (art. 6.1.f RGPD).\n\n• Analítica opcional: comprender cómo se usa la app para mejorarla. Base legal: consentimiento (art. 6.1.a RGPD), que puedes retirar desactivando Analítica en Ajustes.';
 
   @override
   String get privacyS4Title => '4. Servicios de terceros';
@@ -573,7 +612,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyS5Body =>
-      'No conservamos tus datos más allá del tiempo que uses la aplicación. Al eliminar tu cuenta mediante el botón \'Eliminar cuenta\' en Ajustes, todos tus datos personales se borran definitiva e inmediatamente de nuestros sistemas. Los informes de fallos y datos analíticos conservados por Google están sujetos a las políticas de retención propias de Google.';
+      'No conservamos tus datos más allá del tiempo que uses la aplicación. Al eliminar tu cuenta mediante el botón \'Eliminar cuenta\' en Ajustes, borramos tus datos privados, foto de perfil, relaciones, solicitudes, tokens, preferencias y datos musicales. El perfil público se sustituye por un marcador anónimo para no romper referencias técnicas. Los mensajes que hayas enviado se eliminan de las conversaciones y tus reacciones se retiran; si una conversación queda vacía, se borra. Algunos registros técnicos, informes de fallos o datos analíticos conservados por Google pueden estar sujetos a las políticas de retención propias de Google.';
 
   @override
   String get privacyS6Title => '6. Tus derechos';

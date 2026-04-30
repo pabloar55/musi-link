@@ -9,6 +9,7 @@ import 'package:musi_link/providers/service_providers.dart';
 
 /// Pantalla de autenticación con Firebase.
 /// Permite login/registro con email+contraseña y Google Sign-In.
+/// El username se elige siempre en UsernameSetupScreen tras el registro.
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -19,15 +20,12 @@ class AuthScreen extends ConsumerStatefulWidget {
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
-  final _formKey =
-      GlobalKey<
-        FormState
-      >(); //Creamos la clave para hacer referencia al formulario
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isLogin = true; // true = login, false = registro
+  bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -151,7 +149,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-
+                
                 // Formulario
                 Form(
                   key:
@@ -188,9 +186,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         ),
                         validator: (value) {
                           final email = value?.trim() ?? '';
-                          if (email.isEmpty) {
-                            return l10n.authEnterEmail;
-                          }
+                          if (email.isEmpty) return l10n.authEnterEmail;
                           if (!_emailRegex.hasMatch(email)) {
                             return l10n.authInvalidEmail;
                           }
@@ -212,11 +208,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   ? LucideIcons.eyeOff
                                   : LucideIcons.eye,
                             ),
-                            onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
-                            },
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                         validator: (value) {

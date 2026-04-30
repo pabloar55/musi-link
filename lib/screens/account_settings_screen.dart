@@ -144,6 +144,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     try {
       // 4. Datos de Firestore (user aún autenticado → reglas OK)
       await ref.read(friendServiceProvider).deleteAllUserFriendData(uid);
+      await ref.read(chatServiceProvider).deleteAllUserChatData(uid);
+      await ref.read(storageServiceProvider).deleteProfilePhoto(uid);
       await ref.read(userServiceProvider).anonymizeUser(uid);
 
       // 5. Capturar servicios antes de borrar (delete() desmonta el widget)
@@ -202,6 +204,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isDarkMode = ref.watch(isDarkProvider);
     final vibrationEnabled = ref.watch(vibrationEnabledProvider);
+    final analyticsEnabled = ref.watch(analyticsEnabledProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -261,6 +264,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     value: vibrationEnabled,
                     onChanged: (_) =>
                         ref.read(vibrationEnabledProvider.notifier).toggle(),
+                  ),
+                  _SwitchTile(
+                    icon: LucideIcons.chartBar,
+                    label: l10n.settingsAnalytics,
+                    value: analyticsEnabled,
+                    onChanged: (_) =>
+                        ref.read(analyticsEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),

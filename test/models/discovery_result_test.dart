@@ -4,16 +4,10 @@ import 'package:musi_link/models/discovery_result.dart';
 
 void main() {
   group('DiscoveryResult', () {
-    final testUser = AppUser(
-      uid: 'uid1',
-      email: 'test@test.com',
-      displayName: 'Test',
-      createdAt: DateTime(2025, 1, 1),
-      lastLogin: DateTime(2025, 1, 1),
-    );
+    const testUser = AppUser(uid: 'uid1', displayName: 'Test');
 
     test('crea DiscoveryResult con todos los campos', () {
-      final result = DiscoveryResult(
+      const result = DiscoveryResult(
         user: testUser,
         score: 85.0,
         sharedArtistNames: ['Queen', 'Radiohead'],
@@ -27,7 +21,7 @@ void main() {
     });
 
     test('score puede ser 0', () {
-      final result = DiscoveryResult(
+      const result = DiscoveryResult(
         user: testUser,
         score: 0,
         sharedArtistNames: [],
@@ -40,7 +34,7 @@ void main() {
     });
 
     test('score puede ser 100', () {
-      final result = DiscoveryResult(
+      const result = DiscoveryResult(
         user: testUser,
         score: 100,
         sharedArtistNames: ['A', 'B', 'C', 'D', 'E'],

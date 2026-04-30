@@ -104,6 +104,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'This email is already registered with a password. Please sign in with email and password.';
 
   @override
+  String get authUsername => 'Username';
+
+  @override
+  String get authEnterUsername => 'Choose a username';
+
+  @override
+  String get authUsernameHint => 'lowercase letters, numbers and _';
+
+  @override
+  String get authUsernameTooShort => 'At least 3 characters';
+
+  @override
+  String get authUsernameTooLong => 'Max 20 characters';
+
+  @override
+  String get authUsernameInvalidChars => 'Only letters, numbers and _';
+
+  @override
+  String get authUsernameTaken => 'This username is already taken';
+
+  @override
+  String get authUsernameAvailable => 'Available';
+
+  @override
+  String get authUsernameChecking => 'Checking...';
+
+  @override
+  String get usernameSetupTitle => 'Choose your username';
+
+  @override
+  String get usernameSetupSubtitle =>
+      'This is how others will find you on MusiLink.';
+
+  @override
+  String get usernameSetupButton => 'Continue';
+
+  @override
   String get discoverTitle => 'Discover people';
 
   @override
@@ -500,6 +537,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVibration => 'Vibration';
 
   @override
+  String get settingsAnalytics => 'Analytics';
+
+  @override
   String get settingsLegal => 'Legal';
 
   @override
@@ -510,7 +550,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'This will permanently delete your account, all your messages, music data and profile information. This action cannot be undone.';
+      'This will permanently delete your account, your messages, your reactions, your photo, your music data and your profile information. This action cannot be undone.';
 
   @override
   String get deleteAccountConfirm => 'Delete';
@@ -549,14 +589,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.';
+      'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash reports collected by Firebase Crashlytics and, only if you enable analytics in Settings, usage events through Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. How We Use Your Data';
 
   @override
   String get privacyS3Body =>
-      'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).';
+      'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Optional analytics: understanding how users interact with the App to improve it. Legal basis: consent (Art. 6.1.a GDPR), which you can withdraw by disabling Analytics in Settings.';
 
   @override
   String get privacyS4Title => '4. Third-Party Services';
@@ -570,7 +610,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyS5Body =>
-      'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google\'s own retention policies.';
+      'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, we delete your private data, profile photo, relationships, requests, tokens, preferences, and music data. The public profile is replaced with an anonymous placeholder so technical references do not break. Messages you sent are removed from conversations and your reactions are removed; if a conversation becomes empty, it is deleted. Some technical records, crash reports, or analytics data held by Google may be subject to Google\'s own retention policies.';
 
   @override
   String get privacyS6Title => '6. Your Rights';

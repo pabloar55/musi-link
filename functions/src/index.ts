@@ -12,6 +12,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
 
+const userPrivateCollection = 'user_private';
 const recommendationIndexCollection = 'music_recommendation_index';
 const recommendationsCollection = 'recommendations';
 const maxRecommendationInputArtists = 15;
@@ -90,7 +91,7 @@ async function sendNotification(
   } catch (error: unknown) {
     const fcmError = error as { code?: string };
     if (fcmError.code === 'messaging/registration-token-not-registered') {
-      await db.doc(`users/${recipientUid}`).update({ fcmToken: FieldValue.delete() });
+      await db.doc(`${userPrivateCollection}/${recipientUid}`).update({ fcmToken: FieldValue.delete() });
       return;
     }
     logger.error('sendNotification: unexpected FCM error', { recipientUid, error });
@@ -493,7 +494,7 @@ export const onNewMessage = onDocumentCreated(
       if (!recipientId) return;
 
       const [recipientSnap, senderSnap] = await Promise.all([
-        db.doc(`users/${recipientId}`).get(),
+        db.doc(`${userPrivateCollection}/${recipientId}`).get(),
         db.doc(`users/${senderId}`).get(),
       ]);
 
@@ -580,7 +581,7 @@ export const onFriendRequest = onDocumentCreated(
       const receiverId = request.receiverId as string;
 
       const [receiverSnap, senderSnap] = await Promise.all([
-        db.doc(`users/${receiverId}`).get(),
+        db.doc(`${userPrivateCollection}/${receiverId}`).get(),
         db.doc(`users/${senderId}`).get(),
       ]);
 
@@ -618,7 +619,7 @@ export const onFriendRequestAccepted = onDocumentUpdated(
       const receiverId = after.receiverId as string;
 
       const [senderSnap, receiverSnap] = await Promise.all([
-        db.doc(`users/${senderId}`).get(),
+        db.doc(`${userPrivateCollection}/${senderId}`).get(),
         db.doc(`users/${receiverId}`).get(),
       ]);
 

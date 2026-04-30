@@ -8,14 +8,36 @@ service cloud.firestore {
       // Cualquier usuario autenticado puede leer perfiles (necesario para búsqueda y avatares)
       allow read: if request.auth != null;
       // El propio usuario puede crear su perfil
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'displayName',
+          'username',
+          'photoUrl',
+        ]);
       // El propio usuario puede actualizar cualquier campo.
       // Escritura cruzada (otro usuario): solo se permite añadir o eliminar el propio UID
       // del campo 'friends'.  Cubre tres casos legítimos:
       //   • acceptRequest  → arrayUnion([request.auth.uid]) en el doc del remitente
       //   • removeFriend   → arrayRemove([request.auth.uid]) en el doc del ex-amigo
       //   • deleteAllUserFriendData → arrayRemove([request.auth.uid]) en cada amigo
-      allow update: if request.auth != null && (
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName',
+          'username',
+          'photoUrl',
+          'spotifyId',
+          'topArtists',
+          'topGenres',
+          'topArtistNames',
+          'topGenreNames',
+          'musicDataUpdatedAt',
+          'dailySong',
+          'dailySongUpdatedAt',
+          'recommendationsRefreshRequestedAt',
+        ])
+        && (
         request.auth.uid == userId
         ||
         (
@@ -45,6 +67,53 @@ service cloud.firestore {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow write: if false;
       }
+    }
+
+    match /user_private/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'createdAt',
+          'lastLogin',
+          'friends',
+          'fcmToken',
+          'preferredLocale',
+        ]);
+      allow update: if request.auth != null && (
+        (
+          request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'email',
+            'lastLogin',
+            'friends',
+            'fcmToken',
+            'preferredLocale',
+            'deletedAt',
+          ])
+        )
+        ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends'])
+          && (
+            (
+              request.resource.data.friends.hasAll(resource.data.get('friends', []))
+              && request.resource.data.friends.size() == resource.data.get('friends', []).size() + 1
+              && request.resource.data.friends.hasAll([request.auth.uid])
+              && !resource.data.get('friends', []).hasAll([request.auth.uid])
+            )
+            ||
+            (
+              resource.data.get('friends', []).hasAll(request.resource.data.friends)
+              && request.resource.data.friends.size() == resource.data.get('friends', []).size() - 1
+              && !request.resource.data.friends.hasAll([request.auth.uid])
+              && resource.data.get('friends', []).hasAll([request.auth.uid])
+            )
+          )
+        )
+      );
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // ─── Solicitudes de amistad ───────────────────────────
@@ -227,7 +296,7 @@ service cloud.firestore {
           validMessageRateLimitUpdate()
           || validFriendRequestRateLimitUpdate()
         );
-      allow delete: if false;
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     match /chats/{chatId} {

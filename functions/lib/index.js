@@ -11,6 +11,7 @@ Object.defineProperty(exports, "searchSpotifyTracks", { enumerable: true, get: f
 admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
+const userPrivateCollection = 'user_private';
 const recommendationIndexCollection = 'music_recommendation_index';
 const recommendationsCollection = 'recommendations';
 const maxRecommendationInputArtists = 15;
@@ -56,7 +57,7 @@ tag) {
     catch (error) {
         const fcmError = error;
         if (fcmError.code === 'messaging/registration-token-not-registered') {
-            await db.doc(`users/${recipientUid}`).update({ fcmToken: firestore_2.FieldValue.delete() });
+            await db.doc(`${userPrivateCollection}/${recipientUid}`).update({ fcmToken: firestore_2.FieldValue.delete() });
             return;
         }
         v2_1.logger.error('sendNotification: unexpected FCM error', { recipientUid, error });
@@ -364,7 +365,7 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
         if (!recipientId)
             return;
         const [recipientSnap, senderSnap] = await Promise.all([
-            db.doc(`users/${recipientId}`).get(),
+            db.doc(`${userPrivateCollection}/${recipientId}`).get(),
             db.doc(`users/${senderId}`).get(),
         ]);
         const fcmToken = recipientSnap.data()?.fcmToken;
@@ -433,7 +434,7 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
         const senderId = request.senderId;
         const receiverId = request.receiverId;
         const [receiverSnap, senderSnap] = await Promise.all([
-            db.doc(`users/${receiverId}`).get(),
+            db.doc(`${userPrivateCollection}/${receiverId}`).get(),
             db.doc(`users/${senderId}`).get(),
         ]);
         const receiver = receiverSnap.data();
@@ -461,7 +462,7 @@ exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document:
         const senderId = after.senderId;
         const receiverId = after.receiverId;
         const [senderSnap, receiverSnap] = await Promise.all([
-            db.doc(`users/${senderId}`).get(),
+            db.doc(`${userPrivateCollection}/${senderId}`).get(),
             db.doc(`users/${receiverId}`).get(),
         ]);
         const sender = senderSnap.data();

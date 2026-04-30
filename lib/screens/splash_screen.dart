@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
@@ -53,8 +54,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _initialize() async {
     final minSplash = Future.delayed(const Duration(milliseconds: 500));
 
-    unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
-
     try {
       // Cold-start: capturar notificación que abrió la app
       final initialMessage = await FirebaseMessaging.instance
@@ -66,10 +65,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
 
       final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(kAnalyticsEnabledKey) ?? false) {
+        unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
+      }
 
-      // Comprobar si el usuario ya tiene artistas seleccionados en Firestore
+      // Comprobar si el usuario ya tiene perfil completo en Firestore
       final authUser = ref.read(firebaseAuthProvider).currentUser;
       final uid = authUser?.uid;
+      bool usernameSet = false;
       bool artistsSelected = false;
       if (uid != null) {
         try {
@@ -77,6 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           final user = await ref
               .read(userServiceProvider)
               .getUser(uid, reportErrors: false);
+          usernameSet = user != null && user.username.isNotEmpty;
           artistsSelected = user != null && user.topArtistNames.isNotEmpty;
         } catch (_) {}
       }
@@ -110,6 +114,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ref
             .read(appRouterNotifierProvider)
             .setInitialized(
+              usernameSet: usernameSet,
               artistsSelected: artistsSelected,
               onboardingDone: onboardingDone,
               photoSetupDone: photoSetupDone,
@@ -120,10 +125,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   loginUid,
                   reportErrors: false,
                 );
+                final hasUsername =
+                    profile != null && profile.username.isNotEmpty;
                 final hasArtists =
                     profile != null && profile.topArtistNames.isNotEmpty;
                 // Si ya tiene artistas, necesariamente completó el onboarding y foto.
                 return (
+                  usernameSet: hasUsername,
                   artistsSelected: hasArtists,
                   onboardingDone: hasArtists,
                   photoSetupDone: hasArtists,
@@ -138,6 +146,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ref
             .read(appRouterNotifierProvider)
             .setInitialized(
+              usernameSet: false,
               artistsSelected: false,
               onboardingDone: false,
               photoSetupDone: false,

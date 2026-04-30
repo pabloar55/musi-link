@@ -5,33 +5,27 @@ import 'package:musi_link/models/track.dart';
 
 class AppUser {
   final String uid;
-  final String email;
   final String displayName;
+  final String username;
   final String photoUrl;
-  final DateTime createdAt;
-  final DateTime lastLogin;
   final List<Artist> topArtists;
   final List<Genre> topGenres;
   final List<String> topArtistNames;
   final List<String> topGenreNames;
   final DateTime? musicDataUpdatedAt;
-  final List<String> friends;
   final Track? dailySong;
   final DateTime? dailySongUpdatedAt;
 
   const AppUser({
     required this.uid,
-    required this.email,
     required this.displayName,
+    this.username = '',
     this.photoUrl = '',
-    required this.createdAt,
-    required this.lastLogin,
     this.topArtists = const [],
     this.topGenres = const [],
     this.topArtistNames = const [],
     this.topGenreNames = const [],
     this.musicDataUpdatedAt,
-    this.friends = const [],
     this.dailySong,
     this.dailySongUpdatedAt,
   });
@@ -41,32 +35,30 @@ class AppUser {
     if (data == null) return null;
     return AppUser(
       uid: doc.id,
-      email: (data['email'] ?? '').toString(),
       displayName: (data['displayName'] ?? '').toString(),
+      username: (data['username'] ?? '').toString(),
       photoUrl: (data['photoUrl'] ?? '').toString(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastLogin: (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      topArtists: (data['topArtists'] as List<dynamic>?)
+      topArtists:
+          (data['topArtists'] as List<dynamic>?)
               ?.map((e) => Artist.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      topGenres: (data['topGenres'] as List<dynamic>?)
+      topGenres:
+          (data['topGenres'] as List<dynamic>?)
               ?.map((e) => Genre.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      topArtistNames: (data['topArtistNames'] as List<dynamic>?)
+      topArtistNames:
+          (data['topArtistNames'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      topGenreNames: (data['topGenreNames'] as List<dynamic>?)
+      topGenreNames:
+          (data['topGenreNames'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
       musicDataUpdatedAt: (data['musicDataUpdatedAt'] as Timestamp?)?.toDate(),
-      friends: (data['friends'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
       dailySong: data['dailySong'] != null
           ? Track.fromMap(data['dailySong'] as Map<String, dynamic>)
           : null,
@@ -76,12 +68,9 @@ class AppUser {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'email': email,
       'displayName': displayName,
-      'displayNameLower': displayName.toLowerCase(),
+      'username': username,
       'photoUrl': photoUrl,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'lastLogin': Timestamp.fromDate(lastLogin),
     };
   }
 
@@ -89,31 +78,29 @@ class AppUser {
 
   AppUser copyWith({
     String? displayName,
+    String? username,
     String? photoUrl,
-    DateTime? lastLogin,
     List<Artist>? topArtists,
     List<Genre>? topGenres,
     List<String>? topArtistNames,
     List<String>? topGenreNames,
     DateTime? musicDataUpdatedAt,
-    List<String>? friends,
     Object? dailySong = _unset,
     DateTime? dailySongUpdatedAt,
   }) {
     return AppUser(
       uid: uid,
-      email: email,
       displayName: displayName ?? this.displayName,
+      username: username ?? this.username,
       photoUrl: photoUrl ?? this.photoUrl,
-      createdAt: createdAt,
-      lastLogin: lastLogin ?? this.lastLogin,
       topArtists: topArtists ?? this.topArtists,
       topGenres: topGenres ?? this.topGenres,
       topArtistNames: topArtistNames ?? this.topArtistNames,
       topGenreNames: topGenreNames ?? this.topGenreNames,
       musicDataUpdatedAt: musicDataUpdatedAt ?? this.musicDataUpdatedAt,
-      friends: friends ?? this.friends,
-      dailySong: identical(dailySong, _unset) ? this.dailySong : dailySong as Track?,
+      dailySong: identical(dailySong, _unset)
+          ? this.dailySong
+          : dailySong as Track?,
       dailySongUpdatedAt: dailySongUpdatedAt ?? this.dailySongUpdatedAt,
     );
   }

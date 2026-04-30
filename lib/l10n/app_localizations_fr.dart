@@ -107,6 +107,43 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet e-mail est déjà enregistré avec un mot de passe. Veuillez vous connecter avec e-mail et mot de passe.';
 
   @override
+  String get authUsername => 'Nom d\'utilisateur';
+
+  @override
+  String get authEnterUsername => 'Choisissez un nom d\'utilisateur';
+
+  @override
+  String get authUsernameHint => 'lettres minuscules, chiffres et _';
+
+  @override
+  String get authUsernameTooShort => 'Au moins 3 caractères';
+
+  @override
+  String get authUsernameTooLong => 'Max 20 caractères';
+
+  @override
+  String get authUsernameInvalidChars => 'Lettres, chiffres et _ seulement';
+
+  @override
+  String get authUsernameTaken => 'Ce nom d\'utilisateur est déjà pris';
+
+  @override
+  String get authUsernameAvailable => 'Disponible';
+
+  @override
+  String get authUsernameChecking => 'Vérification...';
+
+  @override
+  String get usernameSetupTitle => 'Choisissez votre nom d\'utilisateur';
+
+  @override
+  String get usernameSetupSubtitle =>
+      'C\'est ainsi que les autres vous trouveront sur MusiLink.';
+
+  @override
+  String get usernameSetupButton => 'Continuer';
+
+  @override
   String get discoverTitle => 'Découvrir des personnes';
 
   @override
@@ -512,6 +549,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsVibration => 'Vibration';
 
   @override
+  String get settingsAnalytics => 'Statistiques';
+
+  @override
   String get settingsLegal => 'Informations légales';
 
   @override
@@ -522,7 +562,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'Cette action supprimera définitivement votre compte, tous vos messages, vos données musicales et vos informations de profil. Cette action est irréversible.';
+      'Cette action supprimera définitivement votre compte, vos messages, vos réactions, votre photo, vos données musicales et vos informations de profil. Cette action est irréversible.';
 
   @override
   String get deleteAccountConfirm => 'Supprimer';
@@ -562,14 +602,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d\'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.';
+      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage collectés par Firebase Crashlytics et, uniquement si vous activez les statistiques dans les réglages, événements d\'utilisation via Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Utilisation de vos données';
 
   @override
   String get privacyS3Body =>
-      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Analyses : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).';
+      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Statistiques facultatives : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : consentement (art. 6.1.a RGPD), que vous pouvez retirer en désactivant les statistiques dans les réglages.';
 
   @override
   String get privacyS4Title => '4. Services tiers';
@@ -583,7 +623,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS5Body =>
-      'Nous ne conservons pas vos données au-delà de la durée d\'utilisation de l\'application. Lorsque vous supprimez votre compte via le bouton « Supprimer le compte » dans les Paramètres, toutes vos données personnelles sont définitivement et immédiatement effacées de nos systèmes. Les rapports de plantage et données analytiques conservés par Google sont soumis aux politiques de conservation de Google.';
+      'Nous ne conservons pas vos données au-delà de la durée d\'utilisation de l\'application. Lorsque vous supprimez votre compte via le bouton « Supprimer le compte » dans les Paramètres, nous supprimons vos données privées, photo de profil, relations, demandes, jetons, préférences et données musicales. Le profil public est remplacé par un marqueur anonyme afin de ne pas rompre les références techniques. Les messages que vous avez envoyés sont retirés des conversations et vos réactions sont supprimées ; si une conversation devient vide, elle est supprimée. Certains journaux techniques, rapports de plantage ou données statistiques conservés par Google peuvent être soumis aux propres politiques de conservation de Google.';
 
   @override
   String get privacyS6Title => '6. Vos droits';

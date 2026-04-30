@@ -13,6 +13,10 @@ class UserService {
   final FirebaseFirestore _firestore;
   late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
       .collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _privateUsersRef =
+      _firestore.collection(FirestoreCollections.userPrivate);
+  late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
+      _firestore.collection(FirestoreCollections.rateLimits);
 
   static const int _maxCacheSize = 200;
   static const _userCacheTtl = Duration(minutes: 10);
@@ -26,17 +30,24 @@ class UserService {
     required String uid,
     required String email,
     required String displayName,
+    required String username,
   }) async {
     try {
       final now = DateTime.now();
       final user = AppUser(
         uid: uid,
-        email: email,
         displayName: displayName,
-        createdAt: now,
-        lastLogin: now,
+        username: username,
       );
-      await _usersRef.doc(uid).set(user.toFirestore());
+      final batch = _firestore.batch();
+      batch.set(_usersRef.doc(uid), user.toFirestore());
+      batch.set(_privateUsersRef.doc(uid), {
+        'email': email,
+        'createdAt': Timestamp.fromDate(now),
+        'lastLogin': Timestamp.fromDate(now),
+        'friends': <String>[],
+      });
+      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -114,10 +125,35 @@ class UserService {
     }
   }
 
+  /// Comprueba si un username ya está en uso.
+  Future<bool> usernameExists(String username) async {
+    try {
+      final snapshot = await _usersRef
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
+  /// Establece el username de un usuario existente (migración o Google sign-in).
+  Future<void> setUsername(String uid, String username) async {
+    try {
+      await _usersRef.doc(uid).update({'username': username});
+      _userCache.remove(uid);
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
   /// Actualiza la fecha de último login.
   Future<void> updateLastLogin(String uid) async {
     try {
-      await _usersRef.doc(uid).update({
+      await _privateUsersRef.doc(uid).update({
         'lastLogin': Timestamp.fromDate(DateTime.now()),
       });
       _userCache.remove(uid);
@@ -136,7 +172,6 @@ class UserService {
       final updates = <String, dynamic>{};
       if (displayName != null) {
         updates['displayName'] = displayName;
-        updates['displayNameLower'] = displayName.toLowerCase();
       }
       if (photoUrl != null) updates['photoUrl'] = photoUrl;
       if (updates.isNotEmpty) {
@@ -149,7 +184,7 @@ class UserService {
     }
   }
 
-  /// Busca usuarios por nombre.
+  /// Busca usuarios por username.
   /// Excluye al usuario con [excludeUid] de los resultados. (el que hace la búsqueda)
   Future<List<AppUser>> searchUsers(String query, {String? excludeUid}) async {
     final lowerQuery = query.trim().toLowerCase();
@@ -157,8 +192,8 @@ class UserService {
 
     try {
       final snapshot = await _usersRef
-          .where('displayNameLower', isGreaterThanOrEqualTo: lowerQuery)
-          .where('displayNameLower', isLessThanOrEqualTo: '$lowerQuery\uf8ff')
+          .where('username', isGreaterThanOrEqualTo: lowerQuery)
+          .where('username', isLessThanOrEqualTo: '$lowerQuery')
           .limit(20)
           .get();
 
@@ -190,21 +225,22 @@ class UserService {
   /// un autor reconocible ("Deleted user") en lugar de romperse.
   Future<void> anonymizeUser(String uid) async {
     try {
-      await _usersRef.doc(uid).update({
+      final batch = _firestore.batch();
+      batch.update(_usersRef.doc(uid), {
         'displayName': 'Deleted user',
-        'displayNameLower': 'deleted user',
+        'username': 'deleted_user',
         'photoUrl': '',
-        'email': '',
         'spotifyId': FieldValue.delete(),
         'topArtists': FieldValue.delete(),
         'topGenres': FieldValue.delete(),
         'topArtistNames': FieldValue.delete(),
         'topGenreNames': FieldValue.delete(),
-        'friends': [],
         'dailySong': FieldValue.delete(),
         'dailySongUpdatedAt': FieldValue.delete(),
-        'fcmToken': FieldValue.delete(),
       });
+      batch.delete(_privateUsersRef.doc(uid));
+      batch.delete(_rateLimitsRef.doc(uid));
+      await batch.commit();
       _userCache.remove(uid);
     } catch (e, stack) {
       await reportError(e, stack);

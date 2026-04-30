@@ -51,11 +51,7 @@ class AuthService {
       final user = credential.user;
       if (user != null) {
         await user.updateDisplayName(displayName);
-        await _userService.createUserProfile(
-          uid: user.uid,
-          email: email,
-          displayName: displayName,
-        );
+        // El perfil en Firestore se crea en UsernameSetupScreen junto con el username.
       }
       return user;
     } on FirebaseAuthException catch (e, stack) {
@@ -106,15 +102,11 @@ class AuthService {
 
       if (user != null) {
         final exists = await _userService.userExists(user.uid);
-        if (!exists) {
-          await _userService.createUserProfile(
-            uid: user.uid,
-            email: user.email ?? '',
-            displayName: user.displayName ?? googleUser.displayName ?? '',
-          );
-        } else {
+        if (exists) {
           await _userService.updateLastLogin(user.uid);
         }
+        // New Google users: no profile created here.
+        // UsernameSetupScreen handles profile creation after they pick a username.
       }
       return user;
     } on FirebaseAuthException catch (e, stack) {

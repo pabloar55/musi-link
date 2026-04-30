@@ -116,10 +116,10 @@ class NotificationService {
     if (uid == null) return;
     final token = await _messaging.getToken();
     if (token == null) return;
-    await _firestore.collection(FirestoreCollections.users).doc(uid).update({
+    await _firestore.collection(FirestoreCollections.userPrivate).doc(uid).set({
       'fcmToken': token,
       'preferredLocale': _preferredLocale(),
-    });
+    }, SetOptions(merge: true));
   }
 
   String _preferredLocale() {
@@ -149,9 +149,10 @@ class NotificationService {
 
   Future<void> _clearFcmTokenFromFirestore(String uid) async {
     try {
-      await _firestore.collection(FirestoreCollections.users).doc(uid).update({
-        'fcmToken': FieldValue.delete(),
-      });
+      await _firestore
+          .collection(FirestoreCollections.userPrivate)
+          .doc(uid)
+          .update({'fcmToken': FieldValue.delete()});
       await _prefs.remove(_pendingClearUidKey);
     } catch (e, stack) {
       await reportError(e, stack);

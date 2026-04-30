@@ -28,6 +28,9 @@ void main() {
     ).thenReturn(mockRequestsRef);
     when(() => mockFirestore.collection('users')).thenReturn(mockUsersRef);
     when(
+      () => mockFirestore.collection('user_private'),
+    ).thenReturn(mockUsersRef);
+    when(
       () => mockFirestore.collection('rate_limits'),
     ).thenReturn(mockRateLimitsRef);
     when(() => mockAuth.currentUser).thenReturn(mockCurrentUser);

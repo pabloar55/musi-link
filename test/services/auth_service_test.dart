@@ -49,46 +49,53 @@ void main() {
     });
 
     group('registerWithEmail', () {
-      test('registra usuario y crea perfil en Firestore', () async {
-        final mockUser = MockUser();
-        final mockCredential = MockUserCredential();
+      test(
+        'registra usuario y actualiza displayName en Firebase Auth',
+        () async {
+          final mockUser = MockUser();
+          final mockCredential = MockUserCredential();
 
-        when(() => mockUser.uid).thenReturn('uid123');
-        when(() => mockUser.updateDisplayName(any()))
-            .thenAnswer((_) async {});
-        when(() => mockCredential.user).thenReturn(mockUser);
-        when(() => mockAuth.createUserWithEmailAndPassword(
+          when(() => mockUser.uid).thenReturn('uid123');
+          when(
+            () => mockUser.updateDisplayName(any()),
+          ).thenAnswer((_) async {});
+          when(() => mockCredential.user).thenReturn(mockUser);
+          when(
+            () => mockAuth.createUserWithEmailAndPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
-            )).thenAnswer((_) async => mockCredential);
-        when(() => mockUserService.createUserProfile(
+            ),
+          ).thenAnswer((_) async => mockCredential);
+
+          final result = await authService.registerWithEmail(
+            email: 'test@test.com',
+            password: 'password123',
+            displayName: 'Test User',
+          );
+
+          expect(result, mockUser);
+          verify(() => mockUser.updateDisplayName('Test User')).called(1);
+          // El perfil Firestore lo crea UsernameSetupScreen, no aquí.
+          verifyNever(
+            () => mockUserService.createUserProfile(
               uid: any(named: 'uid'),
               email: any(named: 'email'),
               displayName: any(named: 'displayName'),
-            )).thenAnswer((_) async {});
-
-        final result = await authService.registerWithEmail(
-          email: 'test@test.com',
-          password: 'password123',
-          displayName: 'Test User',
-        );
-
-        expect(result, mockUser);
-        verify(() => mockUser.updateDisplayName('Test User')).called(1);
-        verify(() => mockUserService.createUserProfile(
-              uid: 'uid123',
-              email: 'test@test.com',
-              displayName: 'Test User',
-            )).called(1);
-      });
+              username: any(named: 'username'),
+            ),
+          );
+        },
+      );
 
       test('devuelve null si credential.user es null', () async {
         final mockCredential = MockUserCredential();
         when(() => mockCredential.user).thenReturn(null);
-        when(() => mockAuth.createUserWithEmailAndPassword(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenAnswer((_) async => mockCredential);
+        when(
+          () => mockAuth.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockCredential);
 
         final result = await authService.registerWithEmail(
           email: 'test@test.com',
@@ -97,21 +104,20 @@ void main() {
         );
 
         expect(result, isNull);
-        verifyNever(() => mockUserService.createUserProfile(
-              uid: any(named: 'uid'),
-              email: any(named: 'email'),
-              displayName: any(named: 'displayName'),
-            ));
       });
 
       test('propaga FirebaseAuthException', () async {
-        when(() => mockAuth.createUserWithEmailAndPassword(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenThrow(FirebaseAuthException(
-          code: 'email-already-in-use',
-          message: 'Email already in use',
-        ));
+        when(
+          () => mockAuth.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenThrow(
+          FirebaseAuthException(
+            code: 'email-already-in-use',
+            message: 'Email already in use',
+          ),
+        );
 
         expect(
           () => authService.registerWithEmail(
@@ -131,12 +137,15 @@ void main() {
 
         when(() => mockUser.uid).thenReturn('uid123');
         when(() => mockCredential.user).thenReturn(mockUser);
-        when(() => mockAuth.signInWithEmailAndPassword(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenAnswer((_) async => mockCredential);
-        when(() => mockUserService.updateLastLogin(any()))
-            .thenAnswer((_) async {});
+        when(
+          () => mockAuth.signInWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockCredential);
+        when(
+          () => mockUserService.updateLastLogin(any()),
+        ).thenAnswer((_) async {});
 
         final result = await authService.signInWithEmail(
           email: 'test@test.com',
@@ -150,10 +159,12 @@ void main() {
       test('no actualiza lastLogin si user es null', () async {
         final mockCredential = MockUserCredential();
         when(() => mockCredential.user).thenReturn(null);
-        when(() => mockAuth.signInWithEmailAndPassword(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenAnswer((_) async => mockCredential);
+        when(
+          () => mockAuth.signInWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockCredential);
 
         final result = await authService.signInWithEmail(
           email: 'test@test.com',
@@ -164,73 +175,84 @@ void main() {
         verifyNever(() => mockUserService.updateLastLogin(any()));
       });
 
-      test('propaga FirebaseAuthException con credenciales incorrectas',
-          () async {
-        when(() => mockAuth.signInWithEmailAndPassword(
+      test(
+        'propaga FirebaseAuthException con credenciales incorrectas',
+        () async {
+          when(
+            () => mockAuth.signInWithEmailAndPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
-            )).thenThrow(FirebaseAuthException(
-          code: 'wrong-password',
-          message: 'Wrong password',
-        ));
+            ),
+          ).thenThrow(
+            FirebaseAuthException(
+              code: 'wrong-password',
+              message: 'Wrong password',
+            ),
+          );
 
-        expect(
-          () => authService.signInWithEmail(
-            email: 'test@test.com',
-            password: 'wrong',
-          ),
-          throwsA(isA<FirebaseAuthException>()),
-        );
-      });
+          expect(
+            () => authService.signInWithEmail(
+              email: 'test@test.com',
+              password: 'wrong',
+            ),
+            throwsA(isA<FirebaseAuthException>()),
+          );
+        },
+      );
     });
 
     group('signInWithGoogle', () {
       test('devuelve null si el usuario cancela (lightweight)', () async {
         when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(false);
         when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
-        when(() => mockGoogleSignIn.attemptLightweightAuthentication())
-            .thenAnswer((_) async => null);
+        when(
+          () => mockGoogleSignIn.attemptLightweightAuthentication(),
+        ).thenAnswer((_) async => null);
 
         final result = await authService.signInWithGoogle();
         expect(result, isNull);
       });
 
-      test('crea perfil si es primer login con Google', () async {
-        final mockGoogleUser = MockGoogleSignInAccount();
-        final mockGoogleAuth = MockGoogleSignInAuthentication();
-        final mockUser = MockUser();
-        final mockCredential = MockUserCredential();
+      test(
+        'no crea perfil para nuevos usuarios de Google (lo hace UsernameSetupScreen)',
+        () async {
+          final mockGoogleUser = MockGoogleSignInAccount();
+          final mockGoogleAuth = MockGoogleSignInAuthentication();
+          final mockUser = MockUser();
+          final mockCredential = MockUserCredential();
 
-        when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(true);
-        when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
-        when(() => mockGoogleSignIn.authenticate())
-            .thenAnswer((_) async => mockGoogleUser);
-        when(() => mockGoogleUser.authentication).thenReturn(mockGoogleAuth);
-        when(() => mockGoogleUser.displayName).thenReturn('Google User');
-        when(() => mockGoogleAuth.idToken).thenReturn('id_token_123');
-        when(() => mockAuth.signInWithCredential(any()))
-            .thenAnswer((_) async => mockCredential);
-        when(() => mockCredential.user).thenReturn(mockUser);
-        when(() => mockUser.uid).thenReturn('google_uid');
-        when(() => mockUser.email).thenReturn('google@test.com');
-        when(() => mockUser.displayName).thenReturn('Google User');
-        when(() => mockUserService.userExists(any()))
-            .thenAnswer((_) async => false);
-        when(() => mockUserService.createUserProfile(
+          when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(true);
+          when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
+          when(
+            () => mockGoogleSignIn.attemptLightweightAuthentication(),
+          ).thenAnswer((_) async => mockGoogleUser);
+          when(() => mockGoogleUser.authentication).thenReturn(mockGoogleAuth);
+          when(() => mockGoogleUser.displayName).thenReturn('Google User');
+          when(() => mockGoogleAuth.idToken).thenReturn('id_token_123');
+          when(
+            () => mockAuth.signInWithCredential(any()),
+          ).thenAnswer((_) async => mockCredential);
+          when(() => mockCredential.user).thenReturn(mockUser);
+          when(() => mockUser.uid).thenReturn('google_uid');
+          when(() => mockUser.email).thenReturn('google@test.com');
+          when(() => mockUser.displayName).thenReturn('Google User');
+          when(
+            () => mockUserService.userExists(any()),
+          ).thenAnswer((_) async => false);
+
+          final result = await authService.signInWithGoogle();
+
+          expect(result, mockUser);
+          verifyNever(
+            () => mockUserService.createUserProfile(
               uid: any(named: 'uid'),
               email: any(named: 'email'),
               displayName: any(named: 'displayName'),
-            )).thenAnswer((_) async {});
-
-        final result = await authService.signInWithGoogle();
-
-        expect(result, mockUser);
-        verify(() => mockUserService.createUserProfile(
-              uid: 'google_uid',
-              email: 'google@test.com',
-              displayName: 'Google User',
-            )).called(1);
-      });
+              username: any(named: 'username'),
+            ),
+          );
+        },
+      );
 
       test('actualiza lastLogin si ya existe el usuario', () async {
         final mockGoogleUser = MockGoogleSignInAccount();
@@ -240,30 +262,37 @@ void main() {
 
         when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(true);
         when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
-        when(() => mockGoogleSignIn.authenticate())
-            .thenAnswer((_) async => mockGoogleUser);
+        when(
+          () => mockGoogleSignIn.attemptLightweightAuthentication(),
+        ).thenAnswer((_) async => mockGoogleUser);
         when(() => mockGoogleUser.authentication).thenReturn(mockGoogleAuth);
         when(() => mockGoogleAuth.idToken).thenReturn('id_token_123');
-        when(() => mockAuth.signInWithCredential(any()))
-            .thenAnswer((_) async => mockCredential);
+        when(
+          () => mockAuth.signInWithCredential(any()),
+        ).thenAnswer((_) async => mockCredential);
         when(() => mockCredential.user).thenReturn(mockUser);
         when(() => mockUser.uid).thenReturn('google_uid');
         when(() => mockUser.email).thenReturn('google@test.com');
         when(() => mockUser.displayName).thenReturn('Google User');
-        when(() => mockUserService.userExists(any()))
-            .thenAnswer((_) async => true);
-        when(() => mockUserService.updateLastLogin(any()))
-            .thenAnswer((_) async {});
+        when(
+          () => mockUserService.userExists(any()),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockUserService.updateLastLogin(any()),
+        ).thenAnswer((_) async {});
 
         final result = await authService.signInWithGoogle();
 
         expect(result, mockUser);
         verify(() => mockUserService.updateLastLogin('google_uid')).called(1);
-        verifyNever(() => mockUserService.createUserProfile(
-              uid: any(named: 'uid'),
-              email: any(named: 'email'),
-              displayName: any(named: 'displayName'),
-            ));
+        verifyNever(
+          () => mockUserService.createUserProfile(
+            uid: any(named: 'uid'),
+            email: any(named: 'email'),
+            displayName: any(named: 'displayName'),
+            username: any(named: 'username'),
+          ),
+        );
       });
 
       test('usa lightweight auth si no soporta authenticate', () async {
@@ -274,26 +303,31 @@ void main() {
 
         when(() => mockGoogleSignIn.supportsAuthenticate()).thenReturn(false);
         when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
-        when(() => mockGoogleSignIn.attemptLightweightAuthentication())
-            .thenAnswer((_) async => mockGoogleUser);
+        when(
+          () => mockGoogleSignIn.attemptLightweightAuthentication(),
+        ).thenAnswer((_) async => mockGoogleUser);
         when(() => mockGoogleUser.authentication).thenReturn(mockGoogleAuth);
         when(() => mockGoogleUser.displayName).thenReturn('User');
         when(() => mockGoogleAuth.idToken).thenReturn('token');
-        when(() => mockAuth.signInWithCredential(any()))
-            .thenAnswer((_) async => mockCredential);
+        when(
+          () => mockAuth.signInWithCredential(any()),
+        ).thenAnswer((_) async => mockCredential);
         when(() => mockCredential.user).thenReturn(mockUser);
         when(() => mockUser.uid).thenReturn('uid');
         when(() => mockUser.email).thenReturn('e@t.com');
         when(() => mockUser.displayName).thenReturn('User');
-        when(() => mockUserService.userExists(any()))
-            .thenAnswer((_) async => true);
-        when(() => mockUserService.updateLastLogin(any()))
-            .thenAnswer((_) async {});
+        when(
+          () => mockUserService.userExists(any()),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockUserService.updateLastLogin(any()),
+        ).thenAnswer((_) async {});
 
         await authService.signInWithGoogle();
 
-        verify(() => mockGoogleSignIn.attemptLightweightAuthentication())
-            .called(1);
+        verify(
+          () => mockGoogleSignIn.attemptLightweightAuthentication(),
+        ).called(1);
         verifyNever(() => mockGoogleSignIn.authenticate());
       });
     });
@@ -303,8 +337,9 @@ void main() {
         when(() => mockGoogleSignIn.initialize()).thenAnswer((_) async {});
         when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async {});
         when(() => mockAuth.signOut()).thenAnswer((_) async {});
-        when(() => mockNotificationService.clearToken())
-            .thenAnswer((_) async {});
+        when(
+          () => mockNotificationService.clearToken(),
+        ).thenAnswer((_) async {});
 
         await authService.signOut();
 

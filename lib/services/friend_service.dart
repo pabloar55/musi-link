@@ -32,8 +32,8 @@ class FriendService with AuthenticatedService {
   FirebaseAuth get auth => _auth;
   late final CollectionReference<Map<String, dynamic>> _requestsRef = _firestore
       .collection(FirestoreCollections.friendRequests);
-  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
-      .collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _privateUsersRef =
+      _firestore.collection(FirestoreCollections.userPrivate);
   late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
       _firestore.collection(FirestoreCollections.rateLimits);
 
@@ -80,8 +80,8 @@ class FriendService with AuthenticatedService {
       final docRef = _requestsRef.doc(docId);
       final inverseDocRef = _requestsRef.doc('${receiverUid}_$currentUid');
       final limiterRef = _rateLimitsRef.doc(currentUid);
-      final currentUserRef = _usersRef.doc(currentUid);
-      final receiverUserRef = _usersRef.doc(receiverUid);
+      final currentUserRef = _privateUsersRef.doc(currentUid);
+      final receiverUserRef = _privateUsersRef.doc(receiverUid);
       await _firestore.runTransaction((tx) async {
         final currentUserSnap = await tx.get(currentUserRef);
         final friends = List<String>.from(
@@ -153,10 +153,10 @@ class FriendService with AuthenticatedService {
           'status': FriendRequestStatus.accepted.name,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        tx.update(_usersRef.doc(currentUid), {
+        tx.update(_privateUsersRef.doc(currentUid), {
           'friends': FieldValue.arrayUnion([otherUid]),
         });
-        tx.update(_usersRef.doc(otherUid), {
+        tx.update(_privateUsersRef.doc(otherUid), {
           'friends': FieldValue.arrayUnion([currentUid]),
         });
         if (inverseSnap.exists) tx.delete(inverseRef);
@@ -226,7 +226,7 @@ class FriendService with AuthenticatedService {
 
   /// Stream de la lista de amigos del usuario actual.
   Stream<List<String>> getFriendsStream() {
-    return _usersRef
+    return _privateUsersRef
         .doc(currentUid)
         .snapshots()
         .map((doc) {
@@ -238,12 +238,24 @@ class FriendService with AuthenticatedService {
         .distinct((a, b) => a.length == b.length && a.toSet().containsAll(b));
   }
 
+  /// Obtiene la lista privada de amigos del usuario actual.
+  Future<List<String>> getFriends() async {
+    try {
+      final doc = await _privateUsersRef.doc(currentUid).get();
+      if (!doc.exists) return const <String>[];
+      return List<String>.from(doc.data()?['friends'] as List? ?? []);
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
   // ─── Consultas ──────────────────────────────────────────
 
   /// Comprueba si el usuario actual es amigo de [otherUid].
   Future<bool> areFriends(String otherUid) async {
     try {
-      final doc = await _usersRef.doc(currentUid).get();
+      final doc = await _privateUsersRef.doc(currentUid).get();
       if (!doc.exists) return false;
       final friends = List<String>.from(doc.data()?['friends'] as List? ?? []);
       return friends.contains(otherUid);
@@ -257,7 +269,7 @@ class FriendService with AuthenticatedService {
   Future<RelationshipResult> getRelationship(String otherUid) async {
     try {
       final results = await Future.wait([
-        _usersRef.doc(currentUid).get(),
+        _privateUsersRef.doc(currentUid).get(),
         _requestsRef
             .where('senderId', isEqualTo: currentUid)
             .where('receiverId', isEqualTo: otherUid)
@@ -339,28 +351,26 @@ class FriendService with AuthenticatedService {
     controller = StreamController<RelationshipResult>(
       onListen: () {
         subscriptions.add(
-          _usersRef.doc(currentUid).snapshots().listen((snapshot) {
+          _privateUsersRef.doc(currentUid).snapshots().listen((snapshot) {
             userDoc = snapshot;
             emitRelationship();
           }),
         );
         subscriptions.add(
-          _requestsRef
-              .doc('${currentUid}_$otherUid')
-              .snapshots()
-              .listen((snapshot) {
-                sentDoc = snapshot;
-                emitRelationship();
-              }),
+          _requestsRef.doc('${currentUid}_$otherUid').snapshots().listen((
+            snapshot,
+          ) {
+            sentDoc = snapshot;
+            emitRelationship();
+          }),
         );
         subscriptions.add(
-          _requestsRef
-              .doc('${otherUid}_$currentUid')
-              .snapshots()
-              .listen((snapshot) {
-                receivedDoc = snapshot;
-                emitRelationship();
-              }),
+          _requestsRef.doc('${otherUid}_$currentUid').snapshots().listen((
+            snapshot,
+          ) {
+            receivedDoc = snapshot;
+            emitRelationship();
+          }),
         );
       },
       onCancel: () async {
@@ -370,8 +380,9 @@ class FriendService with AuthenticatedService {
       },
     );
 
-    return controller.stream
-        .distinct((a, b) => a.status == b.status && a.requestId == b.requestId);
+    return controller.stream.distinct(
+      (a, b) => a.status == b.status && a.requestId == b.requestId,
+    );
   }
 
   // ─── Eliminar cuenta ────────────────────────────────────
@@ -381,7 +392,7 @@ class FriendService with AuthenticatedService {
   Future<void> deleteAllUserFriendData(String uid) async {
     try {
       // Quitar uid del array friends de cada amigo suyo
-      final userDoc = await _usersRef.doc(uid).get();
+      final userDoc = await _privateUsersRef.doc(uid).get();
       final friends = List<String>.from(
         userDoc.data()?['friends'] as List? ?? [],
       );
@@ -393,7 +404,7 @@ class FriendService with AuthenticatedService {
         );
         final batch = _firestore.batch();
         for (final friendUid in chunk) {
-          batch.update(_usersRef.doc(friendUid), {
+          batch.update(_privateUsersRef.doc(friendUid), {
             'friends': FieldValue.arrayRemove([uid]),
           });
         }
@@ -430,10 +441,10 @@ class FriendService with AuthenticatedService {
   Future<void> removeFriend(String otherUid) async {
     try {
       final batch = _firestore.batch();
-      batch.update(_usersRef.doc(currentUid), {
+      batch.update(_privateUsersRef.doc(currentUid), {
         'friends': FieldValue.arrayRemove([otherUid]),
       });
-      batch.update(_usersRef.doc(otherUid), {
+      batch.update(_privateUsersRef.doc(otherUid), {
         'friends': FieldValue.arrayRemove([currentUid]),
       });
       await batch.commit();
