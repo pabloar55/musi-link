@@ -24,10 +24,10 @@ flutter build apk                      # Build Android APK
 - **State management:** Riverpod (`Provider`, `StreamProvider`, `NotifierProvider`)
 - **Navigation:** GoRouter with auth-aware redirect logic (`router/`)
 - **Backend:** Firebase Auth + Cloud Firestore + Analytics + Crashlytics + Cloud Messaging (FCM)
-- **Cloud Functions:** TypeScript triggers in `functions/src/index.ts` (region: `europe-southwest1`) — sends push notifications on new messages, friend requests, and accepted friend requests
-- **Spotify:** OAuth PKCE flow, top tracks/artists sync, now-playing polling
+- **Cloud Functions:** TypeScript in `functions/src/` (region: `europe-southwest1`) — push notifications (index.ts) + Spotify catalog search (spotify.ts); secrets stored in Google Secret Manager via `defineSecret`
+- **Spotify:** Public catalog search (artists, tracks) proxied through Cloud Functions (`searchSpotifyArtists`, `searchSpotifyTracks`); no user OAuth — PKCE flow has been removed
 - **Notifications:** `firebase_messaging` + `flutter_local_notifications`; FCM token stored in Firestore user doc; `NotificationService` handles foreground/background/terminated states; `notification_navigation.dart` routes notification taps to the correct screen
-- **Auth extras:** `google_sign_in`, `flutter_web_auth_2` (Spotify PKCE)
+- **Auth extras:** `google_sign_in`
 - **i18n:** `flutter_localizations` + `intl` — English, Spanish, French (`l10n/`)
 - **Testing:** `flutter_test` + `mocktail`
 
@@ -72,17 +72,25 @@ Defined as constants in `lib/utils/firestore_collections.dart`:
 
 ### Cloud Functions (`functions/`)
 
-TypeScript project deployed to `europe-southwest1`. Three Firestore-triggered functions:
+TypeScript project deployed to `europe-southwest1`. Split across two source files:
+
+**`functions/src/index.ts`** — Firestore-triggered push notifications:
 - `onNewMessage` — notifies chat recipient on message creation
 - `onFriendRequest` — notifies target user on new friend request
 - `onFriendRequestAccepted` — notifies requester on acceptance + deletes the request doc
 
 Each function reads the recipient's FCM token from the `users` collection and sends via Firebase Admin SDK. See `push-notifications.md` at the project root for setup details.
 
+**`functions/src/spotify.ts`** — Callable functions for Spotify catalog search:
+- `searchSpotifyArtists` — proxies artist search; requires Firebase Auth
+- `searchSpotifyTracks` — proxies track search; requires Firebase Auth
+
+Both use `defineSecret` for `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` (stored in Google Secret Manager — never in source or the binary). A module-level token cache reuses the Client Credentials access token across warm instances. To set secrets: `firebase functions:secrets:set SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET`.
+
 ### Key patterns
 - Services are pure Dart classes instantiated as Riverpod `Provider`s; screens call them via `ref.read(xyzServiceProvider)`.
 - Real-time data (friends list, chats) uses `StreamProvider` backed by Firestore streams.
-- Spotify now-playing uses `Timer.periodic` with explicit cancellation on dispose.
+- Spotify catalog search goes through `SpotifyCloudService` → Cloud Functions; never call the Spotify API directly from Flutter.
 - Friend acceptance uses a Firestore transaction to avoid race conditions.
 - Non-fatal errors are always routed through `ErrorReporter` (Crashlytics), never `print()`.
 - Use `debugPrint()` instead of `print()` — the linter enforces this.

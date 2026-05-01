@@ -9,6 +9,10 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get authTagline =>
+      'Connecte-toi avec des personnes qui partagent tes goûts musicaux';
+
+  @override
   String get authName => 'Nom';
 
   @override
@@ -85,6 +89,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authLogin => 'Se connecter';
 
   @override
+  String get authForgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get authPasswordResetSent =>
+      'Si cet e-mail correspond à un compte avec mot de passe, nous avons envoyé un lien de réinitialisation.';
+
+  @override
   String get authErrorCouldNotAuth =>
       'Impossible de s\'authentifier. Veuillez réessayer.';
 
@@ -103,6 +114,43 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cet e-mail est déjà enregistré avec un mot de passe. Veuillez vous connecter avec e-mail et mot de passe.';
 
   @override
+  String get authUsername => 'Nom d\'utilisateur';
+
+  @override
+  String get authEnterUsername => 'Choisissez un nom d\'utilisateur';
+
+  @override
+  String get authUsernameHint => 'lettres minuscules, chiffres et _';
+
+  @override
+  String get authUsernameTooShort => 'Au moins 3 caractères';
+
+  @override
+  String get authUsernameTooLong => 'Max 20 caractères';
+
+  @override
+  String get authUsernameInvalidChars => 'Lettres, chiffres et _ seulement';
+
+  @override
+  String get authUsernameTaken => 'Ce nom d\'utilisateur est déjà pris';
+
+  @override
+  String get authUsernameAvailable => 'Disponible';
+
+  @override
+  String get authUsernameChecking => 'Vérification...';
+
+  @override
+  String get usernameSetupTitle => 'Choisissez votre nom d\'utilisateur';
+
+  @override
+  String get usernameSetupSubtitle =>
+      'C\'est ainsi que les autres vous trouveront sur MusiLink.';
+
+  @override
+  String get usernameSetupButton => 'Continuer';
+
+  @override
   String get discoverTitle => 'Découvrir des personnes';
 
   @override
@@ -114,7 +162,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get discoverNoUsersHint =>
-      'Au fur et à mesure que d\'autres utilisateurs connectent leur Spotify, ils apparaîtront ici';
+      'Au fur et à mesure que d\'autres utilisateurs créent leur profil musical, ils apparaîtront ici';
 
   @override
   String get navDiscover => 'Découvrir';
@@ -139,9 +187,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get searchTypeToSearch => 'Tapez un nom pour rechercher';
-
-  @override
-  String get searchSpotifyConnected => 'Spotify connecté';
 
   @override
   String get profileTitle => 'Profil musical';
@@ -172,10 +217,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatWriteMessage => 'Écrire un message...';
 
   @override
-  String get chatSearchSpotify => 'Rechercher une chanson sur Spotify...';
+  String get chatSearchSong => 'Rechercher une chanson...';
 
   @override
   String get chatShareSong => 'Partager une chanson';
+
+  @override
+  String get chatDeletedUser =>
+      'Ce compte a été supprimé. Vous ne pouvez plus envoyer de messages.';
 
   @override
   String get chatSendFirst => 'Envoyez le premier message';
@@ -210,6 +259,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get statsEditArtists => 'Modifier les artistes';
+
+  @override
   String get statsNoData => 'Aucune donnée disponible';
 
   @override
@@ -224,9 +276,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get socialNow => 'Maintenant';
-
-  @override
-  String get nowPlaying => 'En train d\'écouter';
 
   @override
   String socialMinutes(int minutes) {
@@ -253,21 +302,55 @@ class AppLocalizationsFr extends AppLocalizations {
   String get socialUser => 'Utilisateur';
 
   @override
-  String get spotifyConnectTitle => 'Connectez votre Spotify';
+  String get artistSelectorTitle => 'Vos Top Artistes';
 
   @override
-  String get spotifyConnectDescription =>
-      'Pour voir vos statistiques musicales, nous avons besoin d\'accéder à votre compte Spotify.';
+  String artistSelectorSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count artistes · plus vous en ajoutez, meilleure est la compatibilité',
+      one: '1 artiste · plus vous en ajoutez, meilleure est la compatibilité',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get spotifyConnectButton => 'Connecter Spotify';
+  String get artistSelectorSearchHint => 'Rechercher des artistes...';
 
   @override
-  String get spotifyConnectError => 'Erreur lors de la connexion à Spotify';
+  String get artistSelectorContinue => 'Continuer';
 
   @override
-  String get spotifyAlreadyLinkedError =>
-      'Ce compte Spotify est déjà lié à un autre utilisateur';
+  String get artistSelectorContinueLocked =>
+      'Ajoutez au moins 4 artistes pour continuer';
+
+  @override
+  String get artistSelectorNoResults => 'Aucun artiste trouvé';
+
+  @override
+  String get artistSelectorEmpty =>
+      'Recherchez vos artistes préférés pour commencer';
+
+  @override
+  String get artistSelectorSuggested => 'Suggérés';
+
+  @override
+  String get artistSelectorStageBasic => 'Basique';
+
+  @override
+  String get artistSelectorStageGood => 'Bien';
+
+  @override
+  String get artistSelectorStageGreat => 'Super';
+
+  @override
+  String get artistSelectorStageExpert => 'Expert';
+
+  @override
+  String get artistSelectorStageHint =>
+      'Ajoutez-en plus pour améliorer vos recommandations';
 
   @override
   String get menuProfile => 'Mon profil';
@@ -397,7 +480,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingStatsDesc =>
-      'Explorez vos titres, artistes et genres préférés sur Spotify. Voyez comment vos goûts évoluent au fil du temps.';
+      'Créez votre propre top d\'artistes et de genres. Découvrez comment vos goûts se comparent à ceux des autres.';
 
   @override
   String get onboardingDailySongTitle => 'Chanson du jour';
@@ -411,7 +494,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingChatDesc =>
-      'Lancez des conversations et partagez des chansons directement depuis Spotify. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
+      'Lancez des conversations et partagez des chansons. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
 
   @override
   String get onboardingFriendsTitle => 'Créez votre groupe';
@@ -430,6 +513,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingSkip => 'Passer';
 
   @override
+  String get photoSetupTitle => 'Ajouter une photo de profil';
+
+  @override
+  String get photoSetupSubtitle =>
+      'Montrez qui vous êtes. Vous pourrez la modifier à tout moment.';
+
+  @override
+  String get photoSetupChoose => 'Choisir une photo';
+
+  @override
+  String get photoSetupChange => 'Changer la photo';
+
+  @override
+  String get photoSetupContinue => 'Continuer';
+
+  @override
+  String get photoSetupSkip => 'Passer pour l\'instant';
+
+  @override
+  String get photoSetupUploading => 'Téléchargement...';
+
+  @override
+  String get photoSetupGallery => 'Galerie';
+
+  @override
+  String get photoSetupCamera => 'Appareil photo';
+
+  @override
+  String get photoSetupError =>
+      'Impossible de télécharger la photo. Veuillez réessayer.';
+
+  @override
   String get genericError => 'Une erreur s\'est produite. Veuillez réessayer.';
 
   @override
@@ -445,6 +560,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsVibration => 'Vibration';
 
   @override
+  String get settingsAnalytics => 'Statistiques';
+
+  @override
   String get settingsLegal => 'Informations légales';
 
   @override
@@ -455,7 +573,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'Cette action supprimera définitivement votre compte, tous vos messages, vos données Spotify et vos informations de profil. Cette action est irréversible.';
+      'Cette action supprimera définitivement votre compte, vos messages, vos réactions, votre photo, vos données musicales et vos informations de profil. Cette action est irréversible.';
 
   @override
   String get deleteAccountConfirm => 'Supprimer';
@@ -488,35 +606,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS1Body =>
-      'Musi Link est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).';
+      'MusiLink est développée et exploitée par Pablo Armas (armasp80@gmail.com), établi en Espagne. Pablo Armas agit en tant que responsable du traitement de vos données personnelles conformément au Règlement (UE) 2016/679 (RGPD).';
 
   @override
   String get privacyS2Title => '2. Données collectées';
 
   @override
   String get privacyS2Body =>
-      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données Spotify : identifiant utilisateur Spotify, photo de profil, artistes, genres et titres les plus écoutés, et titre en cours de lecture — synchronisés via l\'API Spotify avec votre autorisation explicite.\n\n• Données sociales : messages, chansons partagées, chanson du jour, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage et événements d\'utilisation anonymisés collectés par Firebase Crashlytics et Firebase Analytics.';
+      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage collectés par Firebase Crashlytics et, uniquement si vous activez les statistiques dans les réglages, événements d\'utilisation via Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Utilisation de vos données';
 
   @override
   String get privacyS3Body =>
-      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Intégration Spotify : affichage et comparaison de votre profil musical. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Analyses : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).';
+      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Statistiques facultatives : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : consentement (art. 6.1.a RGPD), que vous pouvez retirer en désactivant les statistiques dans les réglages.';
 
   @override
   String get privacyS4Title => '4. Services tiers';
 
   @override
   String get privacyS4Body =>
-      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Les données peuvent être transférées aux États-Unis dans le cadre de clauses contractuelles types.\n\n• Spotify — Spotify AB. Utilisé uniquement pour lire vos données musicales avec votre autorisation.';
+      'Nous utilisons les services tiers suivants, soumis à leurs propres politiques de confidentialité :\n\n• Google Firebase Firestore, Crashlytics et Analytics — Google LLC. Vos données de profil, messages et événements d\'utilisation sont stockés sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Les photos de profil sont stockées sur des serveurs situés aux États-Unis dans le cadre de clauses contractuelles types (Art. 46 RGPD).\n\n• Cloud Functions — Google LLC. Vos données de messages et demandes d\'amitié sont traitées sur des serveurs situés dans la région européenne (europe-southwest1).\n\n• Spotify et Last.fm. Utilisés comme fournisseurs de catalogue musical pour la recherche d\'artistes/chansons et les suggestions d\'artistes. Aucune connexion à un compte Spotify n\'est requise.';
 
   @override
   String get privacyS5Title => '5. Conservation et suppression des données';
 
   @override
   String get privacyS5Body =>
-      'Nous ne conservons pas vos données au-delà de la durée d\'utilisation de l\'application. Lorsque vous supprimez votre compte via le bouton « Supprimer le compte » dans les Paramètres, toutes vos données personnelles sont définitivement et immédiatement effacées de nos systèmes. Les rapports de plantage et données analytiques conservés par Google sont soumis aux politiques de conservation de Google.';
+      'Nous ne conservons pas vos données au-delà de la durée d\'utilisation de l\'application. Lorsque vous supprimez votre compte via le bouton « Supprimer le compte » dans les Paramètres, nous supprimons vos données privées, photo de profil, relations, demandes, jetons, préférences et données musicales. Le profil public est remplacé par un marqueur anonyme afin de ne pas rompre les références techniques. Les messages que vous avez envoyés sont retirés des conversations et vos réactions sont supprimées ; si une conversation devient vide, elle est supprimée. Certains journaux techniques, rapports de plantage ou données statistiques conservés par Google peuvent être soumis aux propres politiques de conservation de Google.';
 
   @override
   String get privacyS6Title => '6. Vos droits';
@@ -530,7 +648,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS7Body =>
-      'Musi Link est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu\'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.';
+      'MusiLink est destinée aux utilisateurs âgés de 16 ans et plus. Nous ne collectons pas sciemment de données personnelles auprès de personnes de moins de 16 ans. Si vous pensez qu\'un mineur nous a fourni des données personnelles, contactez-nous à armasp80@gmail.com et nous les supprimerons immédiatement.';
 
   @override
   String get privacyS8Title => '8. Sécurité';
@@ -545,4 +663,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get privacyS9Body =>
       'Pour toute question concernant cette Politique de Confidentialité ou le traitement de vos données personnelles, contactez-nous à :\n\nPablo Armas\narmasp80@gmail.com';
+
+  @override
+  String get privacyS10Title => '10. Transferts internationaux de données';
+
+  @override
+  String get privacyS10Body =>
+      'Les photos de profil sont stockées dans Google Firebase Storage avec des serveurs situés aux États-Unis. En utilisant l\'application, vous autorisez explicitement ce transfert international de données d\'images. Google a mis en place les mesures techniques et organisationnelles nécessaires en vertu des Clauses Contractuelles Types approuvées par la Commission Européenne (Art. 46 RGPD) pour garantir un niveau de protection adéquat équivalent à celui de l\'UE.\n\nVos données personnelles, messages et données de profil musical sont stockés sur des serveurs situés dans la région européenne (europe-southwest1), au sein de l\'UE.';
 }

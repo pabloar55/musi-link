@@ -14,7 +14,7 @@ class _Cache with UserFutureCache {
   Duration _ttl;
 
   _Cache(this.userService, {Duration ttl = const Duration(minutes: 5)})
-      : _ttl = ttl;
+    : _ttl = ttl;
 
   @override
   Duration get cacheTtl => _ttl;
@@ -22,13 +22,7 @@ class _Cache with UserFutureCache {
   void setTtl(Duration ttl) => _ttl = ttl;
 }
 
-AppUser _makeUser(String uid) => AppUser(
-      uid: uid,
-      email: '$uid@test.com',
-      displayName: 'User $uid',
-      createdAt: DateTime(2025, 1, 1),
-      lastLogin: DateTime(2025, 1, 1),
-    );
+AppUser _makeUser(String uid) => AppUser(uid: uid, displayName: 'User $uid');
 
 void main() {
   late MockUserService mockUserService;
@@ -62,15 +56,18 @@ void main() {
 
     // ── Cache hit ───────────────────────────────────────────────────────────
 
-    test('cache hit: segunda llamada no vuelve a llamar a UserService', () async {
-      final user = _makeUser('u1');
-      when(() => mockUserService.getUser('u1')).thenAnswer((_) async => user);
+    test(
+      'cache hit: segunda llamada no vuelve a llamar a UserService',
+      () async {
+        final user = _makeUser('u1');
+        when(() => mockUserService.getUser('u1')).thenAnswer((_) async => user);
 
-      await cache.getUserFuture('u1'); // popula caché
-      await cache.getUserFuture('u1'); // hit
+        await cache.getUserFuture('u1'); // popula caché
+        await cache.getUserFuture('u1'); // hit
 
-      verify(() => mockUserService.getUser('u1')).called(1);
-    });
+        verify(() => mockUserService.getUser('u1')).called(1);
+      },
+    );
 
     test('cache hit devuelve el mismo objeto que el fetch original', () async {
       final user = _makeUser('u1');
@@ -88,7 +85,9 @@ void main() {
       final user = _makeUser('u1');
       when(() => mockUserService.getUser('u1')).thenAnswer((_) async => user);
 
-      cache.setTtl(const Duration(microseconds: -1)); // diff > -1µs siempre es true
+      cache.setTtl(
+        const Duration(microseconds: -1),
+      ); // diff > -1µs siempre es true
 
       await cache.getUserFuture('u1');
       await cache.getUserFuture('u1'); // expirado → nuevo fetch
@@ -98,17 +97,19 @@ void main() {
 
     // ── Invalidation ────────────────────────────────────────────────────────
 
-    test('invalidateUserFuture fuerza un nuevo fetch en la siguiente llamada',
-        () async {
-      final user = _makeUser('u1');
-      when(() => mockUserService.getUser('u1')).thenAnswer((_) async => user);
+    test(
+      'invalidateUserFuture fuerza un nuevo fetch en la siguiente llamada',
+      () async {
+        final user = _makeUser('u1');
+        when(() => mockUserService.getUser('u1')).thenAnswer((_) async => user);
 
-      await cache.getUserFuture('u1');
-      cache.invalidateUserFuture('u1');
-      await cache.getUserFuture('u1');
+        await cache.getUserFuture('u1');
+        cache.invalidateUserFuture('u1');
+        await cache.getUserFuture('u1');
 
-      verify(() => mockUserService.getUser('u1')).called(2);
-    });
+        verify(() => mockUserService.getUser('u1')).called(2);
+      },
+    );
 
     test('invalidar uid no cacheado no lanza error', () {
       expect(() => cache.invalidateUserFuture('inexistente'), returnsNormally);
@@ -116,35 +117,37 @@ void main() {
 
     // ── LRU eviction ────────────────────────────────────────────────────────
 
-    test('LRU: la entrada más antigua sin uso reciente es desalojada al llenar',
-        () async {
-      when(() => mockUserService.getUser(any())).thenAnswer(
-        (inv) async => _makeUser(inv.positionalArguments.first as String),
-      );
+    test(
+      'LRU: la entrada más antigua sin uso reciente es desalojada al llenar',
+      () async {
+        when(() => mockUserService.getUser(any())).thenAnswer(
+          (inv) async => _makeUser(inv.positionalArguments.first as String),
+        );
 
-      // Llenar caché con 100 entradas (uid_0 ... uid_99).
-      for (int i = 0; i < 100; i++) {
-        await cache.getUserFuture('uid_$i');
-      }
-      // Orden LRU: uid_0 (más antiguo) ... uid_99 (más reciente)
+        // Llenar caché con 100 entradas (uid_0 ... uid_99).
+        for (int i = 0; i < 100; i++) {
+          await cache.getUserFuture('uid_$i');
+        }
+        // Orden LRU: uid_0 (más antiguo) ... uid_99 (más reciente)
 
-      // Acceder a uid_0 lo mueve al final: uid_1 pasa a ser el más antiguo.
-      clearInteractions(mockUserService);
-      await cache.getUserFuture('uid_0');
+        // Acceder a uid_0 lo mueve al final: uid_1 pasa a ser el más antiguo.
+        clearInteractions(mockUserService);
+        await cache.getUserFuture('uid_0');
 
-      // Añadir la entrada 101 → uid_1 (el más antiguo ahora) es desalojado.
-      clearInteractions(mockUserService);
-      await cache.getUserFuture('uid_100');
+        // Añadir la entrada 101 → uid_1 (el más antiguo ahora) es desalojado.
+        clearInteractions(mockUserService);
+        await cache.getUserFuture('uid_100');
 
-      // uid_1 ya no está en caché → se vuelve a buscar.
-      clearInteractions(mockUserService);
-      await cache.getUserFuture('uid_1');
-      verify(() => mockUserService.getUser('uid_1')).called(1);
+        // uid_1 ya no está en caché → se vuelve a buscar.
+        clearInteractions(mockUserService);
+        await cache.getUserFuture('uid_1');
+        verify(() => mockUserService.getUser('uid_1')).called(1);
 
-      // uid_0 sigue en caché → no se vuelve a buscar.
-      clearInteractions(mockUserService);
-      await cache.getUserFuture('uid_0');
-      verifyNever(() => mockUserService.getUser(any()));
-    });
+        // uid_0 sigue en caché → no se vuelve a buscar.
+        clearInteractions(mockUserService);
+        await cache.getUserFuture('uid_0');
+        verifyNever(() => mockUserService.getUser(any()));
+      },
+    );
   });
 }

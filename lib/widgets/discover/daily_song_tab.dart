@@ -51,7 +51,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
     final user = await ref.read(userServiceProvider).getUser(uid);
     if (!mounted) return;
 
-    final friendIds = user?.friends ?? [];
+    final friendIds = await ref.read(friendServiceProvider).getFriends();
     List<AppUser> friendsWithSongs = [];
 
     if (friendIds.isNotEmpty) {
@@ -71,7 +71,9 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
 
   Future<void> _chooseDailySong() async {
     final uid = _currentUid;
-    if (uid.isEmpty) return; // Session lost — skip silently, GoRouter redirects.
+    if (uid.isEmpty) {
+      return; // Session lost — skip silently, GoRouter redirects.
+    }
     final track = await showModalBottomSheet<Track>(
       context: context,
       isScrollControlled: true,
@@ -119,12 +121,7 @@ class _DailySongTabState extends ConsumerState<DailySongTab>
           ),
           const SizedBox(height: 12),
           if (_dailySong != null) ...[
-            DailySongCard(
-              song: _dailySong!,
-              onTap: _dailySong!.spotifyUrl.isNotEmpty
-                  ? () => _openSpotifyUrl(_dailySong!.spotifyUrl)
-                  : null,
-            ),
+            DailySongCard(song: _dailySong!),
             const SizedBox(height: 8),
             Center(
               child: TextButton.icon(

@@ -141,10 +141,11 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             data: (friendUids) {
               if (friendUids.isEmpty) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     EmptyMessage(text: l10n.friendsNoFriends),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: Text(
                         l10n.friendsNoFriendsHint,
                         style: TextStyle(

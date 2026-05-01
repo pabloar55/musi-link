@@ -1,28 +1,34 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/discovery_result.dart';
-import 'package:musi_link/services/spotify_stats_service.dart';
+import 'package:musi_link/services/authenticated_service.dart';
+import 'package:musi_link/services/music_catalog_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
-class MusicProfileService {
+class MusicProfileService with AuthenticatedService {
   MusicProfileService(
-    this._spotifyGetStats, {
+    this._musicCatalogService, {
     required FirebaseFirestore firestore,
     required FirebaseAuth auth,
-  })  : _firestore = firestore,
-        _auth = auth;
+  }) : _firestore = firestore,
+       _auth = auth;
 
-  final SpotifyGetStats _spotifyGetStats;
+  final MusicCatalogService _musicCatalogService;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  late final CollectionReference<Map<String, dynamic>> _usersRef =
-      _firestore.collection(FirestoreCollections.users);
+  @override
+  FirebaseAuth get auth => _auth;
 
-  // --- Discovery cache & pagination state ---
+  late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
+      .collection(FirestoreCollections.users);
+
   List<DiscoveryResult>? _cachedResults;
   int _displayedCount = 0;
   DateTime? _cacheTime;
@@ -35,7 +41,12 @@ class MusicProfileService {
 
   static const _cacheTtl = Duration(minutes: 30);
   static const _pageSize = 20;
-  static const _queryLimit = 100;
+  static const _recommendationLimit = 100;
+  static const _recommendationRefreshTimeout = Duration(seconds: 60);
+  static const _artistScoreWeight = 70.0;
+  static const _genreScoreWeight = 30.0;
+  static const _artistEvidenceTarget = 7.0;
+  static const _genreEvidenceTarget = 4.0;
 
   bool get hasMoreDiscoveryUsers =>
       _cachedResults != null && _displayedCount < _cachedResults!.length;
@@ -45,33 +56,13 @@ class MusicProfileService {
       _cacheTime != null &&
       DateTime.now().difference(_cacheTime!) < _cacheTtl;
 
-  /// Returns the UID of the currently authenticated user.
-  /// Throws [StateError] instead of crashing if the session is lost.
-  String get _currentUid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('MusicProfileService: no authenticated user.');
-    return uid;
-  }
-
-  /// Sincroniza los datos musicales del usuario desde Spotify a Firestore.
-  /// Aplica un cooldown de 24h para evitar llamadas innecesarias.
-  Future<void> syncMusicProfile(String uid) async {
+  Future<void> saveManualArtists(
+    String uid,
+    List<app.Artist> selectedArtists,
+  ) async {
     try {
-      final doc = await _usersRef.doc(uid).get();
-      if (!doc.exists) return;
-
-      final data = doc.data()!;
-      final lastSync = (data['musicDataUpdatedAt'] as Timestamp?)?.toDate();
-      if (lastSync != null &&
-          DateTime.now().difference(lastSync).inHours < 24) {
-        return;
-      }
-
-      final allArtists =
-          await _spotifyGetStats.getTopArtists(50, 'medium_term');
-      final artists = allArtists.take(15).toList();
-      final genres =
-          _spotifyGetStats.getTopGenresFromArtists(allArtists, 10);
+      final artists = selectedArtists.take(50).toList();
+      final genres = _musicCatalogService.getTopGenresFromArtists(artists, 10);
 
       await _usersRef.doc(uid).update({
         'topArtists': artists.map((a) => a.toMap()).toList(),
@@ -80,13 +71,13 @@ class MusicProfileService {
         'topGenreNames': genres.map((g) => g.name).toList(),
         'musicDataUpdatedAt': Timestamp.now(),
       });
+      clearCache();
     } catch (e, stack) {
       await reportError(e, stack);
+      rethrow;
     }
   }
 
-  /// Intenta obtener resultados desde la caché local de Firestore (sin red).
-  /// Devuelve null si la caché está vacía (primera ejecución o datos purgados).
   Future<List<DiscoveryResult>?> getDiscoveryUsersFromCache() async {
     if (_isCacheValid) {
       return List<DiscoveryResult>.unmodifiable(
@@ -97,7 +88,7 @@ class MusicProfileService {
     try {
       const opts = GetOptions(source: Source.cache);
 
-      final myDoc = await _usersRef.doc(_currentUid).get(opts);
+      final myDoc = await _usersRef.doc(currentUid).get(opts);
       if (!myDoc.exists) return null;
 
       final myUser = AppUser.fromFirestore(myDoc);
@@ -106,7 +97,7 @@ class MusicProfileService {
         return null;
       }
 
-      final results = await _fetchRelevantUsers(myUser, options: opts);
+      final results = await _fetchStoredRecommendations(options: opts);
       if (results == null) return null;
 
       _cachedResults = results;
@@ -114,7 +105,6 @@ class MusicProfileService {
       _displayedCount = results.length.clamp(0, _pageSize);
       return List<DiscoveryResult>.unmodifiable(results.take(_displayedCount));
     } on FirebaseException catch (e) {
-      // 'unavailable' es el código esperado cuando la caché local está vacía.
       if (e.code == 'unavailable') return null;
       await reportError(e, StackTrace.current);
       return null;
@@ -123,8 +113,6 @@ class MusicProfileService {
     }
   }
 
-  /// Obtiene la primera página de usuarios para el feed de descubrimiento.
-  /// Usa caché con TTL de 30 minutos. Pasa [forceRefresh] para invalidarlo.
   Future<List<DiscoveryResult>> getDiscoveryUsers({
     bool forceRefresh = false,
   }) async {
@@ -138,10 +126,8 @@ class MusicProfileService {
       _cachedResults = null;
       _displayedCount = 0;
 
-      final myDoc = await _usersRef.doc(_currentUid).get();
-      if (!myDoc.exists) {
-        return [];
-      }
+      final myDoc = await _usersRef.doc(currentUid).get();
+      if (!myDoc.exists) return [];
 
       final myUser = AppUser.fromFirestore(myDoc);
       if (myUser == null) return [];
@@ -149,98 +135,139 @@ class MusicProfileService {
         return [];
       }
 
-      final results = await _fetchRelevantUsers(myUser) ?? [];
+      if (forceRefresh) {
+        await _requestRecommendationRefresh();
+      }
+
+      final results = await _fetchStoredRecommendations() ?? [];
       _cachedResults = results;
       _cacheTime = DateTime.now();
       _displayedCount = results.length.clamp(0, _pageSize);
-      return List<DiscoveryResult>.unmodifiable(
-        results.take(_displayedCount),
-      );
+      return List<DiscoveryResult>.unmodifiable(results.take(_displayedCount));
     } catch (e, stack) {
       await reportError(e, stack);
       return [];
     }
   }
 
-  /// Devuelve la siguiente página desde el caché local (0 Firestore reads).
+  Future<void> _requestRecommendationRefresh() async {
+    try {
+      final userRef = _usersRef.doc(currentUid);
+      await userRef.update({
+        'recommendationsRefreshRequestedAt': FieldValue.serverTimestamp(),
+      });
+
+      await userRef
+          .snapshots()
+          .where((snapshot) {
+            final data = snapshot.data();
+            final requestedAt =
+                data?['recommendationsRefreshRequestedAt'] as Timestamp?;
+            final generatedAt =
+                data?['recommendationsGeneratedAt'] as Timestamp?;
+            return requestedAt != null &&
+                generatedAt != null &&
+                generatedAt.compareTo(requestedAt) >= 0;
+          })
+          .first
+          .timeout(_recommendationRefreshTimeout);
+    } on TimeoutException {
+      // Keep the previous recommendations visible if the refresh completion
+      // signal is delayed by network conditions or a slow Cloud Function.
+    } catch (e, stack) {
+      await reportError(e, stack);
+    }
+  }
+
   Future<(List<DiscoveryResult>, bool hasMore)> loadMoreDiscoveryUsers() async {
     if (_cachedResults == null || _displayedCount >= _cachedResults!.length) {
       return (List<DiscoveryResult>.unmodifiable(_cachedResults ?? []), false);
     }
 
-    _displayedCount =
-        (_displayedCount + _pageSize).clamp(0, _cachedResults!.length);
+    _displayedCount = (_displayedCount + _pageSize).clamp(
+      0,
+      _cachedResults!.length,
+    );
     return (
       List<DiscoveryResult>.unmodifiable(_cachedResults!.take(_displayedCount)),
       _displayedCount < _cachedResults!.length,
     );
   }
 
-  /// Lanza dos queries en paralelo usando arrayContainsAny para traer
-  /// solo usuarios que comparten al menos un artista o género.
-  /// Máximo ~200 reads (100 por query) en vez de escanear toda la colección.
-  /// [options] null → servidor (por defecto); Source.cache → caché local.
-  /// Devuelve null solo cuando [options] apunta a caché y ésta está vacía.
-  Future<List<DiscoveryResult>?> _fetchRelevantUsers(
-    AppUser myUser, {
+  Future<List<DiscoveryResult>?> _fetchStoredRecommendations({
     GetOptions? options,
   }) async {
-    final artistNames = myUser.topArtistNames.take(10).toList();
-    final genreNames = myUser.topGenreNames.take(10).toList();
-
     try {
-      // Lanzar ambas queries en paralelo
-      final artistFuture = artistNames.isNotEmpty
-          ? _usersRef
-              .where('topArtistNames', arrayContainsAny: artistNames)
-              .limit(_queryLimit)
-              .get(options)
-          : null;
+      final snapshot = await _usersRef
+          .doc(currentUid)
+          .collection(FirestoreCollections.recommendations)
+          .orderBy('score', descending: true)
+          .limit(_recommendationLimit)
+          .get(options);
 
-      final genreFuture = genreNames.isNotEmpty
-          ? _usersRef
-              .where('topGenreNames', arrayContainsAny: genreNames)
-              .limit(_queryLimit)
-              .get(options)
-          : null;
+      if (snapshot.docs.isEmpty) return null;
 
-      final seen = <String>{_currentUid};
-      final allDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      final recommendationDocs = snapshot.docs;
+      final orderedIds = recommendationDocs
+          .map((doc) => (doc.data()['userId'] ?? doc.id).toString())
+          .where((uid) => uid.isNotEmpty && uid != currentUid)
+          .toList();
 
-      if (artistFuture != null) {
-        for (final doc in (await artistFuture).docs) {
-          if (seen.add(doc.id)) allDocs.add(doc);
-        }
-      }
+      if (orderedIds.isEmpty) return null;
 
-      if (genreFuture != null) {
-        for (final doc in (await genreFuture).docs) {
-          if (seen.add(doc.id)) allDocs.add(doc);
+      final usersById = <String, AppUser>{};
+      for (var i = 0; i < orderedIds.length; i += 10) {
+        final chunk = orderedIds.sublist(
+          i,
+          (i + 10).clamp(0, orderedIds.length),
+        );
+        final usersSnapshot = await _usersRef
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get(options);
+        for (final doc in usersSnapshot.docs) {
+          final user = AppUser.fromFirestore(doc);
+          if (user != null) usersById[user.uid] = user;
         }
       }
 
       final results = <DiscoveryResult>[];
-      for (final doc in allDocs) {
-        final user = AppUser.fromFirestore(doc);
+      for (final doc in recommendationDocs) {
+        final data = doc.data();
+        final uid = (data['userId'] ?? doc.id).toString();
+        final user = usersById[uid];
         if (user == null) continue;
         if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
 
-        results.add(calculateCompatibility(
-          myArtistNames: myUser.topArtistNames,
-          myGenreNames: myUser.topGenreNames,
-          otherUser: user,
-        ));
+        results.add(
+          DiscoveryResult(
+            user: user,
+            score: ((data['score'] as num?) ?? 0).toDouble(),
+            sharedArtistNames:
+                (data['sharedArtistNames'] as List<dynamic>?)
+                    ?.map((value) => value.toString())
+                    .toList() ??
+                const [],
+            sharedGenreNames:
+                (data['sharedGenreNames'] as List<dynamic>?)
+                    ?.map((value) => value.toString())
+                    .toList() ??
+                const [],
+          ),
+        );
       }
 
-      results.sort((a, b) => b.score.compareTo(a.score));
-      return results;
+      return results.isEmpty ? null : results;
     } on FirebaseException catch (e) {
-      if (options?.source == Source.cache && e.code == 'unavailable') return null;
-      rethrow;
+      if (options?.source == Source.cache && e.code == 'unavailable') {
+        return null;
+      }
+      await reportError(e, StackTrace.current);
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
-  /// Calcula la compatibilidad entre el usuario actual y otro usuario.
   Future<DiscoveryResult> getCompatibilityWith(
     AppUser myUser,
     AppUser otherUser,
@@ -258,26 +285,69 @@ class MusicProfileService {
     required List<String> myGenreNames,
     required AppUser otherUser,
   }) {
-    final sharedArtists = myArtistNames
-        .toSet()
-        .intersection(otherUser.topArtistNames.toSet())
+    final myUniqueArtistNames = _uniqueMusicNames(myArtistNames);
+    final otherUniqueArtistNames = _uniqueMusicNames(otherUser.topArtistNames);
+    final myUniqueGenreNames = _uniqueMusicNames(myGenreNames);
+    final otherUniqueGenreNames = _uniqueMusicNames(otherUser.topGenreNames);
+    final myArtists = myUniqueArtistNames.map(_normalizedMusicKey).toSet();
+    final myGenres = myUniqueGenreNames.map(_normalizedMusicKey).toSet();
+    final sharedArtists = otherUniqueArtistNames
+        .where((artist) => myArtists.contains(_normalizedMusicKey(artist)))
+        .toList();
+    final sharedGenres = otherUniqueGenreNames
+        .where((genre) => myGenres.contains(_normalizedMusicKey(genre)))
         .toList();
 
-    final sharedGenres = myGenreNames
-        .toSet()
-        .intersection(otherUser.topGenreNames.toSet())
-        .toList();
-    // Con 5 artistas en común ya se llega al máximo de 70 puntos, y con 5 géneros se llega al máximo de 30 puntos.
-    // 5*14 = 70 puntos de artistas, y 5*6 = 30 puntos de géneros, para un total de 100 puntos.
-    // El clamp asegura que no se pase de esos máximos aunque haya más coincidencias.
-    final artistScore = (sharedArtists.length * 14.0).clamp(0.0, 70.0);
-    final genreScore = (sharedGenres.length * 6.0).clamp(0.0, 30.0);
+    final artistScore = _similarityScore(
+      sharedCount: sharedArtists.length,
+      leftCount: myUniqueArtistNames.length,
+      rightCount: otherUniqueArtistNames.length,
+      evidenceTarget: _artistEvidenceTarget,
+      weight: _artistScoreWeight,
+    );
+    final genreScore = _similarityScore(
+      sharedCount: sharedGenres.length,
+      leftCount: myUniqueGenreNames.length,
+      rightCount: otherUniqueGenreNames.length,
+      evidenceTarget: _genreEvidenceTarget,
+      weight: _genreScoreWeight,
+    );
 
     return DiscoveryResult(
       user: otherUser,
-      score: artistScore + genreScore,
+      score: (artistScore + genreScore).roundToDouble(),
       sharedArtistNames: sharedArtists,
       sharedGenreNames: sharedGenres,
     );
+  }
+
+  static String _normalizedMusicKey(String value) => value.trim().toLowerCase();
+
+  static List<String> _uniqueMusicNames(List<String> values) {
+    final namesByKey = <String, String>{};
+    for (final value in values) {
+      final trimmed = value.trim();
+      final key = _normalizedMusicKey(trimmed);
+      if (key.isNotEmpty && !namesByKey.containsKey(key)) {
+        namesByKey[key] = trimmed;
+      }
+    }
+    return namesByKey.values.toList(growable: false);
+  }
+
+  static double _similarityScore({
+    required int sharedCount,
+    required int leftCount,
+    required int rightCount,
+    required double evidenceTarget,
+    required double weight,
+  }) {
+    if (sharedCount == 0) return 0.0;
+
+    final comparableCount = leftCount < rightCount ? leftCount : rightCount;
+    final coverage = comparableCount == 0 ? 0.0 : sharedCount / comparableCount;
+    final evidence = (sharedCount / evidenceTarget).clamp(0.0, 1.0);
+    final similarity = coverage > evidence ? coverage : evidence;
+    return similarity * weight;
   }
 }

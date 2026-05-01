@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,6 +9,7 @@ import 'package:musi_link/providers/service_providers.dart';
 
 /// Pantalla de autenticación con Firebase.
 /// Permite login/registro con email+contraseña y Google Sign-In.
+/// El username se elige siempre en UsernameSetupScreen tras el registro.
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
@@ -16,15 +18,14 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  final _formKey =
-      GlobalKey<
-        FormState
-      >(); //Creamos la clave para hacer referencia al formulario
+  static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isLogin = true; // true = login, false = registro
+  bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -43,16 +44,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       User? user;
       if (_isLogin) {
-        user = await ref.read(authServiceProvider).signInWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        user = await ref
+            .read(authServiceProvider)
+            .signInWithEmail(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            );
       } else {
-        user = await ref.read(authServiceProvider).registerWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          displayName: _nameController.text.trim(),
-        );
+        user = await ref
+            .read(authServiceProvider)
+            .registerWithEmail(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              displayName: _nameController.text.trim(),
+            );
       }
 
       if (user == null && mounted) {
@@ -61,7 +66,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
     } catch (e) {
-      if (mounted) _showError(AppLocalizations.of(context)!.authErrorUnexpected);
+      if (mounted) {
+        _showError(AppLocalizations.of(context)!.authErrorUnexpected);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -72,20 +79,48 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       final user = await ref.read(authServiceProvider).signInWithGoogle();
       if (user == null && mounted) {
-        _showError(AppLocalizations.of(context)!.authErrorGoogleSignIn);
+        return;
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) _showError(_mapFirebaseError(e.code));
+    } on GoogleSignInException catch (e) {
+      if (!mounted || e.code == GoogleSignInExceptionCode.canceled) return;
+      _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
     } catch (e) {
       if (mounted) {
-        if (e.toString().contains('canceled')) {
-          // Si el usuario cancela el diálogo, no mostramos error
-          return;
-        }
-        _showError(
-          AppLocalizations.of(context)!.authErrorGoogleSignInGeneric,
-        );
+        _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _sendPasswordResetEmail() async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showError(l10n.authEnterEmail);
+      return;
+    }
+    if (!_emailRegex.hasMatch(email)) {
+      _showError(l10n.authInvalidEmail);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      if (mounted) _showError(l10n.authPasswordResetSent);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'user-not-found') {
+        _showError(l10n.authPasswordResetSent);
+      } else {
+        _showError(_mapFirebaseError(e.code));
+      }
+    } catch (_) {
+      if (mounted) _showError(l10n.authErrorUnexpected);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -135,7 +170,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset('assets/images/logo.png', width: 250),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.authTagline,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 28),
 
                 // Formulario
                 Form(
@@ -172,10 +216,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           prefixIcon: const Icon(LucideIcons.mail),
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return l10n.authEnterEmail;
-                          }
-                          if (!value.contains('@')) {
+                          final email = value?.trim() ?? '';
+                          if (email.isEmpty) return l10n.authEnterEmail;
+                          if (!_emailRegex.hasMatch(email)) {
                             return l10n.authInvalidEmail;
                           }
                           return null;
@@ -196,11 +239,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   ? LucideIcons.eyeOff
                                   : LucideIcons.eye,
                             ),
-                            onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
-                            },
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                         validator: (value) {
@@ -213,7 +254,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      if (_isLogin) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : _sendPasswordResetEmail,
+                            child: Text(l10n.authForgotPassword),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ] else
+                        const SizedBox(height: 24),
 
                       // Botón principal
                       SizedBox(

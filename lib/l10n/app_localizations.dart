@@ -100,6 +100,12 @@ abstract class AppLocalizations {
     Locale('fr'),
   ];
 
+  /// No description provided for @authTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with people who share your music taste'**
+  String get authTagline;
+
   /// No description provided for @authName.
   ///
   /// In en, this message translates to:
@@ -244,6 +250,18 @@ abstract class AppLocalizations {
   /// **'Log in'**
   String get authLogin;
 
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authPasswordResetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If this email has a password account, we sent you a reset link.'**
+  String get authPasswordResetSent;
+
   /// No description provided for @authErrorCouldNotAuth.
   ///
   /// In en, this message translates to:
@@ -274,6 +292,78 @@ abstract class AppLocalizations {
   /// **'This email is already registered with a password. Please sign in with email and password.'**
   String get authErrorAccountExistsWithDifferentCredential;
 
+  /// No description provided for @authUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get authUsername;
+
+  /// No description provided for @authEnterUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a username'**
+  String get authEnterUsername;
+
+  /// No description provided for @authUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'lowercase letters, numbers and _'**
+  String get authUsernameHint;
+
+  /// No description provided for @authUsernameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 3 characters'**
+  String get authUsernameTooShort;
+
+  /// No description provided for @authUsernameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Max 20 characters'**
+  String get authUsernameTooLong;
+
+  /// No description provided for @authUsernameInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Only letters, numbers and _'**
+  String get authUsernameInvalidChars;
+
+  /// No description provided for @authUsernameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This username is already taken'**
+  String get authUsernameTaken;
+
+  /// No description provided for @authUsernameAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get authUsernameAvailable;
+
+  /// No description provided for @authUsernameChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking...'**
+  String get authUsernameChecking;
+
+  /// No description provided for @usernameSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your username'**
+  String get usernameSetupTitle;
+
+  /// No description provided for @usernameSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is how others will find you on MusiLink.'**
+  String get usernameSetupSubtitle;
+
+  /// No description provided for @usernameSetupButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get usernameSetupButton;
+
   /// No description provided for @discoverTitle.
   ///
   /// In en, this message translates to:
@@ -295,7 +385,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoverNoUsersHint.
   ///
   /// In en, this message translates to:
-  /// **'As more users connect their Spotify, they will appear here'**
+  /// **'As more users create their music profile, they will appear here'**
   String get discoverNoUsersHint;
 
   /// No description provided for @navDiscover.
@@ -345,12 +435,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type a name to search'**
   String get searchTypeToSearch;
-
-  /// No description provided for @searchSpotifyConnected.
-  ///
-  /// In en, this message translates to:
-  /// **'Spotify connected'**
-  String get searchSpotifyConnected;
 
   /// No description provided for @profileTitle.
   ///
@@ -406,17 +490,23 @@ abstract class AppLocalizations {
   /// **'Write a message...'**
   String get chatWriteMessage;
 
-  /// No description provided for @chatSearchSpotify.
+  /// No description provided for @chatSearchSong.
   ///
   /// In en, this message translates to:
-  /// **'Search song on Spotify...'**
-  String get chatSearchSpotify;
+  /// **'Search song...'**
+  String get chatSearchSong;
 
   /// No description provided for @chatShareSong.
   ///
   /// In en, this message translates to:
   /// **'Share song'**
   String get chatShareSong;
+
+  /// No description provided for @chatDeletedUser.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been deleted. You can no longer send messages.'**
+  String get chatDeletedUser;
 
   /// No description provided for @chatSendFirst.
   ///
@@ -478,6 +568,12 @@ abstract class AppLocalizations {
   /// **'Error: {error}'**
   String statsError(String error);
 
+  /// No description provided for @statsEditArtists.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit artists'**
+  String get statsEditArtists;
+
   /// No description provided for @statsNoData.
   ///
   /// In en, this message translates to:
@@ -507,12 +603,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Now'**
   String get socialNow;
-
-  /// No description provided for @nowPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Now playing'**
-  String get nowPlaying;
 
   /// No description provided for @socialMinutes.
   ///
@@ -550,35 +640,83 @@ abstract class AppLocalizations {
   /// **'User'**
   String get socialUser;
 
-  /// No description provided for @spotifyConnectTitle.
+  /// No description provided for @artistSelectorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Connect your Spotify'**
-  String get spotifyConnectTitle;
+  /// **'Your Top Artists'**
+  String get artistSelectorTitle;
 
-  /// No description provided for @spotifyConnectDescription.
+  /// No description provided for @artistSelectorSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'To see your music stats we need access to your Spotify account.'**
-  String get spotifyConnectDescription;
+  /// **'{count, plural, =1{1 artist · the more you add, the better your matches} other{{count} artists · the more you add, the better your matches}}'**
+  String artistSelectorSubtitle(int count);
 
-  /// No description provided for @spotifyConnectButton.
+  /// No description provided for @artistSelectorSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Connect Spotify'**
-  String get spotifyConnectButton;
+  /// **'Search artists...'**
+  String get artistSelectorSearchHint;
 
-  /// No description provided for @spotifyConnectError.
+  /// No description provided for @artistSelectorContinue.
   ///
   /// In en, this message translates to:
-  /// **'Error connecting to Spotify'**
-  String get spotifyConnectError;
+  /// **'Continue'**
+  String get artistSelectorContinue;
 
-  /// No description provided for @spotifyAlreadyLinkedError.
+  /// No description provided for @artistSelectorContinueLocked.
   ///
   /// In en, this message translates to:
-  /// **'This Spotify account is already linked to another user'**
-  String get spotifyAlreadyLinkedError;
+  /// **'Add at least 4 artists to continue'**
+  String get artistSelectorContinueLocked;
+
+  /// No description provided for @artistSelectorNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No artists found'**
+  String get artistSelectorNoResults;
+
+  /// No description provided for @artistSelectorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for your favourite artists to get started'**
+  String get artistSelectorEmpty;
+
+  /// No description provided for @artistSelectorSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get artistSelectorSuggested;
+
+  /// No description provided for @artistSelectorStageBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get artistSelectorStageBasic;
+
+  /// No description provided for @artistSelectorStageGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get artistSelectorStageGood;
+
+  /// No description provided for @artistSelectorStageGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great'**
+  String get artistSelectorStageGreat;
+
+  /// No description provided for @artistSelectorStageExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert'**
+  String get artistSelectorStageExpert;
+
+  /// No description provided for @artistSelectorStageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more to improve your recommendations'**
+  String get artistSelectorStageHint;
 
   /// No description provided for @menuProfile.
   ///
@@ -805,7 +943,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingStatsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.'**
+  /// **'Create your own top artists and genres. See how your taste compares with other people.'**
   String get onboardingStatsDesc;
 
   /// No description provided for @onboardingDailySongTitle.
@@ -829,7 +967,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingChatDesc.
   ///
   /// In en, this message translates to:
-  /// **'Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.'**
+  /// **'Start conversations and share songs. Talk about the music you love with people who get it.'**
   String get onboardingChatDesc;
 
   /// No description provided for @onboardingFriendsTitle.
@@ -862,6 +1000,66 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get onboardingSkip;
 
+  /// No description provided for @photoSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a profile photo'**
+  String get photoSetupTitle;
+
+  /// No description provided for @photoSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let others know who you are. You can always change it later.'**
+  String get photoSetupSubtitle;
+
+  /// No description provided for @photoSetupChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get photoSetupChoose;
+
+  /// No description provided for @photoSetupChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change photo'**
+  String get photoSetupChange;
+
+  /// No description provided for @photoSetupContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get photoSetupContinue;
+
+  /// No description provided for @photoSetupSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get photoSetupSkip;
+
+  /// No description provided for @photoSetupUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get photoSetupUploading;
+
+  /// No description provided for @photoSetupGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get photoSetupGallery;
+
+  /// No description provided for @photoSetupCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get photoSetupCamera;
+
+  /// No description provided for @photoSetupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload photo. Please try again.'**
+  String get photoSetupError;
+
   /// No description provided for @genericError.
   ///
   /// In en, this message translates to:
@@ -892,6 +1090,12 @@ abstract class AppLocalizations {
   /// **'Vibration'**
   String get settingsVibration;
 
+  /// No description provided for @settingsAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get settingsAnalytics;
+
   /// No description provided for @settingsLegal.
   ///
   /// In en, this message translates to:
@@ -913,7 +1117,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountBody.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.'**
+  /// **'This will permanently delete your account, your messages, your reactions, your photo, your music data and your profile information. This action cannot be undone.'**
   String get deleteAccountBody;
 
   /// No description provided for @deleteAccountConfirm.
@@ -973,7 +1177,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS1Body.
   ///
   /// In en, this message translates to:
-  /// **'Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).'**
+  /// **'MusiLink is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).'**
   String get privacyS1Body;
 
   /// No description provided for @privacyS2Title.
@@ -985,7 +1189,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify\'s API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.'**
+  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash reports collected by Firebase Crashlytics and, only if you enable analytics in Settings, usage events through Firebase Analytics.'**
   String get privacyS2Body;
 
   /// No description provided for @privacyS3Title.
@@ -997,7 +1201,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS3Body.
   ///
   /// In en, this message translates to:
-  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).'**
+  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Optional analytics: understanding how users interact with the App to improve it. Legal basis: consent (Art. 6.1.a GDPR), which you can withdraw by disabling Analytics in Settings.'**
   String get privacyS3Body;
 
   /// No description provided for @privacyS4Title.
@@ -1009,7 +1213,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS4Body.
   ///
   /// In en, this message translates to:
-  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.'**
+  /// **'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify and Last.fm. Used as music catalogue providers for artist/song search and artist suggestions. No Spotify account connection is required.'**
   String get privacyS4Body;
 
   /// No description provided for @privacyS5Title.
@@ -1021,7 +1225,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS5Body.
   ///
   /// In en, this message translates to:
-  /// **'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google\'s own retention policies.'**
+  /// **'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, we delete your private data, profile photo, relationships, requests, tokens, preferences, and music data. The public profile is replaced with an anonymous placeholder so technical references do not break. Messages you sent are removed from conversations and your reactions are removed; if a conversation becomes empty, it is deleted. Some technical records, crash reports, or analytics data held by Google may be subject to Google\'s own retention policies.'**
   String get privacyS5Body;
 
   /// No description provided for @privacyS6Title.
@@ -1045,7 +1249,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS7Body.
   ///
   /// In en, this message translates to:
-  /// **'Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.'**
+  /// **'MusiLink is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.'**
   String get privacyS7Body;
 
   /// No description provided for @privacyS8Title.
@@ -1071,6 +1275,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com'**
   String get privacyS9Body;
+
+  /// No description provided for @privacyS10Title.
+  ///
+  /// In en, this message translates to:
+  /// **'10. International Data Transfers'**
+  String get privacyS10Title;
+
+  /// No description provided for @privacyS10Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and music profile data are stored on servers located in the European region (europe-southwest1), within the EU.'**
+  String get privacyS10Body;
 }
 
 class _AppLocalizationsDelegate

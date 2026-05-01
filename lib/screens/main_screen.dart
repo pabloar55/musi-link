@@ -32,9 +32,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (ref.read(spotifyServiceProvider).isInitialized) {
-      ref.read(spotifyServiceProvider).startPollingNowPlaying();
-    }
     // Initialize FCM: permisos, token, canal Android, listeners
     ref.read(notificationServiceProvider).initialize();
     // FCM: app abierta desde notificación en background
@@ -51,16 +48,6 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      if (ref.read(spotifyServiceProvider).isInitialized) {
-        ref.read(spotifyServiceProvider).startPollingNowPlaying();
-      }
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
-      ref.read(spotifyServiceProvider).stopPollingNowPlaying();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +60,12 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
         ref.read(pendingNotificationProvider.notifier).setValue(null);
       }
     });
+
+    final unreadChats = ref.watch(unreadChatsCountProvider);
+    final pendingCount = ref.watch(receivedRequestsProvider).maybeWhen(
+          data: (list) => list.length,
+          orElse: () => 0,
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -95,8 +88,22 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
         destinations: [
           NavigationDestination(icon: const Icon(LucideIcons.compass500), label: l10n.navDiscover),
           NavigationDestination(icon: const Icon(LucideIcons.chartNoAxesColumn600), label: l10n.navStats),
-          NavigationDestination(icon: const Icon(LucideIcons.messageCircle500), label: l10n.navMessages),
-          NavigationDestination(icon: const Icon(LucideIcons.users500), label: l10n.navFriends),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: unreadChats > 0,
+              label: unreadChats > 9 ? const Text('9+') : Text('$unreadChats'),
+              child: const Icon(LucideIcons.messageCircle500),
+            ),
+            label: l10n.navMessages,
+          ),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: pendingCount > 0,
+              label: pendingCount > 9 ? const Text('9+') : Text('$pendingCount'),
+              child: const Icon(LucideIcons.users500),
+            ),
+            label: l10n.navFriends,
+          ),
         ],
         selectedIndex: currentPageIndex,
 

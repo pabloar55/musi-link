@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:musi_link/firebase_options.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -6,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
+import 'package:musi_link/providers/shared_preferences_provider.dart';
+import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -13,15 +16,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('FCM background: ${message.messageId}');
+  if (kDebugMode) debugPrint('FCM background: ${message.messageId}');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -37,12 +38,13 @@ void main() async {
   };
 
   final prefs = await SharedPreferences.getInstance();
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+    prefs.getBool(kAnalyticsEnabledKey) ?? false,
+  );
 
   runApp(
     ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: const MainApp(),
     ),
   );

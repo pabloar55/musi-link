@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
@@ -13,8 +15,10 @@ import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/utils/session_cleanup.dart';
 import 'package:musi_link/services/auth_service.dart';
 import 'package:musi_link/widgets/delete_account_dialog.dart';
+import 'package:musi_link/widgets/image_source_picker.dart';
 import 'package:musi_link/widgets/deleting_account_dialog.dart';
 import 'package:musi_link/widgets/reauth_password_dialog.dart';
 import 'package:musi_link/widgets/signing_out_dialog.dart';
@@ -27,12 +31,72 @@ class AccountSettingsScreen extends ConsumerStatefulWidget {
       _AccountSettingsScreenState();
 }
 
-class _AccountSettingsScreenState
-    extends ConsumerState<AccountSettingsScreen> {
+class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
+  bool _isUploadingPhoto = false;
+
   Future<void> _goToProfile() async {
     final appUser = ref.read(currentUserProvider).asData?.value;
     if (appUser != null && mounted) {
       unawaited(context.push('/profile', extra: appUser));
+    }
+  }
+
+  Future<void> _changePhoto() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final source = await showImageSourcePicker(context);
+    if (source == null || !mounted) return;
+
+    final image = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (image == null || !mounted) return;
+
+    setState(() => _isUploadingPhoto = true);
+    try {
+      final uid = ref.read(firebaseAuthProvider).currentUser!.uid;
+      final url = await ref
+          .read(storageServiceProvider)
+          .uploadProfilePhoto(uid, image);
+      if (url != null && mounted) {
+        await ref.read(userServiceProvider).updateProfile(uid, photoUrl: url);
+      }
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.photoSetupError),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingPhoto = false);
+    }
+  }
+
+  Future<String> _sendCurrentUserPasswordResetEmail(User firebaseUser) async {
+    final l10n = AppLocalizations.of(context)!;
+    final email = firebaseUser.email;
+    if (email == null || email.trim().isEmpty) {
+      return l10n.genericError;
+    }
+
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+      return l10n.authPasswordResetSent;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') return l10n.authPasswordResetSent;
+      if (e.code == 'invalid-email') return l10n.authErrorInvalidEmail;
+      if (e.code == 'too-many-requests') return l10n.authErrorTooManyRequests;
+      return l10n.genericError;
+    } catch (e, st) {
+      reportError(e, st).ignore();
+      return l10n.genericError;
     }
   }
 
@@ -46,45 +110,51 @@ class _AccountSettingsScreenState
     final firebaseUser = ref.read(firebaseAuthProvider).currentUser;
     if (firebaseUser == null) return;
 
-    final isGoogle =
-        firebaseUser.providerData.any((p) => p.providerId == 'google.com');
+    final isGoogle = firebaseUser.providerData.any(
+      (p) => p.providerId == 'google.com',
+    );
 
     // 2. Re-autenticación antes de tocar nada
     if (isGoogle) {
       bool success;
       try {
-        success =
-            await ref.read(authServiceProvider).reauthenticateWithGoogle();
+        success = await ref
+            .read(authServiceProvider)
+            .reauthenticateWithGoogle();
       } on GoogleAccountMismatchException {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.reauthWrongAccount)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.reauthWrongAccount)));
         return;
       } catch (e, st) {
         reportError(e, st).ignore();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.genericError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.genericError)));
         return;
       }
       if (!success || !mounted) return; // usuario canceló
     } else {
-      final password = await showReauthPasswordDialog(context);
+      final password = await showReauthPasswordDialog(
+        context,
+        onForgotPassword: () =>
+            _sendCurrentUserPasswordResetEmail(firebaseUser),
+      );
       if (password == null || !mounted) return; // usuario canceló
       try {
         await ref
             .read(authServiceProvider)
             .reauthenticateWithPassword(firebaseUser.email ?? '', password);
-      } on Exception catch (e) {
+      } on FirebaseAuthException catch (e) {
         if (!mounted) return;
-        final msg = e.toString().contains('wrong-password') ||
-                e.toString().contains('invalid-credential')
+        final msg = e.code == 'wrong-password' || e.code == 'invalid-credential'
             ? l10n.authErrorWrongPassword
             : l10n.genericError;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
         return;
       }
     }
@@ -99,16 +169,14 @@ class _AccountSettingsScreenState
     try {
       // 4. Datos de Firestore (user aún autenticado → reglas OK)
       await ref.read(friendServiceProvider).deleteAllUserFriendData(uid);
+      await ref.read(chatServiceProvider).deleteAllUserChatData(uid);
+      await ref.read(storageServiceProvider).deleteProfilePhoto(uid);
       await ref.read(userServiceProvider).anonymizeUser(uid);
 
-      // 5. Spotify (best effort)
-      try {
-        await ref.read(spotifyServiceProvider).disconnect();
-      } catch (_) {}
-
-      // 6. Capturar servicios antes de borrar (delete() desmonta el widget)
+      // 5. Capturar servicios antes de borrar (delete() desmonta el widget)
       final authService = ref.read(authServiceProvider);
       final chatService = ref.read(chatServiceProvider);
+      final musicProfileService = ref.read(musicProfileServiceProvider);
 
       await firebaseUser.delete();
 
@@ -117,7 +185,8 @@ class _AccountSettingsScreenState
         await authService.signOut();
       } catch (_) {}
       chatService.clearCache();
-      ref.read(musicProfileServiceProvider).clearCache();
+      musicProfileService.clearCache();
+      if (mounted) clearSessionState(ref);
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -126,18 +195,15 @@ class _AccountSettingsScreenState
       reportError(e, st).ignore();
       if (!mounted) return;
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.genericError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.genericError)));
     }
   }
 
   Future<void> _signOut() async {
     if (!mounted) return;
     SigningOutDialog.show(context);
-    try {
-      await ref.read(spotifyServiceProvider).disconnect();
-    } catch (_) {}
     final authService = ref.read(authServiceProvider);
     final chatService = ref.read(chatServiceProvider);
     try {
@@ -147,14 +213,13 @@ class _AccountSettingsScreenState
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.genericError),
-        ),
+        SnackBar(content: Text(AppLocalizations.of(context)!.genericError)),
       );
       return;
     }
     chatService.clearCache();
     ref.read(musicProfileServiceProvider).clearCache();
+    clearSessionState(ref);
     if (!mounted) return;
     context.go('/auth');
   }
@@ -164,6 +229,7 @@ class _AccountSettingsScreenState
     final l10n = AppLocalizations.of(context)!;
     final isDarkMode = ref.watch(isDarkProvider);
     final vibrationEnabled = ref.watch(vibrationEnabledProvider);
+    final analyticsEnabled = ref.watch(analyticsEnabledProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -189,6 +255,8 @@ class _AccountSettingsScreenState
                 email: email,
                 uid: appUser?.uid ?? firebaseUser?.uid ?? '',
                 onTap: _goToProfile,
+                onAvatarTap: _changePhoto,
+                isUploadingPhoto: _isUploadingPhoto,
               ),
 
               const SizedBox(height: AppTokens.spaceXL),
@@ -221,6 +289,13 @@ class _AccountSettingsScreenState
                     value: vibrationEnabled,
                     onChanged: (_) =>
                         ref.read(vibrationEnabledProvider.notifier).toggle(),
+                  ),
+                  _SwitchTile(
+                    icon: LucideIcons.chartBar,
+                    label: l10n.settingsAnalytics,
+                    value: analyticsEnabled,
+                    onChanged: (_) =>
+                        ref.read(analyticsEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),
@@ -281,6 +356,8 @@ class _ProfileCard extends StatelessWidget {
   final String email;
   final String uid;
   final VoidCallback onTap;
+  final VoidCallback onAvatarTap;
+  final bool isUploadingPhoto;
 
   const _ProfileCard({
     required this.imageUrl,
@@ -288,6 +365,8 @@ class _ProfileCard extends StatelessWidget {
     required this.email,
     required this.uid,
     required this.onTap,
+    required this.onAvatarTap,
+    required this.isUploadingPhoto,
   });
 
   @override
@@ -302,17 +381,47 @@ class _ProfileCard extends StatelessWidget {
           padding: const EdgeInsets.all(AppTokens.spaceLG),
           child: Row(
             children: [
-              Hero(
-                tag: 'user-avatar-$uid',
-                child: CircleAvatar(
-                  radius: 28,
-                  backgroundImage: imageUrl.trim().isNotEmpty
-                      ? CachedNetworkImageProvider(imageUrl)
-                      : null,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  child: imageUrl.trim().isEmpty
-                      ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
-                      : null,
+              GestureDetector(
+                onTap: isUploadingPhoto ? null : onAvatarTap,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: imageUrl.trim().isNotEmpty
+                          ? CachedNetworkImageProvider(imageUrl)
+                          : null,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      child: isUploadingPhoto
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  cs.onSurfaceVariant,
+                                ),
+                              ),
+                            )
+                          : imageUrl.trim().isEmpty
+                          ? Icon(LucideIcons.user, color: cs.onSurfaceVariant)
+                          : null,
+                    ),
+                    if (!isUploadingPhoto)
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 1.5),
+                        ),
+                        child: Icon(
+                          LucideIcons.camera,
+                          size: 10,
+                          color: cs.onPrimary,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: AppTokens.spaceLG),
@@ -323,16 +432,16 @@ class _ProfileCard extends StatelessWidget {
                     Text(
                       displayName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (email.isNotEmpty) ...[
                       const SizedBox(height: AppTokens.spaceXS),
                       Text(
                         email,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -363,10 +472,10 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          letterSpacing: 0.8,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

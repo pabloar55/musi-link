@@ -15,6 +15,7 @@ void main() {
   late MockFirebaseFirestore mockFirestore;
   late MockFirebaseAuth mockAuth;
   late MockCollectionReference mockChatsRef;
+  late MockCollectionReference mockRateLimitsRef;
   late MockUser mockCurrentUser;
   late ChatService chatService;
 
@@ -22,9 +23,13 @@ void main() {
     mockFirestore = MockFirebaseFirestore();
     mockAuth = MockFirebaseAuth();
     mockChatsRef = MockCollectionReference();
+    mockRateLimitsRef = MockCollectionReference();
     mockCurrentUser = MockUser();
 
     when(() => mockFirestore.collection('chats')).thenReturn(mockChatsRef);
+    when(
+      () => mockFirestore.collection('rate_limits'),
+    ).thenReturn(mockRateLimitsRef);
     when(() => mockAuth.currentUser).thenReturn(mockCurrentUser);
     when(() => mockCurrentUser.uid).thenReturn('current_uid');
 
@@ -81,61 +86,102 @@ void main() {
         expect(chat.participants, containsAll(['current_uid', 'other_uid']));
         // tx.set debe haberse llamado con los participantes correctos
         expect(fakeTransaction.sets, hasLength(1));
-        expect(fakeTransaction.sets.first.value['participants'],
-            ['current_uid', 'other_uid']);
+        expect(fakeTransaction.sets.first.value['participants'], [
+          'current_uid',
+          'other_uid',
+        ]);
       });
     });
 
     group('sendMessage', () {
       test('crea mensaje y actualiza lastMessage del chat', () async {
-        final mockBatch = MockWriteBatch();
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockMsgDocRef = MockDocumentReference();
+        final mockRateLimitDocRef = MockDocumentReference();
+        final mockRateLimitSnap = MockDocumentSnapshot();
+        final fakeTransaction = FakeTransaction();
 
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
+        mockFirestore.fakeTransaction = fakeTransaction;
+        fakeTransaction.getResult = mockRateLimitSnap;
+        when(() => mockRateLimitSnap.data()).thenReturn({});
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
+        when(
+          () => mockRateLimitsRef.doc('current_uid'),
+        ).thenReturn(mockRateLimitDocRef);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.doc()).thenReturn(mockMsgDocRef);
-        when(() => mockBatch.set<Map<String, dynamic>>(any(), any(), any()))
-            .thenReturn(null);
-        when(() => mockBatch.update(any(), any())).thenReturn(null);
-        when(() => mockBatch.commit()).thenAnswer((_) async {});
 
-        await chatService.sendMessage('chat_123', 'Hello!', otherUid: 'other_uid');
+        await chatService.sendMessage(
+          'chat_123',
+          'Hello!',
+          otherUid: 'other_uid',
+        );
 
         // Verificar que se creó el mensaje y se actualizó el chat
-        final setCall = verify(() => mockBatch.set<Map<String, dynamic>>(
-            mockMsgDocRef, captureAny(), any())).captured.single as Map;
+        final setCall = fakeTransaction.sets
+            .firstWhere((entry) => entry.key == mockMsgDocRef)
+            .value;
         expect(setCall['text'], 'Hello!');
         expect(setCall['senderId'], 'current_uid');
+        expect(setCall['timestamp'], isA<FieldValue>());
 
-        final updateCall = verify(
-                () => mockBatch.update(mockChatDocRef, captureAny()))
-            .captured.single as Map;
+        final updateCall = fakeTransaction.updates
+            .firstWhere((entry) => entry.key == mockChatDocRef)
+            .value;
         expect(updateCall['lastMessage'], 'Hello!');
+        expect(updateCall['lastMessageTime'], isA<FieldValue>());
 
-        verify(() => mockBatch.commit()).called(1);
+        final limiterData = fakeTransaction.sets
+            .firstWhere((entry) => entry.key == mockRateLimitDocRef)
+            .value;
+        expect(limiterData['lastMessageAt'], isA<FieldValue>());
+        expect(limiterData['messageWindowStart'], isA<FieldValue>());
+        expect(limiterData['messageCount'], 1);
       });
     });
 
     group('sendTrackMessage', () {
+      test('rechaza track si el texto supera el limite de bytes', () async {
+        final longTitle = '🎵' * 501;
+        final track = Track(
+          title: longTitle,
+          artist: 'Queen',
+          imageUrl: 'https://img.url',
+          spotifyUrl: 'https://spotify.url',
+        );
+
+        expect(
+          () => chatService.sendTrackMessage(
+            'chat_123',
+            track,
+            otherUid: 'other_uid',
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
       test('envía mensaje de tipo track con datos de la canción', () async {
-        final mockBatch = MockWriteBatch();
         final mockChatDocRef = MockDocumentReference();
         final mockMessagesCol = MockMessagesCollectionRef();
         final mockMsgDocRef = MockDocumentReference();
+        final mockRateLimitDocRef = MockDocumentReference();
+        final mockRateLimitSnap = MockDocumentSnapshot();
+        final fakeTransaction = FakeTransaction();
 
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
+        mockFirestore.fakeTransaction = fakeTransaction;
+        fakeTransaction.getResult = mockRateLimitSnap;
+        when(() => mockRateLimitSnap.data()).thenReturn({});
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
+        when(
+          () => mockRateLimitsRef.doc('current_uid'),
+        ).thenReturn(mockRateLimitDocRef);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.doc()).thenReturn(mockMsgDocRef);
-        when(() => mockBatch.set<Map<String, dynamic>>(any(), any(), any()))
-            .thenReturn(null);
-        when(() => mockBatch.update(any(), any())).thenReturn(null);
-        when(() => mockBatch.commit()).thenAnswer((_) async {});
 
         const track = Track(
           title: 'Bohemian Rhapsody',
@@ -144,20 +190,33 @@ void main() {
           spotifyUrl: 'https://spotify.url',
         );
 
-        await chatService.sendTrackMessage('chat_123', track, otherUid: 'other_uid');
+        await chatService.sendTrackMessage(
+          'chat_123',
+          track,
+          otherUid: 'other_uid',
+        );
 
         // Verificar mensaje tipo track
-        final setCall = verify(() => mockBatch.set<Map<String, dynamic>>(
-            mockMsgDocRef, captureAny(), any())).captured.single as Map;
+        final setCall = fakeTransaction.sets
+            .firstWhere((entry) => entry.key == mockMsgDocRef)
+            .value;
         expect(setCall['type'], 'track');
         expect(setCall['text'], 'Bohemian Rhapsody - Queen');
         expect(setCall['trackData'], isNotNull);
+        expect(setCall['timestamp'], isA<FieldValue>());
 
         // Verificar lastMessage con emoji
-        final updateCall = verify(
-                () => mockBatch.update(mockChatDocRef, captureAny()))
-            .captured.single as Map;
+        final updateCall = fakeTransaction.updates
+            .firstWhere((entry) => entry.key == mockChatDocRef)
+            .value;
         expect(updateCall['lastMessage'], contains('Bohemian Rhapsody'));
+        expect(updateCall['lastMessageTime'], isA<FieldValue>());
+        final limiterData = fakeTransaction.sets
+            .firstWhere((entry) => entry.key == mockRateLimitDocRef)
+            .value;
+        expect(limiterData['lastMessageAt'], isA<FieldValue>());
+        expect(limiterData['messageWindowStart'], isA<FieldValue>());
+        expect(limiterData['messageCount'], 1);
       });
     });
 
@@ -175,11 +234,13 @@ void main() {
         final mockMsgRef2 = MockDocumentReference();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.limit(499)).thenReturn(mockLimitQuery);
-        when(() => mockLimitQuery.get())
-            .thenAnswer((_) async => mockMsgSnapshot);
+        when(
+          () => mockLimitQuery.get(),
+        ).thenAnswer((_) async => mockMsgSnapshot);
         when(() => mockMsgSnapshot.docs).thenReturn([mockMsgDoc1, mockMsgDoc2]);
         when(() => mockMsgDoc1.reference).thenReturn(mockMsgRef1);
         when(() => mockMsgDoc2.reference).thenReturn(mockMsgRef2);
@@ -206,11 +267,13 @@ void main() {
         final mockMsgSnapshot = MockQuerySnapshot();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.limit(499)).thenReturn(mockLimitQuery);
-        when(() => mockLimitQuery.get())
-            .thenAnswer((_) async => mockMsgSnapshot);
+        when(
+          () => mockLimitQuery.get(),
+        ).thenAnswer((_) async => mockMsgSnapshot);
         when(() => mockMsgSnapshot.docs).thenReturn([]);
         when(() => mockChatDocRef.delete()).thenAnswer((_) async {});
 
@@ -220,6 +283,200 @@ void main() {
         verifyNever(() => mockFirestore.batch());
         verify(() => mockChatDocRef.delete()).called(1);
       });
+    });
+
+    group('deleteAllUserChatData', () {
+      test(
+        'borra mensajes propios, retira reacciones y actualiza resumen',
+        () async {
+          const uid = 'deleted_uid';
+          final mockChatsQuery = MockQuery();
+          final mockChatsSnapshot = MockQuerySnapshot();
+          final mockChatDoc = MockQueryDocumentSnapshot();
+          final mockChatDocRef = MockDocumentReference();
+          final mockMessagesCol = MockMessagesCollectionRef();
+
+          final mockSentQuery = MockQuery();
+          final mockSentLimitQuery = MockQuery();
+          final mockSentSnapshot = MockQuerySnapshot();
+          final mockSentMsgDoc = MockQueryDocumentSnapshot();
+          final mockSentMsgRef = MockDocumentReference();
+
+          final mockReactionQuery = MockQuery();
+          final mockReactionLimitQuery = MockQuery();
+          final mockReactionSnapshot = MockQuerySnapshot();
+          final mockRemainingMsgDoc = MockQueryDocumentSnapshot();
+          final mockRemainingMsgRef = MockDocumentReference();
+
+          final mockLatestQuery = MockQuery();
+          final mockLatestLimitQuery = MockQuery();
+          final mockLatestSnapshot = MockQuerySnapshot();
+          final mockBatch = MockWriteBatch();
+          final latestTimestamp = Timestamp.fromDate(DateTime(2026, 1, 1));
+
+          when(
+            () => mockChatsRef.where('participants', arrayContains: uid),
+          ).thenReturn(mockChatsQuery);
+          when(
+            () => mockChatsQuery.get(),
+          ).thenAnswer((_) async => mockChatsSnapshot);
+          when(() => mockChatsSnapshot.docs).thenReturn([mockChatDoc]);
+          when(() => mockChatDoc.reference).thenReturn(mockChatDocRef);
+          when(
+            () => mockChatDocRef.collection('messages'),
+          ).thenReturn(mockMessagesCol);
+
+          when(
+            () => mockMessagesCol.where('senderId', isEqualTo: uid),
+          ).thenReturn(mockSentQuery);
+          when(() => mockSentQuery.limit(499)).thenReturn(mockSentLimitQuery);
+          when(
+            () => mockSentLimitQuery.get(),
+          ).thenAnswer((_) async => mockSentSnapshot);
+          when(() => mockSentSnapshot.docs).thenReturn([mockSentMsgDoc]);
+          when(() => mockSentMsgDoc.reference).thenReturn(mockSentMsgRef);
+
+          when(
+            () => mockMessagesCol.orderBy(FieldPath.documentId),
+          ).thenReturn(mockReactionQuery);
+          when(
+            () => mockReactionQuery.limit(499),
+          ).thenReturn(mockReactionLimitQuery);
+          when(
+            () => mockReactionLimitQuery.get(),
+          ).thenAnswer((_) async => mockReactionSnapshot);
+          when(
+            () => mockReactionSnapshot.docs,
+          ).thenReturn([mockRemainingMsgDoc]);
+          when(
+            () => mockRemainingMsgDoc.reference,
+          ).thenReturn(mockRemainingMsgRef);
+          when(() => mockRemainingMsgDoc.data()).thenReturn({
+            'senderId': 'other_uid',
+            'text': 'mensaje que queda',
+            'timestamp': latestTimestamp,
+            'reactions': {
+              'like': [uid, 'other_uid'],
+              'fire': [uid],
+            },
+          });
+
+          when(
+            () => mockMessagesCol.orderBy('timestamp', descending: true),
+          ).thenReturn(mockLatestQuery);
+          when(() => mockLatestQuery.limit(1)).thenReturn(mockLatestLimitQuery);
+          when(
+            () => mockLatestLimitQuery.get(),
+          ).thenAnswer((_) async => mockLatestSnapshot);
+          when(() => mockLatestSnapshot.docs).thenReturn([mockRemainingMsgDoc]);
+
+          when(() => mockFirestore.batch()).thenReturn(mockBatch);
+          when(() => mockBatch.delete(any())).thenReturn(null);
+          when(() => mockBatch.update(any(), any())).thenReturn(null);
+          when(() => mockBatch.commit()).thenAnswer((_) async {});
+          when(() => mockChatDocRef.update(any())).thenAnswer((_) async {});
+
+          await chatService.deleteAllUserChatData(uid);
+
+          verify(() => mockBatch.delete(mockSentMsgRef)).called(1);
+          verify(
+            () => mockBatch.update(mockRemainingMsgRef, {
+              'reactions': {
+                'like': ['other_uid'],
+              },
+            }),
+          ).called(1);
+
+          final chatUpdate = Map<String, dynamic>.from(
+            verify(() => mockChatDocRef.update(captureAny())).captured.single
+                as Map,
+          );
+          expect(chatUpdate['lastMessage'], 'mensaje que queda');
+          expect(chatUpdate['lastMessageTime'], latestTimestamp);
+          expect(chatUpdate['unreadCounts.$uid'], isA<FieldValue>());
+          verifyNever(() => mockChatDocRef.delete());
+        },
+      );
+
+      test(
+        'borra el chat si no quedan mensajes tras eliminar los propios',
+        () async {
+          const uid = 'deleted_uid';
+          final mockChatsQuery = MockQuery();
+          final mockChatsSnapshot = MockQuerySnapshot();
+          final mockChatDoc = MockQueryDocumentSnapshot();
+          final mockChatDocRef = MockDocumentReference();
+          final mockMessagesCol = MockMessagesCollectionRef();
+
+          final mockSentQuery = MockQuery();
+          final mockSentLimitQuery = MockQuery();
+          final mockSentSnapshot = MockQuerySnapshot();
+          final mockSentMsgDoc = MockQueryDocumentSnapshot();
+          final mockSentMsgRef = MockDocumentReference();
+
+          final mockReactionQuery = MockQuery();
+          final mockReactionLimitQuery = MockQuery();
+          final mockReactionSnapshot = MockQuerySnapshot();
+
+          final mockLatestQuery = MockQuery();
+          final mockLatestLimitQuery = MockQuery();
+          final mockLatestSnapshot = MockQuerySnapshot();
+          final mockBatch = MockWriteBatch();
+
+          when(
+            () => mockChatsRef.where('participants', arrayContains: uid),
+          ).thenReturn(mockChatsQuery);
+          when(
+            () => mockChatsQuery.get(),
+          ).thenAnswer((_) async => mockChatsSnapshot);
+          when(() => mockChatsSnapshot.docs).thenReturn([mockChatDoc]);
+          when(() => mockChatDoc.reference).thenReturn(mockChatDocRef);
+          when(
+            () => mockChatDocRef.collection('messages'),
+          ).thenReturn(mockMessagesCol);
+
+          when(
+            () => mockMessagesCol.where('senderId', isEqualTo: uid),
+          ).thenReturn(mockSentQuery);
+          when(() => mockSentQuery.limit(499)).thenReturn(mockSentLimitQuery);
+          when(
+            () => mockSentLimitQuery.get(),
+          ).thenAnswer((_) async => mockSentSnapshot);
+          when(() => mockSentSnapshot.docs).thenReturn([mockSentMsgDoc]);
+          when(() => mockSentMsgDoc.reference).thenReturn(mockSentMsgRef);
+
+          when(
+            () => mockMessagesCol.orderBy(FieldPath.documentId),
+          ).thenReturn(mockReactionQuery);
+          when(
+            () => mockReactionQuery.limit(499),
+          ).thenReturn(mockReactionLimitQuery);
+          when(
+            () => mockReactionLimitQuery.get(),
+          ).thenAnswer((_) async => mockReactionSnapshot);
+          when(() => mockReactionSnapshot.docs).thenReturn([]);
+
+          when(
+            () => mockMessagesCol.orderBy('timestamp', descending: true),
+          ).thenReturn(mockLatestQuery);
+          when(() => mockLatestQuery.limit(1)).thenReturn(mockLatestLimitQuery);
+          when(
+            () => mockLatestLimitQuery.get(),
+          ).thenAnswer((_) async => mockLatestSnapshot);
+          when(() => mockLatestSnapshot.docs).thenReturn([]);
+
+          when(() => mockFirestore.batch()).thenReturn(mockBatch);
+          when(() => mockBatch.delete(any())).thenReturn(null);
+          when(() => mockBatch.commit()).thenAnswer((_) async {});
+          when(() => mockChatDocRef.delete()).thenAnswer((_) async {});
+
+          await chatService.deleteAllUserChatData(uid);
+
+          verify(() => mockBatch.delete(mockSentMsgRef)).called(1);
+          verify(() => mockChatDocRef.delete()).called(1);
+          verifyNever(() => mockChatDocRef.update(any()));
+        },
+      );
     });
 
     group('markMessagesAsRead', () {
@@ -237,12 +494,15 @@ void main() {
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
         when(() => mockChatDocRef.update(any())).thenAnswer((_) async {});
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.where('read', isEqualTo: false))
-            .thenReturn(mockQuery1);
-        when(() => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'))
-            .thenReturn(mockQuery2);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
+        when(
+          () => mockMessagesCol.where('read', isEqualTo: false),
+        ).thenReturn(mockQuery1);
+        when(
+          () => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'),
+        ).thenReturn(mockQuery2);
         when(() => mockQuery2.limit(499)).thenReturn(mockLimitQuery);
         when(() => mockLimitQuery.get()).thenAnswer((_) async => mockSnapshot);
         when(() => mockSnapshot.docs).thenReturn([mockMsgDoc]);
@@ -255,13 +515,13 @@ void main() {
         await chatService.markMessagesAsRead('chat_123');
 
         // Debe resetear el contador desnormalizado en el doc del chat
-        final updateCall = verify(() => mockChatDocRef.update(captureAny()))
-            .captured.single as Map;
+        final updateCall =
+            verify(() => mockChatDocRef.update(captureAny())).captured.single
+                as Map;
         expect(updateCall['unreadCounts.current_uid'], 0);
 
         // Y marcar los mensajes individuales como leídos
-        verify(() =>
-            mockBatch.update(mockMsgRef, {'read': true})).called(1);
+        verify(() => mockBatch.update(mockMsgRef, {'read': true})).called(1);
         verify(() => mockBatch.commit()).called(1);
       });
 
@@ -275,12 +535,15 @@ void main() {
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
         when(() => mockChatDocRef.update(any())).thenAnswer((_) async {});
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
-        when(() => mockMessagesCol.where('read', isEqualTo: false))
-            .thenReturn(mockQuery1);
-        when(() => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'))
-            .thenReturn(mockQuery2);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
+        when(
+          () => mockMessagesCol.where('read', isEqualTo: false),
+        ).thenReturn(mockQuery1);
+        when(
+          () => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'),
+        ).thenReturn(mockQuery2);
         when(() => mockQuery2.limit(499)).thenReturn(mockLimitQuery);
         when(() => mockLimitQuery.get()).thenAnswer((_) async => mockSnapshot);
         when(() => mockSnapshot.docs).thenReturn([]);
@@ -308,8 +571,9 @@ void main() {
         fakeTransaction = FakeTransaction();
 
         when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
-        when(() => mockChatDocRef.collection('messages'))
-            .thenReturn(mockMessagesCol);
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
         when(() => mockMessagesCol.doc('msg_123')).thenReturn(mockMsgRef);
 
         // FakeTransaction devuelve mockMsgSnap al hacer get()
@@ -321,15 +585,16 @@ void main() {
 
       test('añade reacción si el usuario no ha reaccionado', () async {
         when(() => mockMsgSnap.exists).thenReturn(true);
-        when(() => mockMsgSnap.data()).thenReturn({
-          'reactions': <String, dynamic>{},
-        });
+        when(
+          () => mockMsgSnap.data(),
+        ).thenReturn({'reactions': <String, dynamic>{}});
 
         await chatService.toggleReaction('chat_123', 'msg_123', '👍');
 
         expect(fakeTransaction.updates, hasLength(1));
         final reactions = Map<String, dynamic>.from(
-            fakeTransaction.updates.first.value['reactions'] as Map);
+          fakeTransaction.updates.first.value['reactions'] as Map,
+        );
         expect(reactions['👍'], contains('current_uid'));
       });
 
@@ -337,7 +602,7 @@ void main() {
         when(() => mockMsgSnap.exists).thenReturn(true);
         when(() => mockMsgSnap.data()).thenReturn({
           'reactions': {
-            '👍': ['current_uid', 'other_uid']
+            '👍': ['current_uid', 'other_uid'],
           },
         });
 
@@ -345,7 +610,8 @@ void main() {
 
         expect(fakeTransaction.updates, hasLength(1));
         final reactions = Map<String, dynamic>.from(
-            fakeTransaction.updates.first.value['reactions'] as Map);
+          fakeTransaction.updates.first.value['reactions'] as Map,
+        );
         final users = reactions['👍'] as List;
         expect(users, isNot(contains('current_uid')));
         expect(users, contains('other_uid'));
@@ -355,7 +621,7 @@ void main() {
         when(() => mockMsgSnap.exists).thenReturn(true);
         when(() => mockMsgSnap.data()).thenReturn({
           'reactions': {
-            '👍': ['current_uid']
+            '👍': ['current_uid'],
           },
         });
 
@@ -363,7 +629,8 @@ void main() {
 
         expect(fakeTransaction.updates, hasLength(1));
         final reactions = Map<String, dynamic>.from(
-            fakeTransaction.updates.first.value['reactions'] as Map);
+          fakeTransaction.updates.first.value['reactions'] as Map,
+        );
         expect(reactions.containsKey('👍'), false);
       });
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
@@ -10,7 +11,6 @@ import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/widgets/profile/compatibility_card.dart';
 import 'package:musi_link/widgets/profile/friendship_buttons.dart';
 import 'package:musi_link/widgets/profile/music_taste_section.dart';
-import 'package:musi_link/widgets/profile/now_playing_card.dart';
 import 'package:musi_link/widgets/profile/profile_daily_song_card.dart';
 import 'package:musi_link/widgets/profile/profile_header.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
@@ -30,30 +30,60 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string on session loss — _isOwnProfile then evaluates to
   /// false (safe: shows the other-user view, actions are gated by GoRouter).
-  String get _currentUid => ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
-  bool get _isOwnProfile => widget.user.uid == _currentUid && _currentUid.isNotEmpty;
+  String get _currentUid =>
+      ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+  bool get _isOwnProfile =>
+      widget.user.uid == _currentUid && _currentUid.isNotEmpty;
 
   Future<void> _startChat() async {
-    final chat =
-        await ref.read(chatServiceProvider).getOrCreateChat(widget.user.uid);
+    if (widget.user.isDeleted) return;
+    final chat = await ref
+        .read(chatServiceProvider)
+        .getOrCreateChat(widget.user.uid);
     if (!mounted) return;
-    unawaited(context.push(
-      Uri(path: '/chat', queryParameters: {
-        'chatId': chat.id,
-        'otherUserName': widget.user.displayName,
-        'otherUserId': widget.user.uid,
-      }).toString(),
-    ));
+    unawaited(
+      context.push(
+        Uri(
+          path: '/chat',
+          queryParameters: {
+            'chatId': chat.id,
+            'otherUserName': widget.user.displayName,
+            'otherUserId': widget.user.uid,
+          },
+        ).toString(),
+      ),
+    );
   }
 
   Future<void> _sendRequest() async {
-    await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
-    if (!mounted) return;
-    ref.invalidate(relationshipProvider(widget.user.uid));
+    if (widget.user.isDeleted) return;
+    try {
+      await ref.read(friendServiceProvider).sendRequest(widget.user.uid);
+      if (!mounted) return;
+      ref.invalidate(relationshipProvider(widget.user.uid));
+    } on FirebaseException catch (e) {
+      if (mounted) _showWriteError(e);
+      rethrow;
+    } catch (_) {
+      if (mounted) _showWriteError(null);
+      rethrow;
+    }
+  }
+
+  void _showWriteError(FirebaseException? error) {
+    final l10n = AppLocalizations.of(context)!;
+    final message = error?.code == 'permission-denied'
+        ? l10n.authErrorTooManyRequests
+        : l10n.genericError;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _acceptRequest(String requestId) async {
-    await ref.read(friendServiceProvider).acceptRequest(requestId, widget.user.uid);
+    await ref
+        .read(friendServiceProvider)
+        .acceptRequest(requestId, widget.user.uid);
     if (!mounted) return;
     ref.invalidate(relationshipProvider(widget.user.uid));
   }
@@ -89,8 +119,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final user = ref.watch(userStreamProvider(widget.user.uid)).asData?.value ?? widget.user;
-    final hasMusicalData = user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
+    final user =
+        ref.watch(userStreamProvider(widget.user.uid)).asData?.value ??
+        widget.user;
+    final hasMusicalData =
+        user.topArtists.isNotEmpty || user.topGenres.isNotEmpty;
+    final isDeletedProfile = user.isDeleted;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -104,16 +138,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             ProfileHeader(user: user),
             const SizedBox(height: 20),
 
-            if (user.nowPlaying != null &&
-                user.nowPlayingUpdatedAt != null &&
-                DateTime.now().difference(user.nowPlayingUpdatedAt!).inMinutes < 10)
-              NowPlayingCard(
-                track: user.nowPlaying!,
-                onTap: user.nowPlaying!.spotifyUrl.isNotEmpty
-                    ? () => _openSpotifyUrl(user.nowPlaying!.spotifyUrl)
-                    : null,
-              ),
-
             if (user.dailySong != null)
               ProfileDailySongCard(
                 song: user.dailySong!,
@@ -124,13 +148,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
             const SizedBox(height: 4),
 
-            if (!_isOwnProfile)
+            if (!_isOwnProfile && !isDeletedProfile)
               Builder(
                 builder: (context) {
-                  final compatibilityValue =
-                      ref.watch(compatibilityProvider(widget.user));
-                  final relationshipValue =
-                      ref.watch(relationshipProvider(widget.user.uid));
+                  final compatibilityValue = ref.watch(
+                    compatibilityProvider(widget.user),
+                  );
+                  final relationshipValue = ref.watch(
+                    relationshipProvider(widget.user.uid),
+                  );
 
                   return Column(
                     children: [

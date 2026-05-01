@@ -16,25 +16,30 @@ class NotificationService {
     required FirebaseAuth auth,
     required SharedPreferences prefs,
     required void Function(Map<String, dynamic>) onNotificationTapped,
-  })  : _messaging = messaging,
-        _firestore = firestore,
-        _auth = auth,
-        _prefs = prefs,
-        _onNotificationTapped = onNotificationTapped;
+    required String? Function() getActiveChatId,
+  }) : _messaging = messaging,
+       _firestore = firestore,
+       _auth = auth,
+       _prefs = prefs,
+       _onNotificationTapped = onNotificationTapped,
+       _getActiveChatId = getActiveChatId;
 
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final SharedPreferences _prefs;
   final void Function(Map<String, dynamic>) _onNotificationTapped;
+  final String? Function() _getActiveChatId;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
   static const _channelId = 'musilink_high';
-  static const _channelName = 'musi link Notifications';
+  static const _channelName = 'MusiLink Notifications';
   static const _channelNoVibrationId = 'musilink_high_no_vibration';
-  static const _channelNoVibrationName = 'musi link Notifications (no vibration)';
+  static const _channelNoVibrationName =
+      'MusiLink Notifications (no vibration)';
+  static const _supportedPreferredLocales = {'en', 'es', 'fr'};
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
   static const kVibrationKey = 'notification_vibration';
 
@@ -51,7 +56,8 @@ class NotificationService {
     // one with vibration and one without.
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         _channelId,
@@ -110,10 +116,19 @@ class NotificationService {
     if (uid == null) return;
     final token = await _messaging.getToken();
     if (token == null) return;
-    await _firestore
-        .collection(FirestoreCollections.users)
-        .doc(uid)
-        .update({'fcmToken': token});
+    await _firestore.collection(FirestoreCollections.userPrivate).doc(uid).set({
+      'fcmToken': token,
+      'preferredLocale': _preferredLocale(),
+    }, SetOptions(merge: true));
+  }
+
+  String _preferredLocale() {
+    final languageCode = PlatformDispatcher.instance.locale.languageCode
+        .toLowerCase();
+    if (_supportedPreferredLocales.contains(languageCode)) {
+      return languageCode;
+    }
+    return 'en';
   }
 
   Future<void> clearToken() async {
@@ -135,7 +150,7 @@ class NotificationService {
   Future<void> _clearFcmTokenFromFirestore(String uid) async {
     try {
       await _firestore
-          .collection(FirestoreCollections.users)
+          .collection(FirestoreCollections.userPrivate)
           .doc(uid)
           .update({'fcmToken': FieldValue.delete()});
       await _prefs.remove(_pendingClearUidKey);
@@ -163,10 +178,11 @@ class NotificationService {
   void _onForegroundMessage(RemoteMessage message) {
     final n = message.notification;
     if (n == null) return;
+    final chatId = message.data['chatId'] as String?;
+    if (chatId != null && chatId == _getActiveChatId()) return;
     final vibrate = _prefs.getBool(kVibrationKey) ?? true;
     final channelId = vibrate ? _channelId : _channelNoVibrationId;
     final channelName = vibrate ? _channelName : _channelNoVibrationName;
-    final chatId = message.data['chatId'] as String?;
     // Messages from the same chat share a stable ID so they replace each
     // other in the notification drawer instead of stacking indefinitely.
     final notifId = chatId != null ? chatId.hashCode : n.hashCode;
@@ -189,14 +205,15 @@ class NotificationService {
     );
   }
 
-  void _onLocalNotificationTapped(NotificationResponse response) {
+  Future<void> _onLocalNotificationTapped(NotificationResponse response) async {
     final payload = response.payload;
     if (payload == null || payload.isEmpty) return;
     try {
       final data = jsonDecode(payload) as Map<String, dynamic>;
       _onNotificationTapped(data);
-    } catch (e) {
-      debugPrint('FCM: invalid notification payload: $e');
+    } catch (e, stack) {
+      if (kDebugMode) debugPrint('FCM: invalid notification payload: $e');
+      await reportError(e, stack);
     }
   }
 }

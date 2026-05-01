@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get authTagline => 'Connect with people who share your music taste';
+
+  @override
   String get authName => 'Name';
 
   @override
@@ -84,6 +87,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authLogin => 'Log in';
 
   @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authPasswordResetSent =>
+      'If this email has a password account, we sent you a reset link.';
+
+  @override
   String get authErrorCouldNotAuth =>
       'Could not authenticate. Please try again.';
 
@@ -101,6 +111,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'This email is already registered with a password. Please sign in with email and password.';
 
   @override
+  String get authUsername => 'Username';
+
+  @override
+  String get authEnterUsername => 'Choose a username';
+
+  @override
+  String get authUsernameHint => 'lowercase letters, numbers and _';
+
+  @override
+  String get authUsernameTooShort => 'At least 3 characters';
+
+  @override
+  String get authUsernameTooLong => 'Max 20 characters';
+
+  @override
+  String get authUsernameInvalidChars => 'Only letters, numbers and _';
+
+  @override
+  String get authUsernameTaken => 'This username is already taken';
+
+  @override
+  String get authUsernameAvailable => 'Available';
+
+  @override
+  String get authUsernameChecking => 'Checking...';
+
+  @override
+  String get usernameSetupTitle => 'Choose your username';
+
+  @override
+  String get usernameSetupSubtitle =>
+      'This is how others will find you on MusiLink.';
+
+  @override
+  String get usernameSetupButton => 'Continue';
+
+  @override
   String get discoverTitle => 'Discover people';
 
   @override
@@ -111,7 +158,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverNoUsersHint =>
-      'As more users connect their Spotify, they will appear here';
+      'As more users create their music profile, they will appear here';
 
   @override
   String get navDiscover => 'Discover';
@@ -136,9 +183,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchTypeToSearch => 'Type a name to search';
-
-  @override
-  String get searchSpotifyConnected => 'Spotify connected';
 
   @override
   String get profileTitle => 'Music profile';
@@ -168,10 +212,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatWriteMessage => 'Write a message...';
 
   @override
-  String get chatSearchSpotify => 'Search song on Spotify...';
+  String get chatSearchSong => 'Search song...';
 
   @override
   String get chatShareSong => 'Share song';
+
+  @override
+  String get chatDeletedUser =>
+      'This account has been deleted. You can no longer send messages.';
 
   @override
   String get chatSendFirst => 'Send the first message';
@@ -206,6 +254,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get statsEditArtists => 'Edit artists';
+
+  @override
   String get statsNoData => 'No data available';
 
   @override
@@ -220,9 +271,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialNow => 'Now';
-
-  @override
-  String get nowPlaying => 'Now playing';
 
   @override
   String socialMinutes(int minutes) {
@@ -247,21 +295,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialUser => 'User';
 
   @override
-  String get spotifyConnectTitle => 'Connect your Spotify';
+  String get artistSelectorTitle => 'Your Top Artists';
 
   @override
-  String get spotifyConnectDescription =>
-      'To see your music stats we need access to your Spotify account.';
+  String artistSelectorSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count artists · the more you add, the better your matches',
+      one: '1 artist · the more you add, the better your matches',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get spotifyConnectButton => 'Connect Spotify';
+  String get artistSelectorSearchHint => 'Search artists...';
 
   @override
-  String get spotifyConnectError => 'Error connecting to Spotify';
+  String get artistSelectorContinue => 'Continue';
 
   @override
-  String get spotifyAlreadyLinkedError =>
-      'This Spotify account is already linked to another user';
+  String get artistSelectorContinueLocked =>
+      'Add at least 4 artists to continue';
+
+  @override
+  String get artistSelectorNoResults => 'No artists found';
+
+  @override
+  String get artistSelectorEmpty =>
+      'Search for your favourite artists to get started';
+
+  @override
+  String get artistSelectorSuggested => 'Suggested';
+
+  @override
+  String get artistSelectorStageBasic => 'Basic';
+
+  @override
+  String get artistSelectorStageGood => 'Good';
+
+  @override
+  String get artistSelectorStageGreat => 'Great';
+
+  @override
+  String get artistSelectorStageExpert => 'Expert';
+
+  @override
+  String get artistSelectorStageHint =>
+      'Add more to improve your recommendations';
 
   @override
   String get menuProfile => 'My profile';
@@ -388,7 +469,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingStatsDesc =>
-      'Explore your top tracks, artists and genres from Spotify. See how your taste evolves over time.';
+      'Create your own top artists and genres. See how your taste compares with other people.';
 
   @override
   String get onboardingDailySongTitle => 'Song of the day';
@@ -402,7 +483,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingChatDesc =>
-      'Start conversations and share songs directly from Spotify. Talk about the music you love with people who get it.';
+      'Start conversations and share songs. Talk about the music you love with people who get it.';
 
   @override
   String get onboardingFriendsTitle => 'Build your crew';
@@ -421,6 +502,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkip => 'Skip';
 
   @override
+  String get photoSetupTitle => 'Add a profile photo';
+
+  @override
+  String get photoSetupSubtitle =>
+      'Let others know who you are. You can always change it later.';
+
+  @override
+  String get photoSetupChoose => 'Choose photo';
+
+  @override
+  String get photoSetupChange => 'Change photo';
+
+  @override
+  String get photoSetupContinue => 'Continue';
+
+  @override
+  String get photoSetupSkip => 'Skip for now';
+
+  @override
+  String get photoSetupUploading => 'Uploading...';
+
+  @override
+  String get photoSetupGallery => 'Gallery';
+
+  @override
+  String get photoSetupCamera => 'Camera';
+
+  @override
+  String get photoSetupError => 'Could not upload photo. Please try again.';
+
+  @override
   String get genericError => 'Something went wrong. Please try again.';
 
   @override
@@ -436,6 +548,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVibration => 'Vibration';
 
   @override
+  String get settingsAnalytics => 'Analytics';
+
+  @override
   String get settingsLegal => 'Legal';
 
   @override
@@ -446,7 +561,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountBody =>
-      'This will permanently delete your account, all your messages, Spotify data and profile information. This action cannot be undone.';
+      'This will permanently delete your account, your messages, your reactions, your photo, your music data and your profile information. This action cannot be undone.';
 
   @override
   String get deleteAccountConfirm => 'Delete';
@@ -478,35 +593,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyS1Body =>
-      'Musi Link is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).';
+      'MusiLink is developed and operated by Pablo Armas (armasp80@gmail.com), established in Spain. Pablo Armas is the data controller responsible for processing your personal data in accordance with Regulation (EU) 2016/679 (GDPR).';
 
   @override
   String get privacyS2Title => '2. Data We Collect';
 
   @override
   String get privacyS2Body =>
-      'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Spotify data: Spotify user ID, profile photo, top artists, top genres, top tracks, and currently playing track — synced via Spotify\'s API with your explicit authorisation.\n\n• Social data: messages, shared songs, daily song selections, friend requests, and emoji reactions.\n\n• Technical data: crash logs and anonymised usage events collected by Firebase Crashlytics and Firebase Analytics.';
+      'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash reports collected by Firebase Crashlytics and, only if you enable analytics in Settings, usage events through Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. How We Use Your Data';
 
   @override
   String get privacyS3Body =>
-      'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Spotify integration: displaying and comparing your music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Analytics: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).';
+      'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Optional analytics: understanding how users interact with the App to improve it. Legal basis: consent (Art. 6.1.a GDPR), which you can withdraw by disabling Analytics in Settings.';
 
   @override
   String get privacyS4Title => '4. Third-Party Services';
 
   @override
   String get privacyS4Body =>
-      'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase (Auth, Firestore, Crashlytics, Analytics) — Google LLC. Data may be transferred to the US under standard contractual clauses.\n\n• Spotify — Spotify AB. Used only to read your music data with your authorisation.';
+      'We use the following third-party services, each with their own privacy policies:\n\n• Google Firebase Firestore, Crashlytics and Analytics — Google LLC. Your profile data, messages, and usage events are stored on servers in the European region (europe-southwest1).\n\n• Google Firebase Storage — Google LLC. Profile photos are stored on servers located in the United States under standard contractual clauses (Art. 46 GDPR).\n\n• Cloud Functions — Google LLC. Your message and friend request data is processed on servers in the European region (europe-southwest1).\n\n• Spotify and Last.fm. Used as music catalogue providers for artist/song search and artist suggestions. No Spotify account connection is required.';
 
   @override
   String get privacyS5Title => '5. Data Retention & Deletion';
 
   @override
   String get privacyS5Body =>
-      'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, all your personal data is permanently and immediately deleted from our systems. Crash reports and analytics data held by Google are subject to Google\'s own retention policies.';
+      'We do not retain your data beyond the time you use the App. When you delete your account via the \'Delete account\' button in Settings, we delete your private data, profile photo, relationships, requests, tokens, preferences, and music data. The public profile is replaced with an anonymous placeholder so technical references do not break. Messages you sent are removed from conversations and your reactions are removed; if a conversation becomes empty, it is deleted. Some technical records, crash reports, or analytics data held by Google may be subject to Google\'s own retention policies.';
 
   @override
   String get privacyS6Title => '6. Your Rights';
@@ -520,7 +635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyS7Body =>
-      'Musi Link is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.';
+      'MusiLink is intended for users aged 16 and over. We do not knowingly collect personal data from anyone under 16. If you believe a minor has provided us with personal data, contact us at armasp80@gmail.com and we will delete it immediately.';
 
   @override
   String get privacyS8Title => '8. Security';
@@ -535,4 +650,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacyS9Body =>
       'For any questions about this Privacy Policy or the processing of your data, please contact:\n\nPablo Armas\narmasp80@gmail.com';
+
+  @override
+  String get privacyS10Title => '10. International Data Transfers';
+
+  @override
+  String get privacyS10Body =>
+      'Profile photos are stored in Google Firebase Storage with servers located in the United States. By using the App, you explicitly authorise this international data transfer of image data. Google has implemented the necessary technical and organisational measures under the Standard Contractual Clauses approved by the European Commission (Art. 46 GDPR) to ensure an adequate level of protection equivalent to that in the EU.\n\nYour personal data, messages, and music profile data are stored on servers located in the European region (europe-southwest1), within the EU.';
 }

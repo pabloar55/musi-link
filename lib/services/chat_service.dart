@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/models/chat.dart';
 import 'package:musi_link/models/message.dart';
@@ -8,30 +9,28 @@ import 'package:musi_link/models/track.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Servicio para gestionar chats y mensajes en Firestore.
-class ChatService {
-  ChatService({required FirebaseFirestore firestore, required FirebaseAuth auth})
-      : _firestore = firestore,
-        _auth = auth;
+class ChatService with AuthenticatedService {
+  ChatService({
+    required FirebaseFirestore firestore,
+    required FirebaseAuth auth,
+  }) : _firestore = firestore,
+       _auth = auth;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
-  late final CollectionReference<Map<String, dynamic>> _chatsRef =
-      _firestore.collection(FirestoreCollections.chats);
+
+  @override
+  FirebaseAuth get auth => _auth;
+  late final CollectionReference<Map<String, dynamic>> _chatsRef = _firestore
+      .collection(FirestoreCollections.chats);
+  late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
+      _firestore.collection(FirestoreCollections.rateLimits);
 
   // Cache por otherUid: evita re-query al abrir el mismo chat varias veces.
   final Map<String, Chat> _chatByOtherUid = {};
 
   /// Limpia la caché en memoria. Llamar al hacer logout.
   void clearCache() => _chatByOtherUid.clear();
-
-
-  /// Returns the UID of the currently authenticated user.
-  /// Throws [StateError] instead of crashing if the session is lost.
-  String get _currentUid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw StateError('ChatService: no authenticated user.');
-    return uid;
-  }
 
   // ─── Chats ────────────────────────────────────────────────
 
@@ -55,7 +54,6 @@ class ChatService {
     if (cached != null) return cached;
 
     try {
-      final currentUid = _currentUid;
       final docRef = _chatsRef.doc(_chatId(currentUid, otherUid));
 
       late Chat chat;
@@ -92,12 +90,11 @@ class ChatService {
   /// Stream de los chats del usuario actual, ordenados por último mensaje.
   Stream<List<Chat>> getChats() {
     return _chatsRef
-        .where('participants', arrayContains: _currentUid)
+        .where('participants', arrayContains: currentUid)
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) =>
-            snapshot.docs.map(Chat.fromFirestore).toList());
+        .map((snapshot) => snapshot.docs.map(Chat.fromFirestore).toList());
   }
 
   static const int _deleteBatchSize = 499;
@@ -105,13 +102,13 @@ class ChatService {
   /// Elimina un chat y todos sus mensajes.
   Future<void> deleteChat(String chatId) async {
     try {
-      final messagesRef =
-          _chatsRef.doc(chatId).collection(FirestoreCollections.messages);
+      final messagesRef = _chatsRef
+          .doc(chatId)
+          .collection(FirestoreCollections.messages);
 
       // Paginar el borrado para no superar el límite de 500 ops por batch.
       while (true) {
-        final snapshot =
-            await messagesRef.limit(_deleteBatchSize).get();
+        final snapshot = await messagesRef.limit(_deleteBatchSize).get();
         if (snapshot.docs.isEmpty) break;
 
         final batch = _firestore.batch();
@@ -131,10 +128,155 @@ class ChatService {
     }
   }
 
+  /// Borra del historial todos los datos aportados por [uid].
+  ///
+  /// Se conservan los mensajes de la otra persona para no destruir su copia de
+  /// la conversación. Si tras borrar los mensajes del usuario el chat queda
+  /// vacío, se elimina el documento del chat completo.
+  Future<void> deleteAllUserChatData(String uid) async {
+    try {
+      final chats = await _chatsRef
+          .where('participants', arrayContains: uid)
+          .get();
+
+      for (final chatDoc in chats.docs) {
+        await _deleteUserDataFromChat(chatDoc.reference, uid);
+      }
+      _chatByOtherUid.removeWhere((_, chat) => chat.participants.contains(uid));
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteUserDataFromChat(
+    DocumentReference<Map<String, dynamic>> chatRef,
+    String uid,
+  ) async {
+    final messagesRef = chatRef.collection(FirestoreCollections.messages);
+
+    await _deleteMessagesSentBy(messagesRef, uid);
+    await _removeUserReactions(messagesRef, uid);
+    await _refreshOrDeleteChat(chatRef, messagesRef, uid);
+  }
+
+  Future<void> _deleteMessagesSentBy(
+    CollectionReference<Map<String, dynamic>> messagesRef,
+    String uid,
+  ) async {
+    while (true) {
+      final snapshot = await messagesRef
+          .where('senderId', isEqualTo: uid)
+          .limit(_deleteBatchSize)
+          .get();
+      if (snapshot.docs.isEmpty) break;
+
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      if (snapshot.docs.length < _deleteBatchSize) break;
+    }
+  }
+
+  Future<void> _removeUserReactions(
+    CollectionReference<Map<String, dynamic>> messagesRef,
+    String uid,
+  ) async {
+    DocumentSnapshot<Map<String, dynamic>>? cursor;
+    while (true) {
+      var query = messagesRef
+          .orderBy(FieldPath.documentId)
+          .limit(_deleteBatchSize);
+      if (cursor != null) query = query.startAfterDocument(cursor);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isEmpty) break;
+      cursor = snapshot.docs.last;
+
+      final batch = _firestore.batch();
+      var hasUpdates = false;
+
+      for (final doc in snapshot.docs) {
+        final reactions = Map<String, dynamic>.from(
+          doc.data()['reactions'] as Map? ?? const {},
+        );
+        if (reactions.isEmpty) continue;
+
+        var changed = false;
+        final scrubbed = <String, List<String>>{};
+        for (final entry in reactions.entries) {
+          final users = List<String>.from(entry.value as List? ?? const []);
+          final filtered = users.where((userId) => userId != uid).toList();
+          if (filtered.length != users.length) changed = true;
+          if (filtered.isNotEmpty) scrubbed[entry.key] = filtered;
+        }
+
+        if (changed) {
+          hasUpdates = true;
+          batch.update(doc.reference, {'reactions': scrubbed});
+        }
+      }
+
+      if (hasUpdates) await batch.commit();
+      if (snapshot.docs.length < _deleteBatchSize) break;
+    }
+  }
+
+  Future<void> _refreshOrDeleteChat(
+    DocumentReference<Map<String, dynamic>> chatRef,
+    CollectionReference<Map<String, dynamic>> messagesRef,
+    String deletedUid,
+  ) async {
+    final latestSnapshot = await messagesRef
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (latestSnapshot.docs.isEmpty) {
+      await chatRef.delete();
+      return;
+    }
+
+    final latest = latestSnapshot.docs.first.data();
+    await chatRef.update({
+      'lastMessage': (latest['text'] ?? '').toString(),
+      'lastMessageTime':
+          latest['timestamp'] as Timestamp? ?? FieldValue.serverTimestamp(),
+      'unreadCounts.$deletedUid': FieldValue.delete(),
+    });
+  }
+
   //  Mensajes
 
   /// Envía un mensaje de texto en un chat.
   static const int maxMessageBytes = 2000;
+  static const Duration _messageRateLimitWindow = Duration(seconds: 10);
+
+  static bool _isValidMessageText(String text) =>
+      text.isNotEmpty && utf8.encode(text).length <= maxMessageBytes;
+
+  Map<String, Object?> _nextMessageRateLimit(
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
+    final data = snap.data() ?? const <String, dynamic>{};
+    final windowStart = data['messageWindowStart'] as Timestamp?;
+    final count = (data['messageCount'] as int?) ?? 0;
+    final shouldReset =
+        windowStart == null ||
+        DateTime.now().difference(windowStart.toDate()) >
+            _messageRateLimitWindow;
+
+    return {
+      'lastMessageAt': FieldValue.serverTimestamp(),
+      'messageWindowStart': shouldReset
+          ? FieldValue.serverTimestamp()
+          : windowStart,
+      'messageCount': shouldReset ? 1 : count + 1,
+    };
+  }
 
   Future<void> sendMessage(
     String chatId,
@@ -142,32 +284,43 @@ class ChatService {
     required String otherUid,
   }) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || utf8.encode(trimmed).length > maxMessageBytes) {
+    if (!_isValidMessageText(trimmed)) {
       throw ArgumentError('Invalid message');
     }
     try {
       final now = DateTime.now();
       final message = Message(
         id: '',
-        senderId: _currentUid,
+        senderId: currentUid,
         text: trimmed,
         timestamp: now,
       );
 
-      final batch = _firestore.batch();
+      final chatRef = _chatsRef.doc(chatId);
+      final msgRef = chatRef.collection(FirestoreCollections.messages).doc();
+      final limiterRef = _rateLimitsRef.doc(currentUid);
 
-      // Añadir el mensaje a la subcolección
-      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
-      batch.set(msgRef, message.toFirestore());
+      await _firestore.runTransaction((tx) async {
+        final limiterSnap = await tx.get(limiterRef);
 
-      // Actualizar último mensaje e incrementar el contador del destinatario
-      batch.update(_chatsRef.doc(chatId), {
-        'lastMessage': trimmed,
-        'lastMessageTime': Timestamp.fromDate(now),
-        'unreadCounts.$otherUid': FieldValue.increment(1),
+        // Añadir el mensaje a la subcolección
+        tx.set(msgRef, {
+          ...message.toFirestore(),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        // Actualizar último mensaje e incrementar el contador del destinatario
+        tx.update(chatRef, {
+          'lastMessage': trimmed,
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'unreadCounts.$otherUid': FieldValue.increment(1),
+        });
+        tx.set(
+          limiterRef,
+          _nextMessageRateLimit(limiterSnap),
+          SetOptions(merge: true),
+        );
       });
-
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -186,10 +339,12 @@ class ChatService {
         .limit(messagesPageSize)
         .snapshots()
         .handleError((e, st) => reportError(e, st).ignore())
-        .map((snapshot) => snapshot.docs.reversed
-            .map(Message.fromFirestore)
-            .whereType<Message>()
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs.reversed
+              .map(Message.fromFirestore)
+              .whereType<Message>()
+              .toList(),
+        );
   }
 
   /// Carga mensajes anteriores a [before] para paginación inversa.
@@ -222,11 +377,6 @@ class ChatService {
   /// del chat.
   Future<void> markMessagesAsRead(String chatId) async {
     try {
-      final currentUid = _currentUid;
-
-      // Resetear el contador desnormalizado: una sola escritura, sin listeners.
-      await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
-
       // Marcar mensajes individuales como leídos (impulsa los ticks de lectura).
       final messagesRef = _chatsRef
           .doc(chatId)
@@ -247,6 +397,11 @@ class ChatService {
 
         if (snapshot.docs.length < _deleteBatchSize) break;
       }
+
+      // Resetear el contador desnormalizado al final. Si el proceso se
+      // interrumpe antes, la siguiente lectura del chat puede reintentar y
+      // completar los ticks pendientes antes de limpiar el badge.
+      await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
     } catch (e, stack) {
       await reportError(e, stack);
     }
@@ -258,29 +413,45 @@ class ChatService {
     Track track, {
     required String otherUid,
   }) async {
+    final text = '${track.title} - ${track.artist}'.trim();
+    if (!_isValidMessageText(text)) {
+      throw ArgumentError('Invalid message');
+    }
+
     try {
       final now = DateTime.now();
       final message = Message(
         id: '',
-        senderId: _currentUid,
-        text: '${track.title} - ${track.artist}',
+        senderId: currentUid,
+        text: text,
         timestamp: now,
         type: MessageType.track,
         trackData: track,
       );
 
-      final batch = _firestore.batch();
+      final chatRef = _chatsRef.doc(chatId);
+      final msgRef = chatRef.collection(FirestoreCollections.messages).doc();
+      final limiterRef = _rateLimitsRef.doc(currentUid);
 
-      final msgRef = _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc();
-      batch.set(msgRef, message.toFirestore());
+      await _firestore.runTransaction((tx) async {
+        final limiterSnap = await tx.get(limiterRef);
 
-      batch.update(_chatsRef.doc(chatId), {
-        'lastMessage': '🎵 ${track.title}',
-        'lastMessageTime': Timestamp.fromDate(now),
-        'unreadCounts.$otherUid': FieldValue.increment(1),
+        tx.set(msgRef, {
+          ...message.toFirestore(),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        tx.update(chatRef, {
+          'lastMessage': '🎵 ${track.title}',
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'unreadCounts.$otherUid': FieldValue.increment(1),
+        });
+        tx.set(
+          limiterRef,
+          _nextMessageRateLimit(limiterSnap),
+          SetOptions(merge: true),
+        );
       });
-
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
@@ -291,24 +462,30 @@ class ChatService {
   /// Usa una transacción para evitar race conditions cuando varios
   /// usuarios reaccionan al mismo mensaje simultáneamente.
   Future<void> toggleReaction(
-      String chatId, String messageId, String emoji) async {
+    String chatId,
+    String messageId,
+    String emoji,
+  ) async {
     try {
-      final msgRef =
-          _chatsRef.doc(chatId).collection(FirestoreCollections.messages).doc(messageId);
+      final msgRef = _chatsRef
+          .doc(chatId)
+          .collection(FirestoreCollections.messages)
+          .doc(messageId);
 
       await _firestore.runTransaction((transaction) async {
         final doc = await transaction.get(msgRef);
         if (!doc.exists) return;
 
         final data = doc.data()!;
-        final reactions =
-            Map<String, dynamic>.from(data['reactions'] as Map? ?? {});
+        final reactions = Map<String, dynamic>.from(
+          data['reactions'] as Map? ?? {},
+        );
 
         // Remove any existing reaction from this user on a different emoji
         for (final key in reactions.keys.toList()) {
           if (key != emoji) {
             final list = List<String>.from(reactions[key] as List? ?? []);
-            if (list.remove(_currentUid)) {
+            if (list.remove(currentUid)) {
               if (list.isEmpty) {
                 reactions.remove(key);
               } else {
@@ -320,10 +497,10 @@ class ChatService {
 
         final users = List<String>.from(reactions[emoji] as List? ?? []);
 
-        if (users.contains(_currentUid)) {
-          users.remove(_currentUid);
+        if (users.contains(currentUid)) {
+          users.remove(currentUid);
         } else {
-          users.add(_currentUid);
+          users.add(currentUid);
         }
 
         if (users.isEmpty) {

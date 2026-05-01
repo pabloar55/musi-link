@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
+import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
+import 'package:musi_link/screens/photo_setup_screen.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -52,52 +54,103 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _initialize() async {
     final minSplash = Future.delayed(const Duration(milliseconds: 500));
 
-    unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
-
     try {
       // Cold-start: capturar notificación que abrió la app
-      final initialMessage =
-          await FirebaseMessaging.instance.getInitialMessage();
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
       if (initialMessage != null) {
         ref
             .read(pendingNotificationProvider.notifier)
             .setValue(initialMessage.data);
       }
 
-      // Ejecutar checks en paralelo con el tiempo mínimo de splash
-      final spotifyFuture = ref.read(spotifyServiceProvider).tryRestoreSession();
-      final prefsFuture = SharedPreferences.getInstance();
-
-      final spotifyConnected = await spotifyFuture;
-      final prefs = await prefsFuture;
-      final onboardingDone =
-          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
-
-      // Si Spotify está conectado, sincronizar perfil musical en background
-      if (spotifyConnected && mounted) {
-        final uid = ref.read(firebaseAuthProvider).currentUser?.uid;
-        if (uid != null) {
-          ref.read(musicProfileServiceProvider).syncMusicProfile(uid).ignore();
-        }
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(kAnalyticsEnabledKey) ?? false) {
+        unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
       }
 
-      // Esperar duración mínima de splash si aún no ha pasado
+      // Comprobar si el usuario ya tiene perfil completo en Firestore
+      final authUser = ref.read(firebaseAuthProvider).currentUser;
+      final uid = authUser?.uid;
+      bool usernameSet = false;
+      bool artistsSelected = false;
+      if (uid != null) {
+        try {
+          await authUser?.getIdToken();
+          final user = await ref
+              .read(userServiceProvider)
+              .getUser(uid, reportErrors: false);
+          usernameSet = user != null && user.username.isNotEmpty;
+          artistsSelected = user != null && user.topArtistNames.isNotEmpty;
+        } catch (_) {}
+      }
+
+      // Si ya tiene artistas en Firestore, completó el onboarding en algún
+      // momento. Usar eso como fuente de verdad por encima de SharedPreferences
+      // (que se borra al reinstalar la app).
+      final onboardingDone =
+          artistsSelected ||
+          (prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false);
+
+      // Usuarios que ya completaron el onboarding antes de que existiera
+      // el paso de foto de perfil saltan ese paso automáticamente.
+      // Nuevos usuarios lo verán tras completar el onboarding de slides.
+      final photoSetupDone =
+          onboardingDone ||
+          (prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false);
+      if (onboardingDone &&
+          !(prefs.getBool(PhotoSetupScreen.photoSetupDoneKey) ?? false)) {
+        await prefs.setBool(PhotoSetupScreen.photoSetupDoneKey, true);
+      }
+
+      // Capturar la referencia al servicio antes de await para que siga
+      // siendo válida aunque el widget se desmonte (SplashScreen desaparece
+      // tras la navegación, y ref deja de ser accesible).
+      final userService = ref.read(userServiceProvider);
+
       await minSplash;
 
       if (mounted) {
-        ref.read(appRouterNotifierProvider).setInitialized(
-          spotifyConnected: spotifyConnected,
-          onboardingDone: onboardingDone,
-        );
+        ref
+            .read(appRouterNotifierProvider)
+            .setInitialized(
+              usernameSet: usernameSet,
+              artistsSelected: artistsSelected,
+              onboardingDone: onboardingDone,
+              photoSetupDone: photoSetupDone,
+              // Callback para re-consultar Firestore tras un login posterior
+              // (ej. usuario que reinstala la app y vuelve a iniciar sesión).
+              fetchUserState: (loginUid) async {
+                final profile = await userService.getUser(
+                  loginUid,
+                  reportErrors: false,
+                );
+                final hasUsername =
+                    profile != null && profile.username.isNotEmpty;
+                final hasArtists =
+                    profile != null && profile.topArtistNames.isNotEmpty;
+                // Si ya tiene artistas, necesariamente completó el onboarding y foto.
+                return (
+                  usernameSet: hasUsername,
+                  artistsSelected: hasArtists,
+                  onboardingDone: hasArtists,
+                  photoSetupDone: hasArtists,
+                );
+              },
+            );
       }
     } catch (e, st) {
       reportError(e, st).ignore();
       await minSplash;
       if (mounted) {
-        ref.read(appRouterNotifierProvider).setInitialized(
-          spotifyConnected: false,
-          onboardingDone: false,
-        );
+        ref
+            .read(appRouterNotifierProvider)
+            .setInitialized(
+              usernameSet: false,
+              artistsSelected: false,
+              onboardingDone: false,
+              photoSetupDone: false,
+            );
       }
     }
   }

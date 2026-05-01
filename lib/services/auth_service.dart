@@ -18,20 +18,19 @@ class AuthService {
     required FirebaseAuth auth,
     required GoogleSignIn googleSignIn,
     required NotificationService notificationService,
-  })  : _auth = auth,
-        _googleSignIn = googleSignIn,
-        _notificationService = notificationService;
+  }) : _auth = auth,
+       _googleSignIn = googleSignIn,
+       _notificationService = notificationService;
 
   final UserService _userService;
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
   final NotificationService _notificationService;
-  bool _googleInitialized = false;
+  static Future<void>? _googleInitialization;
 
   Future<void> _ensureGoogleInitialized() async {
-    if (_googleInitialized) return;
-    await _googleSignIn.initialize();
-    _googleInitialized = true;
+    _googleInitialization ??= _googleSignIn.initialize();
+    await _googleInitialization;
   }
 
   /// Usuario actual de Firebase
@@ -52,11 +51,7 @@ class AuthService {
       final user = credential.user;
       if (user != null) {
         await user.updateDisplayName(displayName);
-        await _userService.createUserProfile(
-          uid: user.uid,
-          email: email,
-          displayName: displayName,
-        );
+        // El perfil en Firestore se crea en UsernameSetupScreen junto con el username.
       }
       return user;
     } on FirebaseAuthException catch (e, stack) {
@@ -87,15 +82,23 @@ class AuthService {
     }
   }
 
+  /// Envía un email de Firebase Auth para restablecer la contraseña.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
   /// Inicia sesión con Google.
   /// Si es la primera vez, crea el perfil en Firestore.
   Future<User?> signInWithGoogle() async {
     try {
       await _ensureGoogleInitialized();
 
-      final googleUser = _googleSignIn.supportsAuthenticate()
-          ? await _googleSignIn.authenticate()
-          : await _googleSignIn.attemptLightweightAuthentication();
+      final googleUser = await _googleSignIn.attemptLightweightAuthentication();
 
       if (googleUser == null) return null; // Usuario canceló
 
@@ -109,15 +112,11 @@ class AuthService {
 
       if (user != null) {
         final exists = await _userService.userExists(user.uid);
-        if (!exists) {
-          await _userService.createUserProfile(
-            uid: user.uid,
-            email: user.email ?? '',
-            displayName: user.displayName ?? googleUser.displayName ?? '',
-          );
-        } else {
+        if (exists) {
           await _userService.updateLastLogin(user.uid);
         }
+        // New Google users: no profile created here.
+        // UsernameSetupScreen handles profile creation after they pick a username.
       }
       return user;
     } on FirebaseAuthException catch (e, stack) {
@@ -161,7 +160,9 @@ class AuthService {
       if (googleUser.email != _auth.currentUser?.email) {
         // Limpiar el estado de Google Sign-In (quedó apuntando a la cuenta
         // incorrecta) sin afectar la sesión de Firebase Auth del usuario real.
-        try { await _googleSignIn.signOut(); } catch (_) {}
+        try {
+          await _googleSignIn.signOut();
+        } catch (_) {}
         throw const GoogleAccountMismatchException();
       }
 
@@ -183,10 +184,16 @@ class AuthService {
 
   /// Re-autentica con email y contraseña.
   /// Lanza [FirebaseAuthException] si las credenciales son incorrectas.
-  Future<void> reauthenticateWithPassword(
-      String email, String password) async {
-    final credential =
-        EmailAuthProvider.credential(email: email, password: password);
-    await _auth.currentUser!.reauthenticateWithCredential(credential);
+  Future<void> reauthenticateWithPassword(String email, String password) async {
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await _auth.currentUser!.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e, st) {
+      await reportError(e, st);
+      rethrow;
+    }
   }
 }

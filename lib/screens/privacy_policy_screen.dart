@@ -20,6 +20,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
       (l10n.privacyS7Title, l10n.privacyS7Body),
       (l10n.privacyS8Title, l10n.privacyS8Body),
       (l10n.privacyS9Title, l10n.privacyS9Body),
+      (l10n.privacyS10Title, l10n.privacyS10Body),
     ];
 
     return Scaffold(

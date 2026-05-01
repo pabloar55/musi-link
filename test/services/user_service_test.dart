@@ -10,58 +10,84 @@ import '../helpers/mocks.dart';
 void main() {
   late MockFirebaseFirestore mockFirestore;
   late MockCollectionReference mockUsersRef;
+  late MockCollectionReference mockPrivateUsersRef;
+  late MockWriteBatch mockBatch;
   late UserService userService;
 
   setUp(() {
     mockFirestore = MockFirebaseFirestore();
     mockUsersRef = MockCollectionReference();
+    mockPrivateUsersRef = MockCollectionReference();
+    mockBatch = MockWriteBatch();
     when(() => mockFirestore.collection('users')).thenReturn(mockUsersRef);
+    when(
+      () => mockFirestore.collection('user_private'),
+    ).thenReturn(mockPrivateUsersRef);
+    when(() => mockFirestore.batch()).thenReturn(mockBatch);
+    when(() => mockBatch.commit()).thenAnswer((_) async {});
     userService = UserService(firestore: mockFirestore);
     registerFallbackValues();
   });
-
-  void stubSpotifyIdIsAvailable(String spotifyId) {
-    final mockQuery = MockQuery();
-    final mockQuerySnapshot = MockQuerySnapshot();
-    when(() => mockUsersRef.where('spotifyId', isEqualTo: spotifyId))
-        .thenReturn(mockQuery);
-    when(() => mockQuery.limit(1)).thenReturn(mockQuery);
-    when(() => mockQuery.get()).thenAnswer((_) async => mockQuerySnapshot);
-    when(() => mockQuerySnapshot.docs).thenReturn([]);
-  }
 
   group('UserService', () {
     group('createUserProfile', () {
       test('crea perfil correctamente en Firestore', () async {
         final mockDocRef = MockDocumentReference();
+        final mockPrivateDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.set(any())).thenAnswer((_) async {});
+        when(
+          () => mockPrivateUsersRef.doc('uid123'),
+        ).thenReturn(mockPrivateDocRef);
 
         await userService.createUserProfile(
           uid: 'uid123',
           email: 'test@test.com',
           displayName: 'Test User',
+          username: 'testuser',
         );
 
-        final captured =
-            verify(() => mockDocRef.set(captureAny())).captured.single
+        final publicProfile =
+            verify(
+                  () => mockBatch.set<Map<String, dynamic>>(
+                    mockDocRef,
+                    captureAny(),
+                    null,
+                  ),
+                ).captured.single
                 as Map<String, dynamic>;
-        expect(captured['email'], 'test@test.com');
-        expect(captured['displayName'], 'Test User');
-        expect(captured['displayNameLower'], 'test user');
+        final privateProfile =
+            verify(
+                  () => mockBatch.set<Map<String, dynamic>>(
+                    mockPrivateDocRef,
+                    captureAny(),
+                    null,
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
+        expect(publicProfile['displayName'], 'Test User');
+        expect(publicProfile['username'], 'testuser');
+        expect(publicProfile.containsKey('email'), isFalse);
+        expect(privateProfile['email'], 'test@test.com');
+        expect(privateProfile['friends'], isEmpty);
       });
 
       test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
+        final mockPrivateDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.set(any()))
-            .thenThrow(FirebaseException(plugin: 'firestore'));
+        when(
+          () => mockPrivateUsersRef.doc('uid123'),
+        ).thenReturn(mockPrivateDocRef);
+        when(
+          () => mockBatch.commit(),
+        ).thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(
           () => userService.createUserProfile(
             uid: 'uid123',
             email: 'test@test.com',
             displayName: 'Test',
+            username: 'testuser',
           ),
           throwsA(isA<FirebaseException>()),
         );
@@ -88,7 +114,6 @@ void main() {
 
         expect(user, isNotNull);
         expect(user!.uid, 'uid123');
-        expect(user.email, 'test@test.com');
         expect(user.displayName, 'Test User');
       });
 
@@ -106,13 +131,49 @@ void main() {
       test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.get())
-            .thenThrow(FirebaseException(plugin: 'firestore'));
+        when(
+          () => mockDocRef.get(),
+        ).thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(
           () => userService.getUser('uid123'),
           throwsA(isA<FirebaseException>()),
         );
+      });
+
+      test('cache aplica LRU y desaloja la entrada menos reciente', () async {
+        final docRefs = <String, MockDocumentReference>{};
+
+        for (var i = 0; i <= 200; i++) {
+          final uid = 'uid_$i';
+          final mockDocRef = MockDocumentReference();
+          final mockDocSnap = MockDocumentSnapshot();
+          docRefs[uid] = mockDocRef;
+
+          when(() => mockUsersRef.doc(uid)).thenReturn(mockDocRef);
+          when(() => mockDocRef.get()).thenAnswer((_) async => mockDocSnap);
+          when(() => mockDocSnap.exists).thenReturn(true);
+          when(() => mockDocSnap.id).thenReturn(uid);
+          when(() => mockDocSnap.data()).thenReturn({
+            'email': '$uid@test.com',
+            'displayName': 'User $i',
+            'photoUrl': '',
+            'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
+            'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
+          });
+        }
+
+        for (var i = 0; i < 200; i++) {
+          await userService.getUser('uid_$i');
+        }
+
+        await userService.getUser('uid_0');
+        await userService.getUser('uid_200');
+        await userService.getUser('uid_1');
+        await userService.getUser('uid_0');
+
+        verify(() => docRefs['uid_1']!.get()).called(2);
+        verify(() => docRefs['uid_0']!.get()).called(1);
       });
     });
 
@@ -140,8 +201,9 @@ void main() {
       test('propaga error si Firestore falla', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.get())
-            .thenThrow(FirebaseException(plugin: 'firestore'));
+        when(
+          () => mockDocRef.get(),
+        ).thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(
           () => userService.userExists('uid123'),
@@ -153,61 +215,21 @@ void main() {
     group('updateLastLogin', () {
       test('actualiza el campo lastLogin', () async {
         final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
+        when(() => mockPrivateUsersRef.doc('uid123')).thenReturn(mockDocRef);
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         await userService.updateLastLogin('uid123');
 
         final captured = Map<String, dynamic>.from(
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map);
+          verify(() => mockDocRef.update(captureAny())).captured.single as Map,
+        );
         expect(captured.containsKey('lastLogin'), true);
         expect(captured['lastLogin'], isA<Timestamp>());
       });
     });
 
-    group('linkSpotifyProfile', () {
-      test('actualiza spotifyId y photoUrl', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        stubSpotifyIdIsAvailable('sp123');
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        await userService.linkSpotifyProfile(
-          'uid123',
-          spotifyId: 'sp123',
-          photoUrl: 'https://photo.url',
-        );
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['spotifyId'], 'sp123');
-        expect(captured['photoUrl'], 'https://photo.url');
-      });
-
-      test('no incluye photoUrl si está vacío', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        stubSpotifyIdIsAvailable('sp123');
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        await userService.linkSpotifyProfile(
-          'uid123',
-          spotifyId: 'sp123',
-          photoUrl: '  ',
-        );
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['spotifyId'], 'sp123');
-        expect(captured.containsKey('photoUrl'), false);
-      });
-    });
-
     group('updateProfile', () {
-      test('actualiza displayName y su versión lowercase', () async {
+      test('actualiza displayName', () async {
         final mockDocRef = MockDocumentReference();
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
@@ -218,7 +240,7 @@ void main() {
             verify(() => mockDocRef.update(captureAny())).captured.single
                 as Map<String, dynamic>;
         expect(captured['displayName'], 'New Name');
-        expect(captured['displayNameLower'], 'new name');
+        expect(captured.containsKey('displayNameLower'), false);
       });
 
       test('actualiza solo photoUrl si no se pasa displayName', () async {
@@ -226,8 +248,10 @@ void main() {
         when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
-        await userService.updateProfile('uid123',
-            photoUrl: 'https://new.photo');
+        await userService.updateProfile(
+          'uid123',
+          photoUrl: 'https://new.photo',
+        );
 
         final captured =
             verify(() => mockDocRef.update(captureAny())).captured.single
@@ -257,7 +281,7 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('busca por displayNameLower y excluye usuario actual', () async {
+      test('busca por username y excluye usuario actual', () async {
         final mockQuery1 = MockQuery();
         final mockQuery2 = MockQuery();
         final mockQuery3 = MockQuery();
@@ -268,23 +292,29 @@ void main() {
         when(() => mockDoc.data()).thenReturn({
           'email': 'other@test.com',
           'displayName': 'Test User',
+          'username': 'testuser',
           'photoUrl': '',
           'createdAt': Timestamp.fromDate(DateTime(2025, 1, 1)),
           'lastLogin': Timestamp.fromDate(DateTime(2025, 1, 1)),
         });
 
-        when(() => mockUsersRef.where('displayNameLower',
-            isGreaterThanOrEqualTo: 'test')).thenReturn(mockQuery1);
-        when(() =>
-                mockQuery1.where('displayNameLower', isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo')))
-            .thenReturn(mockQuery2);
+        when(
+          () => mockUsersRef.where('username', isGreaterThanOrEqualTo: 'test'),
+        ).thenReturn(mockQuery1);
+        when(
+          () => mockQuery1.where(
+            'username',
+            isLessThanOrEqualTo: any(named: 'isLessThanOrEqualTo'),
+          ),
+        ).thenReturn(mockQuery2);
         when(() => mockQuery2.limit(20)).thenReturn(mockQuery3);
-        when(() => mockQuery3.get())
-            .thenAnswer((_) async => mockQuerySnapshot);
+        when(() => mockQuery3.get()).thenAnswer((_) async => mockQuerySnapshot);
         when(() => mockQuerySnapshot.docs).thenReturn([mockDoc]);
 
-        final result =
-            await userService.searchUsers('test', excludeUid: 'my_uid');
+        final result = await userService.searchUsers(
+          'test',
+          excludeUid: 'my_uid',
+        );
 
         expect(result, hasLength(1));
         expect(result.first.uid, 'other_uid');
@@ -307,49 +337,14 @@ void main() {
         await userService.setDailySong('uid123', track);
 
         final captured = Map<String, dynamic>.from(
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map);
-        final songData =
-            Map<String, dynamic>.from(captured['dailySong'] as Map);
+          verify(() => mockDocRef.update(captureAny())).captured.single as Map,
+        );
+        final songData = Map<String, dynamic>.from(
+          captured['dailySong'] as Map,
+        );
         expect(songData['title'], 'Bohemian Rhapsody');
         expect(songData['artist'], 'Queen');
         expect(captured.containsKey('dailySongUpdatedAt'), true);
-      });
-    });
-
-    group('updateNowPlaying', () {
-      test('actualiza con track', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        const track = Track(
-          title: 'Song',
-          artist: 'Artist',
-          imageUrl: 'https://img.url',
-        );
-
-        await userService.updateNowPlaying('uid123', track);
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['nowPlaying'], isNotNull);
-        expect(captured['nowPlayingUpdatedAt'], isA<Timestamp>());
-      });
-
-      test('limpia nowPlaying con null', () async {
-        final mockDocRef = MockDocumentReference();
-        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
-        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
-
-        await userService.updateNowPlaying('uid123', null);
-
-        final captured =
-            verify(() => mockDocRef.update(captureAny())).captured.single
-                as Map<String, dynamic>;
-        expect(captured['nowPlaying'], isNull);
-        expect(captured['nowPlayingUpdatedAt'], isNull);
       });
     });
 
@@ -359,33 +354,36 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('hace una sola consulta con exactamente 10 UIDs (límite whereIn)',
-          () async {
-        final uids = List.generate(10, (i) => 'uid_$i');
+      test(
+        'hace una sola consulta con exactamente 10 UIDs (límite whereIn)',
+        () async {
+          final uids = List.generate(10, (i) => 'uid_$i');
 
-        final mockQuery = MockQuery();
-        final mockSnapshot = MockQuerySnapshot();
+          final mockQuery = MockQuery();
+          final mockSnapshot = MockQuerySnapshot();
 
-        when(() => mockUsersRef.where(FieldPath.documentId,
-            whereIn: uids)).thenReturn(mockQuery);
-        when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
+          when(
+            () => mockUsersRef.where(FieldPath.documentId, whereIn: uids),
+          ).thenReturn(mockQuery);
+          when(() => mockQuery.get()).thenAnswer((_) async => mockSnapshot);
 
-        final mockDoc = MockQueryDocumentSnapshot();
-        when(() => mockDoc.id).thenReturn('uid_0');
-        when(() => mockDoc.data()).thenReturn({
-          'email': 'u0@test.com',
-          'displayName': 'User 0',
-          'photoUrl': '',
-          'createdAt': Timestamp.fromDate(DateTime(2025)),
-          'lastLogin': Timestamp.fromDate(DateTime(2025)),
-        });
-        when(() => mockSnapshot.docs).thenReturn([mockDoc]);
+          final mockDoc = MockQueryDocumentSnapshot();
+          when(() => mockDoc.id).thenReturn('uid_0');
+          when(() => mockDoc.data()).thenReturn({
+            'email': 'u0@test.com',
+            'displayName': 'User 0',
+            'photoUrl': '',
+            'createdAt': Timestamp.fromDate(DateTime(2025)),
+            'lastLogin': Timestamp.fromDate(DateTime(2025)),
+          });
+          when(() => mockSnapshot.docs).thenReturn([mockDoc]);
 
-        final result = await userService.getUsersByIds(uids);
+          final result = await userService.getUsersByIds(uids);
 
-        expect(result, hasLength(1));
-        verify(() => mockQuery.get()).called(1);
-      });
+          expect(result, hasLength(1));
+          verify(() => mockQuery.get()).called(1);
+        },
+      );
 
       test('hace chunks de 10 para consultas whereIn', () async {
         // Generar 15 UIDs para forzar 2 chunks
@@ -397,16 +395,22 @@ void main() {
         final mockSnapshot2 = MockQuerySnapshot();
 
         // Primer chunk (10 items)
-        when(() => mockUsersRef.where(FieldPath.documentId,
-            whereIn: uids.sublist(0, 10))).thenReturn(mockQuery1);
-        when(() => mockQuery1.get())
-            .thenAnswer((_) async => mockSnapshot1);
+        when(
+          () => mockUsersRef.where(
+            FieldPath.documentId,
+            whereIn: uids.sublist(0, 10),
+          ),
+        ).thenReturn(mockQuery1);
+        when(() => mockQuery1.get()).thenAnswer((_) async => mockSnapshot1);
 
         // Segundo chunk (5 items)
-        when(() => mockUsersRef.where(FieldPath.documentId,
-            whereIn: uids.sublist(10, 15))).thenReturn(mockQuery2);
-        when(() => mockQuery2.get())
-            .thenAnswer((_) async => mockSnapshot2);
+        when(
+          () => mockUsersRef.where(
+            FieldPath.documentId,
+            whereIn: uids.sublist(10, 15),
+          ),
+        ).thenReturn(mockQuery2);
+        when(() => mockQuery2.get()).thenAnswer((_) async => mockSnapshot2);
 
         // Docs para cada snapshot
         final mockDoc1 = MockQueryDocumentSnapshot();

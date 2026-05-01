@@ -21,7 +21,7 @@ abstract final class AppTokens {
 
   // ── Opacidades semánticas ──────────────────────────────────────────────────
   static const alphaMedium = 150; // texto secundario
-  static const alphaLow = 100;    // texto terciario / placeholders
+  static const alphaLow = 100; // texto terciario / placeholders
   static const alphaDisabled = 80;
 
   // ── Espaciado ─────────────────────────────────────────────────────────────
@@ -199,7 +199,10 @@ class AppTheme {
       labelColor: cs.primary,
       unselectedLabelColor: cs.onSurfaceVariant,
       labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-      unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+      unselectedLabelStyle: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+      ),
       indicatorSize: TabBarIndicatorSize.label,
       indicator: UnderlineTabIndicator(
         borderSide: BorderSide(color: cs.primary, width: 2.5),
@@ -285,12 +288,10 @@ class AppTheme {
   }
 
   static InputDecorationTheme _buildInputDecorationTheme(ColorScheme cs) {
-    final radius = BorderRadius.circular(AppTokens.radiusMD);
+    final radius = BorderRadius.circular(AppTokens.radiusLG);
     final borderColor = cs.outline;
 
     return InputDecorationTheme(
-      filled: true,
-      fillColor: cs.surfaceContainerHighest.withAlpha(80),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppTokens.spaceLG,
         vertical: AppTokens.spaceMD,
@@ -371,14 +372,13 @@ class AppTheme {
   }
 
   static SnackBarThemeData _buildSnackBarTheme(ColorScheme cs) {
-    final isDark = cs.brightness == Brightness.dark;
     return SnackBarThemeData(
-      // Dark mode: superficie elevada oscura. Light mode: inverseSurface oscuro.
-      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.inverseSurface,
-      contentTextStyle: TextStyle(
-        color: isDark ? cs.onSurface : cs.onInverseSurface,
-      ),
+      backgroundColor: cs.surfaceContainerHigh,
+      contentTextStyle: TextStyle(color: cs.onSurface),
+      actionTextColor: cs.primary,
+      closeIconColor: cs.onSurfaceVariant,
       behavior: SnackBarBehavior.floating,
+      elevation: 6,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusMD),
       ),
