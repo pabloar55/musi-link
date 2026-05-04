@@ -42,6 +42,7 @@ class NotificationService {
   static const _supportedPreferredLocales = {'en', 'es', 'fr'};
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
   static const kVibrationKey = 'notification_vibration';
+  static const _permissionDialogShownKey = 'notification_pre_dialog_shown';
 
   Future<void> initialize() async {
     // 1. iOS foreground presentation options
@@ -89,14 +90,31 @@ class NotificationService {
     // 4. Retry any FCM token clear that failed during a previous sign-out.
     await _retryPendingTokenClear();
 
-    // 5. Request permission and save token
-    await _requestPermissionAndSaveToken();
+    // 5. Save token silently if permission was already granted (no dialog).
+    // New users will be prompted contextually from MessagesScreen.
+    await _saveTokenIfGranted();
 
     // 6. Auto-refresh token
     _messaging.onTokenRefresh.listen((_) => _saveToken());
 
     // 7. Foreground message handler
     FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+  }
+
+  bool get hasShownPermissionDialog =>
+      _prefs.getBool(_permissionDialogShownKey) ?? false;
+
+  Future<void> requestPermission() async {
+    await _prefs.setBool(_permissionDialogShownKey, true);
+    await _requestPermissionAndSaveToken();
+  }
+
+  Future<void> _saveTokenIfGranted() async {
+    final settings = await _messaging.getNotificationSettings();
+    final granted =
+        settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+    if (granted) await _saveToken();
   }
 
   Future<void> _requestPermissionAndSaveToken() async {

@@ -30,6 +30,20 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen>
   @override
   bool get wantKeepAlive => true;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowNotificationPrompt();
+    });
+  }
+
+  Future<void> _maybeShowNotificationPrompt() async {
+    final service = ref.read(notificationServiceProvider);
+    if (service.hasShownPermissionDialog) return;
+    await service.requestPermission();
+  }
+
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string if session was lost (GoRouter redirects before this
   /// is reached in normal flow, but race conditions are possible).
