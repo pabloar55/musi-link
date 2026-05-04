@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -561,7 +560,8 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                   ],
                 ),
               ),
-              if (_suggestions.isNotEmpty) _buildSuggestedArtistsRow(l10n),
+              if (_suggestions.isNotEmpty && !showSearch)
+                _buildSuggestedArtistsRow(l10n),
 
               Expanded(child: _buildArtistContent(l10n, showSearch)),
 
@@ -590,7 +590,9 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
                             : Text(
                                 _selected.length >= _minArtists
                                     ? l10n.artistSelectorContinue
-                                    : l10n.artistSelectorContinueLocked,
+                                    : l10n.artistSelectorContinueLocked(
+                                        _minArtists - _selected.length,
+                                      ),
                               ),
                       ),
                     ),
@@ -604,43 +606,11 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
   }
 
   Widget _buildArtistContent(AppLocalizations l10n, bool showSearch) {
-    final hasSelectedArtists = _selected.isNotEmpty;
-    final hasSecondaryContent = showSearch || _selected.isEmpty;
+    if (showSearch) return _buildSearchResults(l10n);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final children = <Widget>[];
+    if (_selected.isEmpty) return _buildEmptySelectedState(l10n);
 
-        if (hasSelectedArtists) {
-          final selectedHeight = hasSecondaryContent
-              ? math.min(
-                  _selected.length * 56.0,
-                  math.min(256.0, constraints.maxHeight * 0.45),
-                )
-              : constraints.maxHeight;
-
-          children.add(
-            SizedBox(height: selectedHeight, child: _buildRankedList()),
-          );
-        }
-
-        if (hasSelectedArtists && hasSecondaryContent) {
-          children.add(const SizedBox(height: 8));
-        }
-
-        if (hasSecondaryContent) {
-          children.add(
-            Expanded(
-              child: showSearch
-                  ? _buildSearchResults(l10n)
-                  : _buildEmptySelectedState(l10n),
-            ),
-          );
-        }
-
-        return Column(children: children);
-      },
-    );
+    return _buildRankedList();
   }
 
   Widget _buildRankedList() {

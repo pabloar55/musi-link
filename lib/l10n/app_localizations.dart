@@ -667,8 +667,8 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorContinueLocked.
   ///
   /// In en, this message translates to:
-  /// **'Add at least 4 artists to continue'**
-  String get artistSelectorContinueLocked;
+  /// **'{remaining, plural, =1{Add 1 more artist} other{Add {remaining} more artists}}'**
+  String artistSelectorContinueLocked(int remaining);
 
   /// No description provided for @artistSelectorNoResults.
   ///

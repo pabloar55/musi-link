@@ -315,8 +315,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get artistSelectorContinue => 'Continue';
 
   @override
-  String get artistSelectorContinueLocked =>
-      'Add at least 4 artists to continue';
+  String artistSelectorContinueLocked(int remaining) {
+    String _temp0 = intl.Intl.pluralLogic(
+      remaining,
+      locale: localeName,
+      other: 'Add $remaining more artists',
+      one: 'Add 1 more artist',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get artistSelectorNoResults => 'No artists found';

@@ -131,7 +131,12 @@
   },
   "artistSelectorSearchHint": "Search artists...",
   "artistSelectorContinue": "Continue",
-  "artistSelectorContinueLocked": "Add at least 4 artists to continue",
+  "artistSelectorContinueLocked": "{remaining, plural, =1{Add 1 more artist} other{Add {remaining} more artists}}",
+  "@artistSelectorContinueLocked": {
+    "placeholders": {
+      "remaining": { "type": "int" }
+    }
+  },
   "artistSelectorNoResults": "No artists found",
   "artistSelectorEmpty": "Search for your favourite artists to get started",
   "artistSelectorSuggested": "Suggested",
