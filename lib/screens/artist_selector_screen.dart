@@ -11,6 +11,7 @@ import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/utils/error_reporter.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 // ─── Definición de etapas ────────────────────────────────────────────────────
 
@@ -616,7 +617,12 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
 
   Widget _buildSearchResults(AppLocalizations l10n) {
     if (_isSearching) {
-      return const Center(child: CircularProgressIndicator());
+      return SkeletonShimmer(
+        child: ListView.builder(
+          itemCount: 8,
+          itemBuilder: (_, _) => const SkeletonListTile(),
+        ),
+      );
     }
     if (_searchResults.isEmpty) {
       return Center(
