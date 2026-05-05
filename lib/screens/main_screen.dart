@@ -93,7 +93,7 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
       bottomNavigationBar: NavigationBar(
         destinations: [
           NavigationDestination(icon: const Icon(LucideIcons.compass500), label: l10n.navDiscover),
-          NavigationDestination(icon: const Icon(LucideIcons.chartNoAxesColumn600), label: l10n.navStats),
+          NavigationDestination(icon: const Icon(LucideIcons.crown), label: l10n.navStats),
           NavigationDestination(
             icon: Badge(
               isLabelVisible: unreadChats > 0,

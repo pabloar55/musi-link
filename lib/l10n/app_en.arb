@@ -60,7 +60,7 @@
   "discoverNoUsersHint": "As more users create their music profile, they will appear here",
 
   "navDiscover": "Discover",
-  "navStats": "Stats",
+  "navStats": "My Top",
   "navMessages": "Messages",
   "navFriends": "Friends",
 
@@ -122,7 +122,7 @@
   "socialErrorLoading": "Error loading conversations",
   "socialUser": "User",
 
-  "artistSelectorTitle": "Your Top Artists",
+  "artistSelectorTitle": "My Top Artists",
   "artistSelectorSubtitle": "{count, plural, =1{1 artist · the more you add, the better your matches} other{{count} artists · the more you add, the better your matches}}",
   "@artistSelectorSubtitle": {
     "placeholders": {

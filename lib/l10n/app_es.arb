@@ -55,7 +55,7 @@
   "discoverNoUsersHint": "Cuando más usuarios creen su perfil musical, aparecerán aquí",
 
   "navDiscover": "Descubrir",
-  "navStats": "Estadísticas",
+  "navStats": "Mi Top",
   "navMessages": "Mensajes",
   "navFriends": "Amigos",
 
@@ -102,7 +102,7 @@
   "socialErrorLoading": "Error al cargar conversaciones",
   "socialUser": "Usuario",
 
-  "artistSelectorTitle": "Tus Top Artistas",
+  "artistSelectorTitle": "Mis Top Artistas",
   "artistSelectorSubtitle": "{count, plural, =1{1 artista · cuantos más, mejor compatibilidad} other{{count} artistas · cuantos más, mejor compatibilidad}}",
   "@artistSelectorSubtitle": {
     "placeholders": {

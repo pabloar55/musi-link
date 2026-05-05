@@ -164,7 +164,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navDiscover => 'Discover';
 
   @override
-  String get navStats => 'Stats';
+  String get navStats => 'My Top';
 
   @override
   String get navMessages => 'Messages';
@@ -295,7 +295,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialUser => 'User';
 
   @override
-  String get artistSelectorTitle => 'Your Top Artists';
+  String get artistSelectorTitle => 'My Top Artists';
 
   @override
   String artistSelectorSubtitle(int count) {

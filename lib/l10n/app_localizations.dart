@@ -399,7 +399,7 @@ abstract class AppLocalizations {
   /// No description provided for @navStats.
   ///
   /// In en, this message translates to:
-  /// **'Stats'**
+  /// **'My Top'**
   String get navStats;
 
   /// No description provided for @navMessages.
@@ -645,7 +645,7 @@ abstract class AppLocalizations {
   /// No description provided for @artistSelectorTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your Top Artists'**
+  /// **'My Top Artists'**
   String get artistSelectorTitle;
 
   /// No description provided for @artistSelectorSubtitle.

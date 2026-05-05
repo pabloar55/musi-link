@@ -60,7 +60,7 @@
   "discoverNoUsersHint": "Καθώς περισσότεροι χρήστες δημιουργούν το μουσικό τους προφίλ, θα εμφανίζονται εδώ",
 
   "navDiscover": "Ανακάλυψη",
-  "navStats": "Στατιστικά",
+  "navStats": "Το Top μου",
   "navMessages": "Μηνύματα",
   "navFriends": "Φίλοι",
 
@@ -122,7 +122,7 @@
   "socialErrorLoading": "Σφάλμα φόρτωσης συνομιλιών",
   "socialUser": "Χρήστης",
 
-  "artistSelectorTitle": "Οι Κορυφαίοι Καλλιτέχνες σας",
+  "artistSelectorTitle": "Οι Κορυφαίοι Καλλιτέχνες μου",
   "artistSelectorSubtitle": "{count, plural, =1{1 καλλιτέχνης · όσο περισσότερους προσθέτετε, τόσο καλύτερες οι αντιστοιχίσεις} other{{count} καλλιτέχνες · όσο περισσότερους προσθέτετε, τόσο καλύτερες οι αντιστοιχίσεις}}",
   "@artistSelectorSubtitle": {
     "placeholders": {
