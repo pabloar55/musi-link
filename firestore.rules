@@ -85,6 +85,8 @@ service cloud.firestore {
           'friends',
           'fcmToken',
           'preferredLocale',
+          'notifSound',
+          'notifVibration',
         ]);
       allow update: if request.auth != null && (
         (
@@ -96,6 +98,8 @@ service cloud.firestore {
             'fcmToken',
             'preferredLocale',
             'deletedAt',
+            'notifSound',
+            'notifVibration',
           ])
         )
         ||
