@@ -792,6 +792,8 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           (a) => _artistKey(a) == _artistKey(artist),
         );
         return ListTile(
+          visualDensity: const VisualDensity(vertical: -2),
+          minVerticalPadding: 2,
           leading: CircleAvatar(
             backgroundImage: artist.imageUrl.isNotEmpty
                 ? CachedNetworkImageProvider(artist.imageUrl)
