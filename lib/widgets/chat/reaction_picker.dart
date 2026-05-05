@@ -171,43 +171,40 @@ class ReactionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Wrap(
-      spacing: AppTokens.spaceXS,
-      runSpacing: AppTokens.spaceXS,
-      children: reactions.entries.map((entry) {
-        final hasReacted = entry.value.contains(currentUid);
-        return GestureDetector(
-          onTap: () => onReact(entry.key),
-          child: AnimatedContainer(
-            duration: AppTokens.durationFast,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTokens.spaceSM,
-              vertical: AppTokens.spaceXS,
+    final sortedKeys = reactions.keys.toList()
+      ..sort((a, b) => _kEmojis.indexOf(a).compareTo(_kEmojis.indexOf(b)));
+    final totalCount = reactions.values.fold(0, (sum, list) => sum + list.length);
+    final allEmojis = sortedKeys.join(' ');
+    final myEmoji = reactions.entries
+        .where((e) => e.value.contains(currentUid))
+        .map((e) => e.key)
+        .firstOrNull;
+
+    return GestureDetector(
+      onTap: myEmoji != null ? () => onReact(myEmoji) : null,
+      child: AnimatedContainer(
+        duration: AppTokens.durationFast,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTokens.spaceSM,
+          vertical: AppTokens.spaceXS,
+        ),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+          border: Border.all(color: cs.surface, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: cs.shadow.withAlpha(20),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-              border: Border.all(
-                color: hasReacted
-                    ? cs.onSurface.withAlpha(120)
-                    : cs.outlineVariant.withAlpha(80),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: cs.shadow.withAlpha(20),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Text(
-              entry.key,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-        );
-      }).toList(),
+          ],
+        ),
+        child: Text(
+          totalCount > 1 ? '$allEmojis $totalCount' : allEmojis,
+          style: const TextStyle(fontSize: 14),
+        ),
+      ),
     );
   }
 }
