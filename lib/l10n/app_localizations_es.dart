@@ -470,41 +470,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingDiscoverDesc =>
-      'Encuentra personas con gustos musicales similares y descubre lo compatibles que sois según vuestros artistas y géneros favoritos.';
+      'MusiLink te conecta con personas que comparten tu gusto musical. Descubre lo compatibles que sois según vuestros artistas favoritos.';
 
   @override
-  String get onboardingStatsTitle => 'Tus estadísticas';
+  String get onboardingProfileTitle => 'Construye tu perfil musical';
 
   @override
-  String get onboardingStatsDesc =>
-      'Crea tu propio top de artistas y géneros. Descubre cómo se compara tu gusto con el de otras personas.';
+  String get onboardingProfileDesc =>
+      'Añade los artistas que más escuchas. Cuantos más añadas, mejores serán tus matches y más personas descubrirás.';
 
   @override
-  String get onboardingDailySongTitle => 'Canción del día';
+  String get onboardingConnectTitle => 'Chatea, comparte, conecta';
 
   @override
-  String get onboardingDailySongDesc =>
-      'Elige una canción cada día para compartir con tus amigos. Descubre lo que escuchan y encuentra nueva música juntos.';
-
-  @override
-  String get onboardingChatTitle => 'Chatea sobre música';
-
-  @override
-  String get onboardingChatDesc =>
-      'Inicia conversaciones y comparte canciones. Habla de la música que te apasiona con gente que lo entiende.';
-
-  @override
-  String get onboardingFriendsTitle => 'Crea tu grupo';
-
-  @override
-  String get onboardingFriendsDesc =>
-      'Añade amigos, mira sus perfiles musicales y mantened el contacto a través de vuestra pasión compartida por la música.';
+  String get onboardingConnectDesc =>
+      'Conecta con amigos, habla de música y comparte tu canción del día.';
 
   @override
   String get onboardingNext => 'Siguiente';
 
   @override
-  String get onboardingGetStarted => 'Empezar';
+  String get onboardingGetStarted => '¡Vamos!';
 
   @override
   String get onboardingSkip => 'Saltar';

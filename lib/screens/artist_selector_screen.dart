@@ -10,9 +10,7 @@ import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/router/go_router_provider.dart';
-import 'package:musi_link/screens/onboarding_screen.dart';
 import 'package:musi_link/utils/error_reporter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Definición de etapas ────────────────────────────────────────────────────
 
@@ -444,14 +442,8 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
       ref.read(userServiceProvider).clearCache();
       ref.invalidate(currentUserProvider);
 
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingDone =
-          prefs.getBool(OnboardingScreen.onboardingCompletedKey) ?? false;
       if (!mounted) return;
-
-      ref
-          .read(appRouterNotifierProvider)
-          .setArtistsSelected(onboardingDone: onboardingDone);
+      ref.read(appRouterNotifierProvider).setArtistsSelected();
     } catch (e, st) {
       reportError(e, st).ignore();
       if (!mounted) return;

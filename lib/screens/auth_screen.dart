@@ -26,8 +26,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _nameController = TextEditingController();
 
   bool _isLogin = true;
-  bool _isLoading = false;
+  bool _isEmailLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
+
+  bool get _isLoading => _isEmailLoading || _isGoogleLoading;
 
   @override
   void dispose() {
@@ -40,7 +43,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Future<void> _submitEmailForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isEmailLoading = true);
     try {
       User? user;
       if (_isLogin) {
@@ -70,12 +73,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         _showError(AppLocalizations.of(context)!.authErrorUnexpected);
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isEmailLoading = false);
     }
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
+    setState(() => _isGoogleLoading = true);
     try {
       final user = await ref.read(authServiceProvider).signInWithGoogle();
       if (user == null && mounted) {
@@ -91,7 +94,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         _showError(AppLocalizations.of(context)!.authErrorGoogleSignInGeneric);
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -108,7 +111,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() => _isEmailLoading = true);
     try {
       await ref.read(authServiceProvider).sendPasswordResetEmail(email);
       if (mounted) _showError(l10n.authPasswordResetSent);
@@ -122,7 +125,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (_) {
       if (mounted) _showError(l10n.authErrorUnexpected);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isEmailLoading = false);
     }
   }
 
@@ -274,9 +277,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         height: 48,
                         child: FilledButton(
                           onPressed: _isLoading ? null : _submitEmailForm,
-                          child: Text(
-                            _isLogin ? l10n.authSignIn : l10n.authCreateAccount,
-                          ),
+                          child: _isEmailLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  _isLogin
+                                      ? l10n.authSignIn
+                                      : l10n.authCreateAccount,
+                                ),
                         ),
                       ),
                     ],
@@ -304,10 +318,33 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: OutlinedButton.icon(
+                  child: OutlinedButton(
                     onPressed: _isLoading ? null : _signInWithGoogle,
-                    icon: const FaIcon(FontAwesomeIcons.google, size: 20),
-                    label: Text(l10n.authContinueGoogle),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const FaIcon(FontAwesomeIcons.google, size: 20),
+                            const SizedBox(width: 8),
+                            Text(l10n.authContinueGoogle),
+                          ],
+                        ),
+                        if (_isGoogleLoading)
+                          Positioned(
+                            right: 0,
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

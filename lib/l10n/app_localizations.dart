@@ -931,56 +931,32 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingDiscoverDesc.
   ///
   /// In en, this message translates to:
-  /// **'Find people with similar music taste and discover how compatible you are based on your top artists and genres.'**
+  /// **'MusiLink connects you with people who share your music taste. See how compatible you are based on your favourite artists.'**
   String get onboardingDiscoverDesc;
 
-  /// No description provided for @onboardingStatsTitle.
+  /// No description provided for @onboardingProfileTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your music stats'**
-  String get onboardingStatsTitle;
+  /// **'Build your music profile'**
+  String get onboardingProfileTitle;
 
-  /// No description provided for @onboardingStatsDesc.
+  /// No description provided for @onboardingProfileDesc.
   ///
   /// In en, this message translates to:
-  /// **'Create your own top artists and genres. See how your taste compares with other people.'**
-  String get onboardingStatsDesc;
+  /// **'Add the artists you love most. The more you add, the better your matches — and the more people you\'ll discover.'**
+  String get onboardingProfileDesc;
 
-  /// No description provided for @onboardingDailySongTitle.
+  /// No description provided for @onboardingConnectTitle.
   ///
   /// In en, this message translates to:
-  /// **'Song of the day'**
-  String get onboardingDailySongTitle;
+  /// **'Chat, share, connect'**
+  String get onboardingConnectTitle;
 
-  /// No description provided for @onboardingDailySongDesc.
+  /// No description provided for @onboardingConnectDesc.
   ///
   /// In en, this message translates to:
-  /// **'Choose a song each day to share with your friends. See what they\'re listening to and discover new music together.'**
-  String get onboardingDailySongDesc;
-
-  /// No description provided for @onboardingChatTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat about music'**
-  String get onboardingChatTitle;
-
-  /// No description provided for @onboardingChatDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Start conversations and share songs. Talk about the music you love with people who get it.'**
-  String get onboardingChatDesc;
-
-  /// No description provided for @onboardingFriendsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Build your crew'**
-  String get onboardingFriendsTitle;
-
-  /// No description provided for @onboardingFriendsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Add friends, see their music profiles, and stay connected through your shared passion for music.'**
-  String get onboardingFriendsDesc;
+  /// **'Connect with friends, chat about music, and share your song of the day.'**
+  String get onboardingConnectDesc;
 
   /// No description provided for @onboardingNext.
   ///
@@ -991,7 +967,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingGetStarted.
   ///
   /// In en, this message translates to:
-  /// **'Get started'**
+  /// **'Let\'s go'**
   String get onboardingGetStarted;
 
   /// No description provided for @onboardingSkip.

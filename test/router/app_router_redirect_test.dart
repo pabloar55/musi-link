@@ -72,9 +72,39 @@ void main() {
     });
   });
 
-  // ── Estado 3: autenticado, sin username ───────────────────────
+  // ── Estado 3: autenticado, sin onboarding ─────────────────────
+  // Nuevo flujo: onboarding es el primer paso tras login
 
-  group('logged in, no username', () {
+  group('logged in, no onboarding', () {
+    setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
+
+    test('cualquier ruta → /onboarding', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: false,
+            artistsSelected: false,
+            onboardingDone: false,
+            photoSetupDone: false);
+      expect(appRedirect(n, '/'), '/onboarding');
+      expect(appRedirect(n, '/auth'), '/onboarding');
+      n.dispose();
+    });
+
+    test('ya en /onboarding → sin redirect', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: false,
+            artistsSelected: false,
+            onboardingDone: false,
+            photoSetupDone: false);
+      expect(appRedirect(n, '/onboarding'), isNull);
+      n.dispose();
+    });
+  });
+
+  // ── Estado 4: onboarding completado, sin username ─────────────
+
+  group('logged in + onboarding done, no username', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
     test('cualquier ruta → /username-setup', () {
@@ -82,7 +112,7 @@ void main() {
         ..setInitialized(
             usernameSet: false,
             artistsSelected: false,
-            onboardingDone: false,
+            onboardingDone: true,
             photoSetupDone: false);
       expect(appRedirect(n, '/'), '/username-setup');
       expect(appRedirect(n, '/auth'), '/username-setup');
@@ -94,80 +124,23 @@ void main() {
         ..setInitialized(
             usernameSet: false,
             artistsSelected: false,
-            onboardingDone: false,
+            onboardingDone: true,
             photoSetupDone: false);
       expect(appRedirect(n, '/username-setup'), isNull);
       n.dispose();
     });
   });
 
-  // ── Estado 4: autenticado + username, sin artistas ────────────
+  // ── Estado 5: onboarding + username, sin foto ─────────────────
 
-  group('logged in + username, no artists selected', () {
-    setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
-
-    test('cualquier ruta → /artist-select', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: false,
-            onboardingDone: false,
-            photoSetupDone: false);
-      expect(appRedirect(n, '/'), '/artist-select');
-      expect(appRedirect(n, '/auth'), '/artist-select');
-      n.dispose();
-    });
-
-    test('ya en /artist-select → sin redirect', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: false,
-            onboardingDone: false,
-            photoSetupDone: false);
-      expect(appRedirect(n, '/artist-select'), isNull);
-      n.dispose();
-    });
-  });
-
-  // ── Estado 5: artistas seleccionados, sin onboarding ──────────
-
-  group('logged in + artists, no onboarding', () {
-    setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
-
-    test('cualquier ruta → /onboarding', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: true,
-            onboardingDone: false,
-            photoSetupDone: false);
-      expect(appRedirect(n, '/'), '/onboarding');
-      n.dispose();
-    });
-
-    test('ya en /onboarding → sin redirect', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: true,
-            onboardingDone: false,
-            photoSetupDone: false);
-      expect(appRedirect(n, '/onboarding'), isNull);
-      n.dispose();
-    });
-  });
-
-  // ── Estado 6: onboarding completado, sin foto de perfil ────────
-
-  group('logged in + onboarding done, no photo setup', () {
+  group('logged in + onboarding + username, no photo setup', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
     test('cualquier ruta → /photo-setup', () {
       final n = buildNotifier()
         ..setInitialized(
             usernameSet: true,
-            artistsSelected: true,
+            artistsSelected: false,
             onboardingDone: true,
             photoSetupDone: false);
       expect(appRedirect(n, '/'), '/photo-setup');
@@ -178,10 +151,38 @@ void main() {
       final n = buildNotifier()
         ..setInitialized(
             usernameSet: true,
-            artistsSelected: true,
+            artistsSelected: false,
             onboardingDone: true,
             photoSetupDone: false);
       expect(appRedirect(n, '/photo-setup'), isNull);
+      n.dispose();
+    });
+  });
+
+  // ── Estado 6: onboarding + username + foto, sin artistas ──────
+
+  group('logged in + onboarding + username + photo, no artists', () {
+    setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
+
+    test('cualquier ruta → /artist-select', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: true,
+            artistsSelected: false,
+            onboardingDone: true,
+            photoSetupDone: true);
+      expect(appRedirect(n, '/'), '/artist-select');
+      n.dispose();
+    });
+
+    test('ya en /artist-select → sin redirect', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: true,
+            artistsSelected: false,
+            onboardingDone: true,
+            photoSetupDone: true);
+      expect(appRedirect(n, '/artist-select'), isNull);
       n.dispose();
     });
   });
@@ -200,10 +201,10 @@ void main() {
             photoSetupDone: true);
       expect(appRedirect(n, '/splash'), '/');
       expect(appRedirect(n, '/auth'), '/');
-      expect(appRedirect(n, '/username-setup'), '/');
-      expect(appRedirect(n, '/artist-select'), '/');
       expect(appRedirect(n, '/onboarding'), '/');
+      expect(appRedirect(n, '/username-setup'), '/');
       expect(appRedirect(n, '/photo-setup'), '/');
+      expect(appRedirect(n, '/artist-select'), '/');
       n.dispose();
     });
 
@@ -227,52 +228,52 @@ void main() {
   group('state transitions', () {
     setUp(() => when(() => mockAuth.currentUser).thenReturn(mockUser));
 
-    test('setUsernameSet avanza a /artist-select', () {
+    test('setOnboardingDone avanza a /username-setup', () {
       final n = buildNotifier()
         ..setInitialized(
             usernameSet: false,
             artistsSelected: false,
             onboardingDone: false,
             photoSetupDone: false)
-        ..setUsernameSet();
-      expect(appRedirect(n, '/'), '/artist-select');
+        ..setOnboardingDone();
+      expect(appRedirect(n, '/'), '/username-setup');
       n.dispose();
     });
 
-    test('setArtistsSelected avanza al paso de onboarding', () {
+    test('setUsernameSet avanza a /photo-setup', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: false,
+            artistsSelected: false,
+            onboardingDone: true,
+            photoSetupDone: false)
+        ..setUsernameSet();
+      expect(appRedirect(n, '/'), '/photo-setup');
+      n.dispose();
+    });
+
+    test('setPhotoSetupDone avanza a /artist-select', () {
       final n = buildNotifier()
         ..setInitialized(
             usernameSet: true,
             artistsSelected: false,
-            onboardingDone: false,
-            photoSetupDone: false)
-        ..setArtistsSelected(onboardingDone: false);
-      expect(appRedirect(n, '/'), '/onboarding');
-      n.dispose();
-    });
-
-    test('setOnboardingDone avanza a /photo-setup', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: true,
-            onboardingDone: false,
-            photoSetupDone: false)
-        ..setOnboardingDone();
-      expect(appRedirect(n, '/onboarding'), '/photo-setup');
-      expect(appRedirect(n, '/photo-setup'), isNull);
-      n.dispose();
-    });
-
-    test('setPhotoSetupDone avanza a main y desbloquea app', () {
-      final n = buildNotifier()
-        ..setInitialized(
-            usernameSet: true,
-            artistsSelected: true,
             onboardingDone: true,
             photoSetupDone: false)
         ..setPhotoSetupDone();
-      expect(appRedirect(n, '/photo-setup'), '/');
+      expect(appRedirect(n, '/photo-setup'), '/artist-select');
+      expect(appRedirect(n, '/artist-select'), isNull);
+      n.dispose();
+    });
+
+    test('setArtistsSelected desbloquea la app', () {
+      final n = buildNotifier()
+        ..setInitialized(
+            usernameSet: true,
+            artistsSelected: false,
+            onboardingDone: true,
+            photoSetupDone: true)
+        ..setArtistsSelected();
+      expect(appRedirect(n, '/artist-select'), '/');
       expect(appRedirect(n, '/'), isNull);
       n.dispose();
     });

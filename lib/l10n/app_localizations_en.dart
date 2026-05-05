@@ -469,41 +469,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingDiscoverDesc =>
-      'Find people with similar music taste and discover how compatible you are based on your top artists and genres.';
+      'MusiLink connects you with people who share your music taste. See how compatible you are based on your favourite artists.';
 
   @override
-  String get onboardingStatsTitle => 'Your music stats';
+  String get onboardingProfileTitle => 'Build your music profile';
 
   @override
-  String get onboardingStatsDesc =>
-      'Create your own top artists and genres. See how your taste compares with other people.';
+  String get onboardingProfileDesc =>
+      'Add the artists you love most. The more you add, the better your matches — and the more people you\'ll discover.';
 
   @override
-  String get onboardingDailySongTitle => 'Song of the day';
+  String get onboardingConnectTitle => 'Chat, share, connect';
 
   @override
-  String get onboardingDailySongDesc =>
-      'Choose a song each day to share with your friends. See what they\'re listening to and discover new music together.';
-
-  @override
-  String get onboardingChatTitle => 'Chat about music';
-
-  @override
-  String get onboardingChatDesc =>
-      'Start conversations and share songs. Talk about the music you love with people who get it.';
-
-  @override
-  String get onboardingFriendsTitle => 'Build your crew';
-
-  @override
-  String get onboardingFriendsDesc =>
-      'Add friends, see their music profiles, and stay connected through your shared passion for music.';
+  String get onboardingConnectDesc =>
+      'Connect with friends, chat about music, and share your song of the day.';
 
   @override
   String get onboardingNext => 'Next';
 
   @override
-  String get onboardingGetStarted => 'Get started';
+  String get onboardingGetStarted => 'Let\'s go';
 
   @override
   String get onboardingSkip => 'Skip';

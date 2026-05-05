@@ -480,41 +480,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingDiscoverDesc =>
-      'Trouvez des personnes aux goûts musicaux similaires et découvrez votre compatibilité selon vos artistes et genres préférés.';
+      'MusiLink vous connecte avec des personnes qui partagent vos goûts musicaux. Découvrez votre compatibilité selon vos artistes préférés.';
 
   @override
-  String get onboardingStatsTitle => 'Vos statistiques';
+  String get onboardingProfileTitle => 'Construisez votre profil musical';
 
   @override
-  String get onboardingStatsDesc =>
-      'Créez votre propre top d\'artistes et de genres. Découvrez comment vos goûts se comparent à ceux des autres.';
+  String get onboardingProfileDesc =>
+      'Ajoutez les artistes que vous écoutez le plus. Plus vous en ajoutez, meilleures sont vos correspondances et plus vous découvrez de personnes.';
 
   @override
-  String get onboardingDailySongTitle => 'Chanson du jour';
+  String get onboardingConnectTitle => 'Chattez, partagez, connectez';
 
   @override
-  String get onboardingDailySongDesc =>
-      'Choisissez une chanson chaque jour à partager avec vos amis. Découvrez ce qu\'ils écoutent et trouvez de la nouvelle musique ensemble.';
-
-  @override
-  String get onboardingChatTitle => 'Discutez de musique';
-
-  @override
-  String get onboardingChatDesc =>
-      'Lancez des conversations et partagez des chansons. Parlez de la musique que vous aimez avec des gens qui la comprennent.';
-
-  @override
-  String get onboardingFriendsTitle => 'Créez votre groupe';
-
-  @override
-  String get onboardingFriendsDesc =>
-      'Ajoutez des amis, consultez leurs profils musicaux et restez connectés grâce à votre passion commune pour la musique.';
+  String get onboardingConnectDesc =>
+      'Connectez-vous avec des amis, parlez de musique et partagez votre chanson du jour.';
 
   @override
   String get onboardingNext => 'Suivant';
 
   @override
-  String get onboardingGetStarted => 'Commencer';
+  String get onboardingGetStarted => 'C\'est parti !';
 
   @override
   String get onboardingSkip => 'Passer';

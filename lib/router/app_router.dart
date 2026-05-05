@@ -88,9 +88,8 @@ class AppRouterNotifier extends ChangeNotifier {
 
   /// Llamar después de seleccionar artistas para que el router re-evalúe
   /// y navegue automáticamente al siguiente paso.
-  void setArtistsSelected({required bool onboardingDone}) {
+  void setArtistsSelected() {
     _artistsSelected = true;
-    _onboardingDone = onboardingDone;
     notifyListeners();
   }
 
@@ -123,25 +122,25 @@ String? appRedirect(AppRouterNotifier notifier, String location) {
   if (!notifier.isLoggedIn) {
     return location == '/auth' ? null : '/auth';
   }
-  if (!notifier.usernameSet) {
-    return location == '/username-setup' ? null : '/username-setup';
-  }
-  if (!notifier.artistsSelected) {
-    return location == '/artist-select' ? null : '/artist-select';
-  }
   if (!notifier.onboardingDone) {
     return location == '/onboarding' ? null : '/onboarding';
+  }
+  if (!notifier.usernameSet) {
+    return location == '/username-setup' ? null : '/username-setup';
   }
   if (!notifier.photoSetupDone) {
     return location == '/photo-setup' ? null : '/photo-setup';
   }
+  if (!notifier.artistsSelected) {
+    return location == '/artist-select' ? null : '/artist-select';
+  }
   // Usuario listo: evitar que se quede en pantallas de setup
   if (location == '/splash' ||
       location == '/auth' ||
-      location == '/username-setup' ||
-      location == '/artist-select' ||
       location == '/onboarding' ||
-      location == '/photo-setup') {
+      location == '/username-setup' ||
+      location == '/photo-setup' ||
+      location == '/artist-select') {
     return '/';
   }
   return null;

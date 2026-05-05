@@ -22,7 +22,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  static const int _totalPages = 5;
+  static const int _totalPages = 3;
 
   @override
   void dispose() {
@@ -61,24 +61,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         description: l10n.onboardingDiscoverDesc,
       ),
       OnboardingPage(
-        icon: LucideIcons.chartBar,
-        title: l10n.onboardingStatsTitle,
-        description: l10n.onboardingStatsDesc,
-      ),
-      OnboardingPage(
         icon: LucideIcons.music,
-        title: l10n.onboardingDailySongTitle,
-        description: l10n.onboardingDailySongDesc,
-      ),
-      OnboardingPage(
-        icon: LucideIcons.messageCircle,
-        title: l10n.onboardingChatTitle,
-        description: l10n.onboardingChatDesc,
+        title: l10n.onboardingProfileTitle,
+        description: l10n.onboardingProfileDesc,
       ),
       OnboardingPage(
         icon: LucideIcons.users,
-        title: l10n.onboardingFriendsTitle,
-        description: l10n.onboardingFriendsDesc,
+        title: l10n.onboardingConnectTitle,
+        description: l10n.onboardingConnectDesc,
       ),
     ];
 
