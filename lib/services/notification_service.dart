@@ -132,6 +132,8 @@ class NotificationService {
     await _requestPermissionAndSaveToken();
   }
 
+  Future<void> saveTokenIfGranted() async => _saveTokenIfGranted();
+
   Future<void> _saveTokenIfGranted() async {
     final settings = await _messaging.getNotificationSettings();
     final granted =
