@@ -6,6 +6,7 @@ import {
 import { logger } from 'firebase-functions/v2';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 export { searchSpotifyArtists, searchSpotifyTracks } from './spotify';
+export { getSimilarArtists } from './lastfm';
 
 admin.initializeApp();
 

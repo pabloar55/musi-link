@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onFriendRequestAccepted = exports.onFriendRequest = exports.onUserMusicProfileChanged = exports.onUserMusicProfileCreated = exports.onNewMessage = exports.searchSpotifyTracks = exports.searchSpotifyArtists = void 0;
+exports.onFriendRequestAccepted = exports.onFriendRequest = exports.onUserMusicProfileChanged = exports.onUserMusicProfileCreated = exports.onNewMessage = exports.getSimilarArtists = exports.searchSpotifyTracks = exports.searchSpotifyArtists = void 0;
 const admin = require("firebase-admin");
 const firestore_1 = require("firebase-functions/v2/firestore");
 const v2_1 = require("firebase-functions/v2");
@@ -8,6 +8,8 @@ const firestore_2 = require("firebase-admin/firestore");
 var spotify_1 = require("./spotify");
 Object.defineProperty(exports, "searchSpotifyArtists", { enumerable: true, get: function () { return spotify_1.searchSpotifyArtists; } });
 Object.defineProperty(exports, "searchSpotifyTracks", { enumerable: true, get: function () { return spotify_1.searchSpotifyTracks; } });
+var lastfm_1 = require("./lastfm");
+Object.defineProperty(exports, "getSimilarArtists", { enumerable: true, get: function () { return lastfm_1.getSimilarArtists; } });
 admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();

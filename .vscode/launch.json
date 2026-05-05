@@ -4,28 +4,19 @@
         {
             "name": "musi_link (debug)",
             "request": "launch",
-            "type": "dart",
-            "toolArgs": [
-                "--dart-define-from-file=.env.json"
-            ]
+            "type": "dart"
         },
         {
             "name": "musi_link (profile)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile",
-            "toolArgs": [
-                "--dart-define-from-file=.env.json"
-            ]
+            "flutterMode": "profile"
         },
         {
             "name": "musi_link (release)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release",
-            "toolArgs": [
-                "--dart-define-from-file=.env.json"
-            ]
+            "flutterMode": "release"
         }
     ]
 }

@@ -100,7 +100,7 @@ final Provider<SpotifyCloudService> spotifyClientServiceProvider =
 final Provider<LastFmService> lastFmServiceProvider = Provider<LastFmService>((
   ref,
 ) {
-  return LastFmService(apiKey: const String.fromEnvironment('LASTFM_API_KEY'));
+  return LastFmService(ref.watch(firebaseFunctionsProvider));
 });
 
 final Provider<MusicCatalogService> musicCatalogServiceProvider =
