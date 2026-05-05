@@ -21,6 +21,7 @@ class UserDiscoveryCard extends StatelessWidget {
     final user = result.user;
     final score = result.score.round();
     final isHighScore = score >= 70;
+    final isMediumScore = score >= 40;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -46,7 +47,9 @@ class UserDiscoveryCard extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: isHighScore
                           ? [AppTokens.spotifyGreen, AppTokens.spotifyGreenDark]
-                          : [cs.outline, cs.outlineVariant],
+                          : isMediumScore
+                              ? [cs.secondary, cs.secondary.withAlpha(180)]
+                              : [cs.outline, cs.outlineVariant],
                     ),
                   ),
                 ),
@@ -89,10 +92,12 @@ class UserDiscoveryCard extends StatelessWidget {
                               ),
                               const SizedBox(height: AppTokens.spaceXS),
 
-                              if (result.sharedArtistNames.isNotEmpty)
+                              if (result.user.topArtistNames.isNotEmpty ||
+                                  result.sharedArtistNames.isNotEmpty)
                                 _MetaRow(
                                   icon: LucideIcons.music,
-                                  text: result.sharedArtistNames.join(', '),
+                                  sharedArtists: result.sharedArtistNames,
+                                  allArtists: result.user.topArtistNames,
                                   colorScheme: cs,
                                   textTheme: tt,
                                 ),
@@ -217,32 +222,95 @@ class _ScoreBadge extends StatelessWidget {
 
 class _MetaRow extends StatelessWidget {
   final IconData icon;
-  final String text;
+  final List<String> sharedArtists;
+  final List<String> allArtists;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
 
   const _MetaRow({
     required this.icon,
-    required this.text,
+    required this.sharedArtists,
+    required this.allArtists,
     required this.colorScheme,
     required this.textTheme,
   });
 
   @override
   Widget build(BuildContext context) {
+    final sharedSet = sharedArtists.map((a) => a.toLowerCase()).toSet();
+    final extras = allArtists
+        .where((a) => !sharedSet.contains(a.toLowerCase()))
+        .take(5 - sharedArtists.length)
+        .toList();
+    final artists = [...sharedArtists, ...extras].take(5).toList();
+
     return Row(
       children: [
         Icon(icon, size: 15, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: AppTokens.spaceXS),
         Expanded(
-          child: Text(
-            text,
-            style: textTheme.bodySmall,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: _FadingScroll(
+            child: Row(
+              children: artists.map((artist) {
+                final isShared = sharedSet.contains(artist.toLowerCase());
+                if (isShared) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTokens.spotifyGreen.withAlpha(30),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+
+                      ),
+                      child: Text(
+                        artist,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: AppTokens.spotifyGreen,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(
+                    artist,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FadingScroll extends StatelessWidget {
+  final Widget child;
+  const _FadingScroll({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [Colors.white, Colors.white, Colors.transparent],
+        stops: [0.0, 0.75, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+      blendMode: BlendMode.dstIn,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        child: child,
+      ),
     );
   }
 }
@@ -266,8 +334,7 @@ class _GenreRow extends StatelessWidget {
         Icon(LucideIcons.tag, size: 15, color: cs.onSurfaceVariant),
         const SizedBox(width: AppTokens.spaceXS),
         Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          child: _FadingScroll(
             child: Row(
               children: genres
                   .take(3)
