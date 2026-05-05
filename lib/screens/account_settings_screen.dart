@@ -229,7 +229,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isDarkMode = ref.watch(isDarkProvider);
     final vibrationEnabled = ref.watch(vibrationEnabledProvider);
-    final analyticsEnabled = ref.watch(analyticsEnabledProvider);
+    final soundEnabled = ref.watch(soundEnabledProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -284,18 +284,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               _SettingsCard(
                 children: [
                   _SwitchTile(
+                    icon: LucideIcons.volume2,
+                    label: l10n.settingsSound,
+                    value: soundEnabled,
+                    onChanged: (_) =>
+                        ref.read(soundEnabledProvider.notifier).toggle(),
+                  ),
+                  _SwitchTile(
                     icon: LucideIcons.vibrate,
                     label: l10n.settingsVibration,
                     value: vibrationEnabled,
                     onChanged: (_) =>
                         ref.read(vibrationEnabledProvider.notifier).toggle(),
-                  ),
-                  _SwitchTile(
-                    icon: LucideIcons.chartBar,
-                    label: l10n.settingsAnalytics,
-                    value: analyticsEnabled,
-                    onChanged: (_) =>
-                        ref.read(analyticsEnabledProvider.notifier).toggle(),
                   ),
                 ],
               ),

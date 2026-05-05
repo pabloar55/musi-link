@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/shared_preferences_provider.dart';
-import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/theme_provider.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/theme/app_theme.dart';
@@ -38,9 +37,7 @@ void main() async {
   };
 
   final prefs = await SharedPreferences.getInstance();
-  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
-    prefs.getBool(kAnalyticsEnabledKey) ?? false,
-  );
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
   runApp(
     ProviderScope(

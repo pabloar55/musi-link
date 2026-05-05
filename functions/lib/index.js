@@ -40,10 +40,22 @@ const notificationText = {
     },
 };
 // ── Helper ────────────────────────────────────────────────────────────────────
-async function sendNotification(recipientUid, token, notification, data, 
+function notifChannelId(sound, vibration) {
+    if (sound && vibration)
+        return 'musilink_high';
+    if (sound && !vibration)
+        return 'musilink_high_no_vibration';
+    if (!sound && vibration)
+        return 'musilink_high_no_sound';
+    return 'musilink_high_silent';
+}
+async function sendNotification(recipientUid, recipientPrivateData, token, notification, data, 
 // Notifications with the same tag replace each other in the drawer,
 // keeping one entry per conversation instead of an unbounded stack.
 tag) {
+    const sound = recipientPrivateData?.notifSound !== false;
+    const vibration = recipientPrivateData?.notifVibration !== false;
+    const channelId = notifChannelId(sound, vibration);
     try {
         await messaging.send({
             token,
@@ -51,9 +63,12 @@ tag) {
             data,
             android: {
                 priority: 'high',
-                ...(tag ? { notification: { tag } } : {}),
+                notification: {
+                    channelId,
+                    ...(tag ? { tag } : {}),
+                },
             },
-            apns: { payload: { aps: { sound: 'default' } } },
+            apns: { payload: { aps: { sound: sound ? 'default' : '' } } },
         });
     }
     catch (error) {
@@ -374,7 +389,7 @@ exports.onNewMessage = (0, firestore_1.onDocumentCreated)({ document: 'chats/{ch
         const senderName = senderSnap.data()?.displayName;
         if (!fcmToken || !senderName)
             return;
-        await sendNotification(recipientId, fcmToken, { title: senderName, body: message.text ?? '📎' }, {
+        await sendNotification(recipientId, recipientSnap.data(), fcmToken, { title: senderName, body: message.text ?? '📎' }, {
             type: 'new_message',
             chatId,
             otherUserId: senderId,
@@ -445,7 +460,7 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
         if (!fcmToken || !senderName)
             return;
         const locale = preferredLocale(receiver);
-        await sendNotification(receiverId, fcmToken, { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) }, { type: 'friend_request', senderId });
+        await sendNotification(receiverId, receiver, fcmToken, { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) }, { type: 'friend_request', senderId });
     }
     catch (error) {
         v2_1.logger.error('onFriendRequest: unhandled error', { requestId: event.params.requestId, error });
@@ -473,7 +488,7 @@ exports.onFriendRequestAccepted = (0, firestore_1.onDocumentUpdated)({ document:
         if (!fcmToken || !accepterName)
             return;
         const locale = preferredLocale(sender);
-        await sendNotification(senderId, fcmToken, { title: 'MusiLink', body: notificationText.friendRequestAccepted[locale](accepterName) }, { type: 'friend_request_accepted', accepterId: receiverId });
+        await sendNotification(senderId, sender, fcmToken, { title: 'MusiLink', body: notificationText.friendRequestAccepted[locale](accepterName) }, { type: 'friend_request_accepted', accepterId: receiverId });
         await db.doc(event.document).delete();
     }
     catch (error) {

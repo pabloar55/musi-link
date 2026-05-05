@@ -542,7 +542,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVibration => 'Vibración';
 
   @override
-  String get settingsAnalytics => 'Analítica';
+  String get settingsSound => 'Sonido';
 
   @override
   String get settingsLegal => 'Legal';
@@ -581,7 +581,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get privacyTitle => 'Política de privacidad';
 
   @override
-  String get privacyLastUpdated => 'Última actualización: 6 de abril de 2026';
+  String get privacyLastUpdated => 'Última actualización: 5 de mayo de 2026';
 
   @override
   String get privacyS1Title => '1. Responsable del tratamiento';
@@ -595,14 +595,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'Recogemos y tratamos los siguientes datos personales:\n\n• Datos de cuenta: nombre, dirección de correo electrónico, foto de perfil e identificadores de inicio de sesión (mediante correo/contraseña o Google).\n\n• Datos de perfil musical: artistas principales que eliges, géneros principales inferidos, canción del día y canciones compartidas.\n\n• Datos sociales: mensajes, solicitudes de amistad y reacciones con emojis.\n\n• Datos técnicos: informes de fallos recopilados por Firebase Crashlytics y, solo si activas la opción de analítica en Ajustes, eventos de uso mediante Firebase Analytics.';
+      'Recogemos y tratamos los siguientes datos personales:\n\n• Datos de cuenta: nombre, dirección de correo electrónico, foto de perfil e identificadores de inicio de sesión (mediante correo/contraseña o Google).\n\n• Datos de perfil musical: artistas principales que eliges, géneros principales inferidos, canción del día y canciones compartidas.\n\n• Datos sociales: mensajes, solicitudes de amistad y reacciones con emojis.\n\n• Datos técnicos: informes de fallos recopilados por Firebase Crashlytics y eventos de uso recopilados por Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Cómo usamos tus datos';
 
   @override
   String get privacyS3Body =>
-      'Tus datos se tratan con las siguientes finalidades:\n\n• Prestación del servicio (cuenta, compatibilidad musical, descubrimiento, chat). Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Funciones de perfil musical: mostrar y comparar el gusto musical que has seleccionado. Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Estabilidad de la app: diagnóstico de errores y fallos. Base legal: interés legítimo (art. 6.1.f RGPD).\n\n• Analítica opcional: comprender cómo se usa la app para mejorarla. Base legal: consentimiento (art. 6.1.a RGPD), que puedes retirar desactivando Analítica en Ajustes.';
+      'Tus datos se tratan con las siguientes finalidades:\n\n• Prestación del servicio (cuenta, compatibilidad musical, descubrimiento, chat). Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Funciones de perfil musical: mostrar y comparar el gusto musical que has seleccionado. Base legal: ejecución de un contrato (art. 6.1.b RGPD).\n\n• Estabilidad de la app: diagnóstico de errores y fallos. Base legal: interés legítimo (art. 6.1.f RGPD).\n\n• Mejora de la app: comprender cómo se usa la app para mejorarla. Base legal: interés legítimo (art. 6.1.f RGPD).';
 
   @override
   String get privacyS4Title => '4. Servicios de terceros';

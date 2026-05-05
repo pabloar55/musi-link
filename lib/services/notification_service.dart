@@ -39,9 +39,14 @@ class NotificationService {
   static const _channelNoVibrationId = 'musilink_high_no_vibration';
   static const _channelNoVibrationName =
       'MusiLink Notifications (no vibration)';
+  static const _channelNoSoundId = 'musilink_high_no_sound';
+  static const _channelNoSoundName = 'MusiLink Notifications (no sound)';
+  static const _channelSilentId = 'musilink_high_silent';
+  static const _channelSilentName = 'MusiLink Notifications (silent)';
   static const _supportedPreferredLocales = {'en', 'es', 'fr'};
   static const _pendingClearUidKey = 'pending_fcm_clear_uid';
   static const kVibrationKey = 'notification_vibration';
+  static const kSoundKey = 'notification_sound';
   static const _permissionDialogShownKey = 'notification_pre_dialog_shown';
 
   Future<void> initialize() async {
@@ -74,6 +79,24 @@ class NotificationService {
         _channelNoVibrationName,
         importance: Importance.high,
         playSound: true,
+        enableVibration: false,
+      ),
+    );
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelNoSoundId,
+        _channelNoSoundName,
+        importance: Importance.high,
+        playSound: false,
+        enableVibration: true,
+      ),
+    );
+    await androidPlugin?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _channelSilentId,
+        _channelSilentName,
+        importance: Importance.high,
+        playSound: false,
         enableVibration: false,
       ),
     );
@@ -199,8 +222,19 @@ class NotificationService {
     final chatId = message.data['chatId'] as String?;
     if (chatId != null && chatId == _getActiveChatId()) return;
     final vibrate = _prefs.getBool(kVibrationKey) ?? true;
-    final channelId = vibrate ? _channelId : _channelNoVibrationId;
-    final channelName = vibrate ? _channelName : _channelNoVibrationName;
+    final sound = _prefs.getBool(kSoundKey) ?? true;
+    final channelId = switch ((sound, vibrate)) {
+      (true, true) => _channelId,
+      (true, false) => _channelNoVibrationId,
+      (false, true) => _channelNoSoundId,
+      (false, false) => _channelSilentId,
+    };
+    final channelName = switch ((sound, vibrate)) {
+      (true, true) => _channelName,
+      (true, false) => _channelNoVibrationName,
+      (false, true) => _channelNoSoundName,
+      (false, false) => _channelSilentName,
+    };
     // Messages from the same chat share a stable ID so they replace each
     // other in the notification drawer instead of stacking indefinitely.
     final notifId = chatId != null ? chatId.hashCode : n.hashCode;

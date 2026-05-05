@@ -1068,11 +1068,11 @@ abstract class AppLocalizations {
   /// **'Vibration'**
   String get settingsVibration;
 
-  /// No description provided for @settingsAnalytics.
+  /// No description provided for @settingsSound.
   ///
   /// In en, this message translates to:
-  /// **'Analytics'**
-  String get settingsAnalytics;
+  /// **'Sound'**
+  String get settingsSound;
 
   /// No description provided for @settingsLegal.
   ///
@@ -1143,7 +1143,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyLastUpdated.
   ///
   /// In en, this message translates to:
-  /// **'Last updated: 6 April 2026'**
+  /// **'Last updated: 5 May 2026'**
   String get privacyLastUpdated;
 
   /// No description provided for @privacyS1Title.
@@ -1167,7 +1167,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS2Body.
   ///
   /// In en, this message translates to:
-  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash reports collected by Firebase Crashlytics and, only if you enable analytics in Settings, usage events through Firebase Analytics.'**
+  /// **'We collect and process the following personal data:\n\n• Account data: name, email address, profile photo, and login identifiers (via email/password or Google Sign-In).\n\n• Music profile data: top artists you select, inferred top genres, daily song selections, and shared songs.\n\n• Social data: messages, friend requests, and emoji reactions.\n\n• Technical data: crash reports collected by Firebase Crashlytics and usage events collected by Firebase Analytics.'**
   String get privacyS2Body;
 
   /// No description provided for @privacyS3Title.
@@ -1179,7 +1179,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyS3Body.
   ///
   /// In en, this message translates to:
-  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• Optional analytics: understanding how users interact with the App to improve it. Legal basis: consent (Art. 6.1.a GDPR), which you can withdraw by disabling Analytics in Settings.'**
+  /// **'Your data is processed for the following purposes:\n\n• Providing the service (account, music compatibility, discovery, chat). Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• Music profile features: displaying and comparing your selected music taste. Legal basis: contract performance (Art. 6.1.b GDPR).\n\n• App stability: diagnosing crashes and errors. Legal basis: legitimate interest (Art. 6.1.f GDPR).\n\n• App improvement: understanding how users interact with the App to improve it. Legal basis: legitimate interest (Art. 6.1.f GDPR).'**
   String get privacyS3Body;
 
   /// No description provided for @privacyS4Title.

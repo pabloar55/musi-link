@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
-import 'package:musi_link/providers/notification_prefs_provider.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/router/go_router_provider.dart';
 import 'package:musi_link/screens/onboarding_screen.dart';
@@ -65,9 +64,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
 
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool(kAnalyticsEnabledKey) ?? false) {
-        unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
-      }
+      unawaited(FirebaseAnalytics.instance.logEvent(name: 'app_open'));
 
       // Comprobar si el usuario ya tiene perfil completo en Firestore
       final authUser = ref.read(firebaseAuthProvider).currentUser;

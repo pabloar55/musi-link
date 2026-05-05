@@ -69,8 +69,16 @@ const notificationText = {
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
+function notifChannelId(sound: boolean, vibration: boolean): string {
+  if (sound && vibration) return 'musilink_high';
+  if (sound && !vibration) return 'musilink_high_no_vibration';
+  if (!sound && vibration) return 'musilink_high_no_sound';
+  return 'musilink_high_silent';
+}
+
 async function sendNotification(
   recipientUid: string,
+  recipientPrivateData: admin.firestore.DocumentData | undefined,
   token: string,
   notification: { title: string; body: string },
   data: Record<string, string>,
@@ -78,6 +86,9 @@ async function sendNotification(
   // keeping one entry per conversation instead of an unbounded stack.
   tag?: string,
 ): Promise<void> {
+  const sound = recipientPrivateData?.notifSound !== false;
+  const vibration = recipientPrivateData?.notifVibration !== false;
+  const channelId = notifChannelId(sound, vibration);
   try {
     await messaging.send({
       token,
@@ -85,9 +96,12 @@ async function sendNotification(
       data,
       android: {
         priority: 'high',
-        ...(tag ? { notification: { tag } } : {}),
+        notification: {
+          channelId,
+          ...(tag ? { tag } : {}),
+        },
       },
-      apns: { payload: { aps: { sound: 'default' } } },
+      apns: { payload: { aps: { sound: sound ? 'default' : '' } } },
     });
   } catch (error: unknown) {
     const fcmError = error as { code?: string };
@@ -505,6 +519,7 @@ export const onNewMessage = onDocumentCreated(
 
       await sendNotification(
         recipientId,
+        recipientSnap.data(),
         fcmToken,
         { title: senderName, body: (message.text as string | undefined) ?? '📎' },
         {
@@ -594,6 +609,7 @@ export const onFriendRequest = onDocumentCreated(
 
       await sendNotification(
         receiverId,
+        receiver,
         fcmToken,
         { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) },
         { type: 'friend_request', senderId },
@@ -632,6 +648,7 @@ export const onFriendRequestAccepted = onDocumentUpdated(
 
       await sendNotification(
         senderId,
+        sender,
         fcmToken,
         { title: 'MusiLink', body: notificationText.friendRequestAccepted[locale](accepterName) },
         { type: 'friend_request_accepted', accepterId: receiverId },

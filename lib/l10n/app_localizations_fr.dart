@@ -553,7 +553,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsVibration => 'Vibration';
 
   @override
-  String get settingsAnalytics => 'Statistiques';
+  String get settingsSound => 'Son';
 
   @override
   String get settingsLegal => 'Informations légales';
@@ -592,7 +592,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get privacyTitle => 'Politique de confidentialité';
 
   @override
-  String get privacyLastUpdated => 'Dernière mise à jour : 6 avril 2026';
+  String get privacyLastUpdated => 'Dernière mise à jour : 5 mai 2026';
 
   @override
   String get privacyS1Title => '1. Responsable du traitement';
@@ -606,14 +606,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privacyS2Body =>
-      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage collectés par Firebase Crashlytics et, uniquement si vous activez les statistiques dans les réglages, événements d\'utilisation via Firebase Analytics.';
+      'Nous collectons et traitons les données personnelles suivantes :\n\n• Données de compte : nom, adresse e-mail, photo de profil et identifiants de connexion (via e-mail/mot de passe ou Google).\n\n• Données de profil musical : artistes favoris que vous sélectionnez, genres principaux déduits, chanson du jour et chansons partagées.\n\n• Données sociales : messages, demandes d\'amitié et réactions emoji.\n\n• Données techniques : rapports de plantage collectés par Firebase Crashlytics et événements d\'utilisation collectés par Firebase Analytics.';
 
   @override
   String get privacyS3Title => '3. Utilisation de vos données';
 
   @override
   String get privacyS3Body =>
-      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Statistiques facultatives : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : consentement (art. 6.1.a RGPD), que vous pouvez retirer en désactivant les statistiques dans les réglages.';
+      'Vos données sont traitées aux fins suivantes :\n\n• Fourniture du service (compte, compatibilité musicale, découverte, chat). Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Fonctionnalités de profil musical : affichage et comparaison des goûts musicaux que vous avez sélectionnés. Base légale : exécution d\'un contrat (art. 6.1.b RGPD).\n\n• Stabilité de l\'application : diagnostic des erreurs et plantages. Base légale : intérêt légitime (art. 6.1.f RGPD).\n\n• Amélioration de l\'application : comprendre l\'utilisation de l\'application pour l\'améliorer. Base légale : intérêt légitime (art. 6.1.f RGPD).';
 
   @override
   String get privacyS4Title => '4. Services tiers';
