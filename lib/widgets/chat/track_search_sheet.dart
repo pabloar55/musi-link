@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/widgets/skeleton_loader.dart';
 
 class TrackSearchSheet extends ConsumerStatefulWidget {
   final ValueChanged<Track> onTrackSelected;
@@ -100,7 +101,12 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
             ),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? SkeletonShimmer(
+                      child: ListView.builder(
+                        itemCount: 8,
+                        itemBuilder: (_, _) => const SkeletonSongTile(),
+                      ),
+                    )
                   : _results.isEmpty
                   ? Center(
                       child: Text(
