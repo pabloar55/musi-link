@@ -320,6 +320,19 @@ void main() {
       expect(result.sharedArtistNames, ['radiohead', 'queen']);
       expect(result.sharedGenreNames, ['rock']);
     });
+
+    test('normaliza aliases de generos e ignora tags ruidosos al comparar', () {
+      final result = MusicProfileService.calculateCompatibility(
+        myArtistNames: [],
+        myGenreNames: ['Hip-Hop', 'Canadian', 'seen live', 'R&B'],
+        otherUser: createUser(
+          topGenreNames: ['rap', 'rhythm and blues', '80s'],
+        ),
+      );
+
+      expect(result.score, 30.0);
+      expect(result.sharedGenreNames, ['hip hop', 'r&b']);
+    });
   });
 
   group('MusicProfileService discovery (backend recommendations)', () {

@@ -3,6 +3,7 @@ import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/models/track.dart' as app;
 import 'package:musi_link/services/last_fm_service.dart';
 import 'package:musi_link/services/spotify_cloud_service.dart';
+import 'package:musi_link/utils/genre_normalizer.dart';
 
 /// Búsqueda de catálogo musical y cálculo local del perfil musical manual.
 class MusicCatalogService {
@@ -15,7 +16,9 @@ class MusicCatalogService {
     final genreCount = <String, int>{};
     for (final artist in artists) {
       for (final genre in artist.genres) {
-        genreCount[genre] = (genreCount[genre] ?? 0) + 1;
+        final normalizedGenre = normalizeGenreName(genre);
+        if (normalizedGenre == null) continue;
+        genreCount[normalizedGenre] = (genreCount[normalizedGenre] ?? 0) + 1;
       }
     }
     if (genreCount.isEmpty) return [];

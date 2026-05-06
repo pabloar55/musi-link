@@ -10,6 +10,7 @@ import 'package:musi_link/services/authenticated_service.dart';
 import 'package:musi_link/services/music_catalog_service.dart';
 import 'package:musi_link/utils/error_reporter.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
+import 'package:musi_link/utils/genre_normalizer.dart';
 
 class MusicProfileService with AuthenticatedService {
   MusicProfileService(
@@ -259,12 +260,11 @@ class MusicProfileService with AuthenticatedService {
       }
 
       try {
-        final privateDoc = await _privateUsersRef
-            .doc(currentUid)
-            .get(options);
+        final privateDoc = await _privateUsersRef.doc(currentUid).get(options);
         final blockedUids = Set<String>.from(
-          (privateDoc.data()?['blockedUsers'] as List?)
-                  ?.map((e) => e.toString()) ??
+          (privateDoc.data()?['blockedUsers'] as List?)?.map(
+                (e) => e.toString(),
+              ) ??
               [],
         );
         if (blockedUids.isNotEmpty) {
@@ -305,8 +305,8 @@ class MusicProfileService with AuthenticatedService {
   }) {
     final myUniqueArtistNames = _uniqueMusicNames(myArtistNames);
     final otherUniqueArtistNames = _uniqueMusicNames(otherUser.topArtistNames);
-    final myUniqueGenreNames = _uniqueMusicNames(myGenreNames);
-    final otherUniqueGenreNames = _uniqueMusicNames(otherUser.topGenreNames);
+    final myUniqueGenreNames = _uniqueGenreNames(myGenreNames);
+    final otherUniqueGenreNames = _uniqueGenreNames(otherUser.topGenreNames);
     final myArtists = myUniqueArtistNames.map(_normalizedMusicKey).toSet();
     final myGenres = myUniqueGenreNames.map(_normalizedMusicKey).toSet();
     final sharedArtists = otherUniqueArtistNames
@@ -352,6 +352,9 @@ class MusicProfileService with AuthenticatedService {
     }
     return namesByKey.values.toList(growable: false);
   }
+
+  static List<String> _uniqueGenreNames(List<String> values) =>
+      normalizeGenreNames(values);
 
   static double _similarityScore({
     required int sharedCount,
