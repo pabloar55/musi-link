@@ -4,6 +4,7 @@ import { logger } from 'firebase-functions/v2';
 
 const spotifyClientId = defineSecret('SPOTIFY_CLIENT_ID');
 const spotifyClientSecret = defineSecret('SPOTIFY_CLIENT_SECRET');
+const lastFmApiKey = defineSecret('LASTFM_API_KEY');
 const defaultSpotifyMarket = 'ES';
 
 // Module-level cache — reused across warm instances (Spotify tokens last 3600 s).
@@ -100,6 +101,34 @@ function scoreArtistMatch(item: SpotifyArtistItem, queryKey: string, queryTokens
   return score;
 }
 
+async function getLastFmGenres(artistName: string, apiKey: string): Promise<string[]> {
+  try {
+    const url = new URL('https://ws.audioscrobbler.com/2.0/');
+    url.searchParams.set('method', 'artist.getTopTags');
+    url.searchParams.set('artist', artistName);
+    url.searchParams.set('api_key', apiKey);
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('autocorrect', '1');
+
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+
+    const data = await res.json() as {
+      toptags?: { tag?: Array<{ name: string; count: number }> };
+    };
+
+    const tags = data.toptags?.tag;
+    if (!Array.isArray(tags)) return [];
+
+    return tags
+      .filter((t) => t.count >= 10)
+      .slice(0, 5)
+      .map((t) => t.name.toLowerCase());
+  } catch {
+    return [];
+  }
+}
+
 // ── Exported types (mirror the Flutter app.Artist / app.Track models) ─────────
 
 interface ArtistResult {
@@ -119,7 +148,7 @@ interface TrackResult {
 // ── Function 1 — Search artists ───────────────────────────────────────────────
 
 export const searchSpotifyArtists = onCall(
-  { region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret] },
+  { region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret, lastFmApiKey] },
   async (request): Promise<ArtistResult[]> => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Login required');
 
@@ -162,7 +191,7 @@ export const searchSpotifyArtists = onCall(
     }));
     const hasExactMatch = rankedItems.some(({ nameKey }) => nameKey === queryKey);
 
-    return rankedItems
+    const filtered = rankedItems
       .filter(({ nameKey, score }) => {
         if (score <= 0) return false;
         if (!hasExactMatch) return true;
@@ -176,6 +205,15 @@ export const searchSpotifyArtists = onCall(
         genres: item.genres ?? [],
         spotifyId: item.id ?? null,
       }));
+
+    const apiKey = lastFmApiKey.value();
+    return await Promise.all(
+      filtered.map(async (artist) => {
+        if (artist.genres.length > 0) return artist;
+        const genres = await getLastFmGenres(artist.name, apiKey);
+        return { ...artist, genres };
+      }),
+    );
   },
 );
 

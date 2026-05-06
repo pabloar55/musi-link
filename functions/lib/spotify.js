@@ -6,6 +6,7 @@ const params_1 = require("firebase-functions/params");
 const v2_1 = require("firebase-functions/v2");
 const spotifyClientId = (0, params_1.defineSecret)('SPOTIFY_CLIENT_ID');
 const spotifyClientSecret = (0, params_1.defineSecret)('SPOTIFY_CLIENT_SECRET');
+const lastFmApiKey = (0, params_1.defineSecret)('LASTFM_API_KEY');
 const defaultSpotifyMarket = 'ES';
 // Module-level cache — reused across warm instances (Spotify tokens last 3600 s).
 let cachedToken = null;
@@ -89,8 +90,32 @@ function scoreArtistMatch(item, queryKey, queryTokens) {
         score -= 80;
     return score;
 }
+async function getLastFmGenres(artistName, apiKey) {
+    try {
+        const url = new URL('https://ws.audioscrobbler.com/2.0/');
+        url.searchParams.set('method', 'artist.getTopTags');
+        url.searchParams.set('artist', artistName);
+        url.searchParams.set('api_key', apiKey);
+        url.searchParams.set('format', 'json');
+        url.searchParams.set('autocorrect', '1');
+        const res = await fetch(url.toString());
+        if (!res.ok)
+            return [];
+        const data = await res.json();
+        const tags = data.toptags?.tag;
+        if (!Array.isArray(tags))
+            return [];
+        return tags
+            .filter((t) => t.count >= 10)
+            .slice(0, 5)
+            .map((t) => t.name.toLowerCase());
+    }
+    catch {
+        return [];
+    }
+}
 // ── Function 1 — Search artists ───────────────────────────────────────────────
-exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret] }, async (request) => {
+exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1', secrets: [spotifyClientId, spotifyClientSecret, lastFmApiKey] }, async (request) => {
     if (!request.auth)
         throw new https_1.HttpsError('unauthenticated', 'Login required');
     const query = request.data.query?.trim() ?? '';
@@ -121,7 +146,7 @@ exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1'
         score: scoreArtistMatch(item, queryKey, queryTokens),
     }));
     const hasExactMatch = rankedItems.some(({ nameKey }) => nameKey === queryKey);
-    return rankedItems
+    const filtered = rankedItems
         .filter(({ nameKey, score }) => {
         if (score <= 0)
             return false;
@@ -136,6 +161,13 @@ exports.searchSpotifyArtists = (0, https_1.onCall)({ region: 'europe-southwest1'
         imageUrl: item.images?.[0]?.url ?? '',
         genres: item.genres ?? [],
         spotifyId: item.id ?? null,
+    }));
+    const apiKey = lastFmApiKey.value();
+    return await Promise.all(filtered.map(async (artist) => {
+        if (artist.genres.length > 0)
+            return artist;
+        const genres = await getLastFmGenres(artist.name, apiKey);
+        return { ...artist, genres };
     }));
 });
 // ── Function 2 — Search tracks ────────────────────────────────────────────────
