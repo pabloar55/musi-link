@@ -15,7 +15,10 @@ void main() {
   late MockFirebaseFirestore mockFirestore;
   late MockFirebaseAuth mockAuth;
   late MockCollectionReference mockChatsRef;
+  late MockCollectionReference mockPrivateUsersRef;
   late MockCollectionReference mockRateLimitsRef;
+  late MockDocumentReference mockPrivateUserDocRef;
+  late MockDocumentSnapshot mockPrivateUserSnap;
   late MockUser mockCurrentUser;
   late ChatService chatService;
 
@@ -23,13 +26,26 @@ void main() {
     mockFirestore = MockFirebaseFirestore();
     mockAuth = MockFirebaseAuth();
     mockChatsRef = MockCollectionReference();
+    mockPrivateUsersRef = MockCollectionReference();
     mockRateLimitsRef = MockCollectionReference();
+    mockPrivateUserDocRef = MockDocumentReference();
+    mockPrivateUserSnap = MockDocumentSnapshot();
     mockCurrentUser = MockUser();
 
     when(() => mockFirestore.collection('chats')).thenReturn(mockChatsRef);
     when(
+      () => mockFirestore.collection('user_private'),
+    ).thenReturn(mockPrivateUsersRef);
+    when(
       () => mockFirestore.collection('rate_limits'),
     ).thenReturn(mockRateLimitsRef);
+    when(
+      () => mockPrivateUsersRef.doc('current_uid'),
+    ).thenReturn(mockPrivateUserDocRef);
+    when(
+      () => mockPrivateUserDocRef.get(),
+    ).thenAnswer((_) async => mockPrivateUserSnap);
+    when(() => mockPrivateUserSnap.data()).thenReturn({'blockedUsers': []});
     when(() => mockAuth.currentUser).thenReturn(mockCurrentUser);
     when(() => mockCurrentUser.uid).thenReturn('current_uid');
 
@@ -91,6 +107,17 @@ void main() {
           'other_uid',
         ]);
       });
+
+      test('rechaza abrir chat si el usuario esta bloqueado', () async {
+        when(() => mockPrivateUserSnap.data()).thenReturn({
+          'blockedUsers': ['other_uid'],
+        });
+
+        expect(
+          () => chatService.getOrCreateChat('other_uid'),
+          throwsA(isA<StateError>()),
+        );
+      });
     });
 
     group('sendMessage', () {
@@ -140,6 +167,21 @@ void main() {
         expect(limiterData['lastMessageAt'], isA<FieldValue>());
         expect(limiterData['messageWindowStart'], isA<FieldValue>());
         expect(limiterData['messageCount'], 1);
+      });
+
+      test('rechaza enviar mensaje a un usuario bloqueado', () async {
+        when(() => mockPrivateUserSnap.data()).thenReturn({
+          'blockedUsers': ['other_uid'],
+        });
+
+        expect(
+          () => chatService.sendMessage(
+            'chat_123',
+            'Hello!',
+            otherUid: 'other_uid',
+          ),
+          throwsA(isA<StateError>()),
+        );
       });
     });
 
@@ -553,6 +595,36 @@ void main() {
         // El contador se resetea incluso sin mensajes que marcar
         verify(() => mockChatDocRef.update(any())).called(1);
         verifyNever(() => mockFirestore.batch());
+      });
+
+      test('ignora permission-denied al resetear contador', () async {
+        final mockChatDocRef = MockDocumentReference();
+        final mockMessagesCol = MockMessagesCollectionRef();
+        final mockQuery1 = MockQuery();
+        final mockQuery2 = MockQuery();
+        final mockLimitQuery = MockQuery();
+        final mockSnapshot = MockQuerySnapshot();
+
+        when(() => mockChatsRef.doc('chat_123')).thenReturn(mockChatDocRef);
+        when(() => mockChatDocRef.update(any())).thenThrow(
+          FirebaseException(plugin: 'firestore', code: 'permission-denied'),
+        );
+        when(
+          () => mockChatDocRef.collection('messages'),
+        ).thenReturn(mockMessagesCol);
+        when(
+          () => mockMessagesCol.where('read', isEqualTo: false),
+        ).thenReturn(mockQuery1);
+        when(
+          () => mockQuery1.where('senderId', isNotEqualTo: 'current_uid'),
+        ).thenReturn(mockQuery2);
+        when(() => mockQuery2.limit(499)).thenReturn(mockLimitQuery);
+        when(() => mockLimitQuery.get()).thenAnswer((_) async => mockSnapshot);
+        when(() => mockSnapshot.docs).thenReturn([]);
+
+        await chatService.markMessagesAsRead('chat_123');
+
+        verify(() => mockChatDocRef.update(any())).called(1);
       });
     });
 

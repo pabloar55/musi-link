@@ -227,6 +227,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce compte a été supprimé. Vous ne pouvez plus envoyer de messages.';
 
   @override
+  String get chatBlockedCannotSend =>
+      'Vous pouvez voir l\'historique, mais pas envoyer de messages dans ce chat.';
+
+  @override
   String get chatSendFirst => 'Envoyez le premier message';
 
   @override
@@ -536,6 +540,46 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get photoSetupError =>
       'Impossible de télécharger la photo. Veuillez réessayer.';
+
+  @override
+  String get blockUserBlock => 'Bloquer l\'utilisateur';
+
+  @override
+  String get blockUserUnblock => 'Débloquer';
+
+  @override
+  String blockUserBlockConfirmTitle(String name) {
+    return 'Bloquer $name ?';
+  }
+
+  @override
+  String get blockUserBlockConfirmBody =>
+      'Cette personne sera retirée de votre liste d\'amis et n\'apparaîtra plus dans vos découvertes.';
+
+  @override
+  String get blockUserBlockConfirm => 'Bloquer';
+
+  @override
+  String blockUserBlockedSnackbar(String name) {
+    return '$name a été bloqué';
+  }
+
+  @override
+  String blockUserUnblockedSnackbar(String name) {
+    return '$name a été débloqué';
+  }
+
+  @override
+  String get settingsPrivacy => 'Confidentialité';
+
+  @override
+  String get settingsBlockedUsers => 'Utilisateurs bloqués';
+
+  @override
+  String get blockedUsersTitle => 'Utilisateurs bloqués';
+
+  @override
+  String get blockedUsersEmpty => 'Vous n\'avez bloqué aucun utilisateur';
 
   @override
   String get genericError => 'Une erreur s\'est produite. Veuillez réessayer.';

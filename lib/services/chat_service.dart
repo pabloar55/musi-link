@@ -23,6 +23,8 @@ class ChatService with AuthenticatedService {
   FirebaseAuth get auth => _auth;
   late final CollectionReference<Map<String, dynamic>> _chatsRef = _firestore
       .collection(FirestoreCollections.chats);
+  late final CollectionReference<Map<String, dynamic>> _privateUsersRef =
+      _firestore.collection(FirestoreCollections.userPrivate);
   late final CollectionReference<Map<String, dynamic>> _rateLimitsRef =
       _firestore.collection(FirestoreCollections.rateLimits);
 
@@ -42,6 +44,16 @@ class ChatService with AuthenticatedService {
     return '${sorted[0]}_${sorted[1]}';
   }
 
+  Future<void> _throwIfBlockedByMe(String otherUid) async {
+    final doc = await _privateUsersRef.doc(currentUid).get();
+    final blockedUsers = List<String>.from(
+      doc.data()?['blockedUsers'] as List? ?? const [],
+    );
+    if (blockedUsers.contains(otherUid)) {
+      throw StateError('Cannot interact with a blocked user.');
+    }
+  }
+
   /// Crea un chat entre el usuario actual y [otherUid].
   /// Si ya existe un chat entre ambos, devuelve el existente.
   ///
@@ -50,6 +62,8 @@ class ChatService with AuthenticatedService {
   /// tiempo, la transacción del segundo verá el documento ya creado y no
   /// generará un duplicado.
   Future<Chat> getOrCreateChat(String otherUid) async {
+    await _throwIfBlockedByMe(otherUid);
+
     final cached = _chatByOtherUid[otherUid];
     if (cached != null) return cached;
 
@@ -287,6 +301,8 @@ class ChatService with AuthenticatedService {
     if (!_isValidMessageText(trimmed)) {
       throw ArgumentError('Invalid message');
     }
+    await _throwIfBlockedByMe(otherUid);
+
     try {
       final now = DateTime.now();
       final message = Message(
@@ -402,6 +418,9 @@ class ChatService with AuthenticatedService {
       // interrumpe antes, la siguiente lectura del chat puede reintentar y
       // completar los ticks pendientes antes de limpiar el badge.
       await _chatsRef.doc(chatId).update({'unreadCounts.$currentUid': 0});
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') return;
+      await reportError(e, StackTrace.current);
     } catch (e, stack) {
       await reportError(e, stack);
     }
@@ -417,6 +436,7 @@ class ChatService with AuthenticatedService {
     if (!_isValidMessageText(text)) {
       throw ArgumentError('Invalid message');
     }
+    await _throwIfBlockedByMe(otherUid);
 
     try {
       final now = DateTime.now();
@@ -511,6 +531,9 @@ class ChatService with AuthenticatedService {
 
         transaction.update(msgRef, {'reactions': reactions});
       });
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') return;
+      await reportError(e, StackTrace.current);
     } catch (e, stack) {
       await reportError(e, stack);
     }

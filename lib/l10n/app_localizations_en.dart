@@ -222,6 +222,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This account has been deleted. You can no longer send messages.';
 
   @override
+  String get chatBlockedCannotSend =>
+      'You can view the history, but you cannot send messages in this chat.';
+
+  @override
   String get chatSendFirst => 'Send the first message';
 
   @override
@@ -524,6 +528,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoSetupError => 'Could not upload photo. Please try again.';
+
+  @override
+  String get blockUserBlock => 'Block user';
+
+  @override
+  String get blockUserUnblock => 'Unblock';
+
+  @override
+  String blockUserBlockConfirmTitle(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get blockUserBlockConfirmBody =>
+      'They will be removed from your friends list and won\'t appear in your discovery.';
+
+  @override
+  String get blockUserBlockConfirm => 'Block';
+
+  @override
+  String blockUserBlockedSnackbar(String name) {
+    return '$name has been blocked';
+  }
+
+  @override
+  String blockUserUnblockedSnackbar(String name) {
+    return '$name has been unblocked';
+  }
+
+  @override
+  String get settingsPrivacy => 'Privacy';
+
+  @override
+  String get settingsBlockedUsers => 'Blocked users';
+
+  @override
+  String get blockedUsersTitle => 'Blocked users';
+
+  @override
+  String get blockedUsersEmpty => 'You haven\'t blocked any users';
 
   @override
   String get genericError => 'Something went wrong. Please try again.';

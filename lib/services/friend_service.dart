@@ -9,7 +9,7 @@ import 'package:musi_link/models/friend_request.dart';
 import 'package:musi_link/utils/firestore_collections.dart';
 
 /// Estado de la relación entre el usuario actual y otro usuario.
-enum RelationshipStatus { none, requestSent, requestReceived, friends }
+enum RelationshipStatus { none, requestSent, requestReceived, friends, blocked }
 
 /// Resultado de consultar la relación con otro usuario.
 class RelationshipResult {
@@ -95,8 +95,13 @@ class FriendService with AuthenticatedService {
         }
 
         final currentUserSnap = await tx.get(currentUserRef);
+        final currentData = currentUserSnap.data() ?? {};
+        final blockedByMe = List<String>.from(
+          currentData['blockedUsers'] as List? ?? [],
+        );
+        if (blockedByMe.contains(receiverUid)) return;
         final friends = List<String>.from(
-          currentUserSnap.data()?['friends'] as List? ?? [],
+          currentData['friends'] as List? ?? [],
         );
         if (friends.contains(receiverUid)) return;
 
@@ -299,9 +304,12 @@ class FriendService with AuthenticatedService {
       final sent = results[1] as QuerySnapshot<Map<String, dynamic>>;
       final received = results[2] as QuerySnapshot<Map<String, dynamic>>;
 
-      final friends = List<String>.from(
-        userDoc.data()?['friends'] as List? ?? [],
-      );
+      final data = userDoc.data() ?? {};
+      final blocked = List<String>.from(data['blockedUsers'] as List? ?? []);
+      if (blocked.contains(otherUid)) {
+        return const RelationshipResult(RelationshipStatus.blocked);
+      }
+      final friends = List<String>.from(data['friends'] as List? ?? []);
       if (friends.contains(otherUid)) {
         return const RelationshipResult(RelationshipStatus.friends);
       }
@@ -334,9 +342,12 @@ class FriendService with AuthenticatedService {
     DocumentSnapshot<Map<String, dynamic>>? receivedDoc;
 
     RelationshipResult relationshipFromSnapshots() {
-      final friends = List<String>.from(
-        userDoc?.data()?['friends'] as List? ?? [],
-      );
+      final data = userDoc?.data() ?? {};
+      final blocked = List<String>.from(data['blockedUsers'] as List? ?? []);
+      if (blocked.contains(otherUid)) {
+        return const RelationshipResult(RelationshipStatus.blocked);
+      }
+      final friends = List<String>.from(data['friends'] as List? ?? []);
       if (friends.contains(otherUid)) {
         return const RelationshipResult(RelationshipStatus.friends);
       }
@@ -444,6 +455,80 @@ class FriendService with AuthenticatedService {
       await reportError(e, stack);
       rethrow;
     }
+  }
+
+  // ─── Bloquear usuarios ──────────────────────────────────
+
+  /// Bloquea a [otherUid]: lo añade a `blockedUsers`, elimina la amistad
+  /// y borra las solicitudes pendientes en ambas direcciones.
+  Future<void> blockUser(String otherUid) async {
+    if (otherUid == currentUid) return;
+    try {
+      final currentUserRef = _privateUsersRef.doc(currentUid);
+      final otherUserRef = _privateUsersRef.doc(otherUid);
+      final directRequestRef = _requestsRef.doc('${currentUid}_$otherUid');
+      final inverseRequestRef = _requestsRef.doc('${otherUid}_$currentUid');
+
+      await _firestore.runTransaction((tx) async {
+        final currentUserSnap = await tx.get(currentUserRef);
+        final directRequest = await tx.get(directRequestRef);
+        final inverseRequest = await tx.get(inverseRequestRef);
+        final currentFriends = List<String>.from(
+          currentUserSnap.data()?['friends'] as List? ?? const [],
+        );
+
+        tx.set(currentUserRef, {
+          'blockedUsers': FieldValue.arrayUnion([otherUid]),
+          'friends': FieldValue.arrayRemove([otherUid]),
+        }, SetOptions(merge: true));
+        if (currentFriends.contains(otherUid)) {
+          tx.update(otherUserRef, {
+            'friends': FieldValue.arrayRemove([currentUid]),
+          });
+        }
+        if (directRequest.exists) tx.delete(directRequestRef);
+        if (inverseRequest.exists) tx.delete(inverseRequestRef);
+      });
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
+  /// Desbloquea a [otherUid].
+  Future<void> unblockUser(String otherUid) async {
+    try {
+      await _privateUsersRef.doc(currentUid).update({
+        'blockedUsers': FieldValue.arrayRemove([otherUid]),
+      });
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
+  /// Devuelve la lista de UIDs bloqueados por el usuario actual.
+  Future<List<String>> getBlockedUsers() async {
+    try {
+      final doc = await _privateUsersRef.doc(currentUid).get();
+      if (!doc.exists) return const <String>[];
+      return List<String>.from(doc.data()?['blockedUsers'] as List? ?? []);
+    } catch (e, stack) {
+      await reportError(e, stack);
+      rethrow;
+    }
+  }
+
+  /// Stream en tiempo real de los UIDs bloqueados por el usuario actual.
+  Stream<List<String>> getBlockedUsersStream() {
+    return _privateUsersRef
+        .doc(currentUid)
+        .snapshots()
+        .handleError((e, st) => reportError(e, st).ignore())
+        .map((doc) {
+          if (!doc.exists) return <String>[];
+          return List<String>.from(doc.data()?['blockedUsers'] as List? ?? []);
+        });
   }
 
   // ─── Eliminar amigo ─────────────────────────────────────

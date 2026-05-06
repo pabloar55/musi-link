@@ -28,6 +28,8 @@ class MusicProfileService with AuthenticatedService {
 
   late final CollectionReference<Map<String, dynamic>> _usersRef = _firestore
       .collection(FirestoreCollections.users);
+  late final CollectionReference<Map<String, dynamic>> _privateUsersRef =
+      _firestore.collection(FirestoreCollections.userPrivate);
 
   List<DiscoveryResult>? _cachedResults;
   int _displayedCount = 0;
@@ -254,6 +256,22 @@ class MusicProfileService with AuthenticatedService {
                 const [],
           ),
         );
+      }
+
+      try {
+        final privateDoc = await _privateUsersRef
+            .doc(currentUid)
+            .get(options);
+        final blockedUids = Set<String>.from(
+          (privateDoc.data()?['blockedUsers'] as List?)
+                  ?.map((e) => e.toString()) ??
+              [],
+        );
+        if (blockedUids.isNotEmpty) {
+          results.removeWhere((r) => blockedUids.contains(r.user.uid));
+        }
+      } catch (_) {
+        // non-fatal: discovery proceeds without block filtering
       }
 
       return results.isEmpty ? null : results;

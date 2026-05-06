@@ -82,6 +82,7 @@
   "chatSearchSong": "Search song...",
   "chatShareSong": "Share song",
   "chatDeletedUser": "This account has been deleted. You can no longer send messages.",
+  "chatBlockedCannotSend": "You can view the history, but you cannot send messages in this chat.",
   "chatSendFirst": "Send the first message",
   "chatTypeToSearch": "Type to search songs",
   "chatNoResults": "No results",
@@ -225,6 +226,33 @@
   "photoSetupGallery": "Gallery",
   "photoSetupCamera": "Camera",
   "photoSetupError": "Could not upload photo. Please try again.",
+
+  "blockUserBlock": "Block user",
+  "blockUserUnblock": "Unblock",
+  "blockUserBlockConfirmTitle": "Block {name}?",
+  "@blockUserBlockConfirmTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserBlockConfirmBody": "They will be removed from your friends list and won't appear in your discovery.",
+  "blockUserBlockConfirm": "Block",
+  "blockUserBlockedSnackbar": "{name} has been blocked",
+  "@blockUserBlockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserUnblockedSnackbar": "{name} has been unblocked",
+  "@blockUserUnblockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsPrivacy": "Privacy",
+  "settingsBlockedUsers": "Blocked users",
+  "blockedUsersTitle": "Blocked users",
+  "blockedUsersEmpty": "You haven't blocked any users",
 
   "genericError": "Something went wrong. Please try again.",
 

@@ -678,6 +678,115 @@ void main() {
       });
     });
 
+    group('blockUser', () {
+      test('bloquea, elimina amistad y borra solicitudes existentes', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockCurrentUserDoc = MockDocumentReference();
+        final mockOtherUserDoc = MockDocumentReference();
+        final mockDirectRequestRef = MockDocumentReference();
+        final mockInverseRequestRef = MockDocumentReference();
+        final mockCurrentUserSnap = MockDocumentSnapshot();
+        final mockDirectRequestSnap = MockDocumentSnapshot();
+        final mockInverseRequestSnap = MockDocumentSnapshot();
+
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        when(() => mockUsersRef.doc('other_uid')).thenReturn(mockOtherUserDoc);
+        when(
+          () => mockRequestsRef.doc('current_uid_other_uid'),
+        ).thenReturn(mockDirectRequestRef);
+        when(
+          () => mockRequestsRef.doc('other_uid_current_uid'),
+        ).thenReturn(mockInverseRequestRef);
+        when(() => mockDirectRequestSnap.exists).thenReturn(true);
+        when(() => mockInverseRequestSnap.exists).thenReturn(true);
+        when(() => mockCurrentUserSnap.data()).thenReturn({
+          'friends': ['other_uid'],
+        });
+        fakeTransaction.getResults.addAll([
+          mockCurrentUserSnap,
+          mockDirectRequestSnap,
+          mockInverseRequestSnap,
+        ]);
+
+        await friendService.blockUser('other_uid');
+
+        expect(fakeTransaction.sets, hasLength(1));
+        expect(fakeTransaction.sets.first.key, mockCurrentUserDoc);
+        expect(fakeTransaction.sets.first.value.keys, contains('blockedUsers'));
+        expect(fakeTransaction.sets.first.value.keys, contains('friends'));
+        expect(fakeTransaction.updates, hasLength(1));
+        expect(fakeTransaction.updates.first.key, mockOtherUserDoc);
+        expect(fakeTransaction.updates.first.value.keys, contains('friends'));
+        expect(fakeTransaction.deletes, [
+          mockDirectRequestRef,
+          mockInverseRequestRef,
+        ]);
+      });
+
+      test('no borra solicitudes inexistentes al bloquear', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
+
+        final mockCurrentUserDoc = MockDocumentReference();
+        final mockOtherUserDoc = MockDocumentReference();
+        final mockDirectRequestRef = MockDocumentReference();
+        final mockInverseRequestRef = MockDocumentReference();
+        final mockCurrentUserSnap = MockDocumentSnapshot();
+        final mockDirectRequestSnap = MockDocumentSnapshot();
+        final mockInverseRequestSnap = MockDocumentSnapshot();
+
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        when(() => mockUsersRef.doc('other_uid')).thenReturn(mockOtherUserDoc);
+        when(
+          () => mockRequestsRef.doc('current_uid_other_uid'),
+        ).thenReturn(mockDirectRequestRef);
+        when(
+          () => mockRequestsRef.doc('other_uid_current_uid'),
+        ).thenReturn(mockInverseRequestRef);
+        when(() => mockDirectRequestSnap.exists).thenReturn(false);
+        when(() => mockInverseRequestSnap.exists).thenReturn(false);
+        when(() => mockCurrentUserSnap.data()).thenReturn({'friends': []});
+        fakeTransaction.getResults.addAll([
+          mockCurrentUserSnap,
+          mockDirectRequestSnap,
+          mockInverseRequestSnap,
+        ]);
+
+        await friendService.blockUser('other_uid');
+
+        expect(fakeTransaction.deletes, isEmpty);
+        expect(fakeTransaction.updates, isEmpty);
+      });
+    });
+
+    group('unblockUser', () {
+      test('elimina al usuario de blockedUsers', () async {
+        final mockCurrentUserDoc = MockDocumentReference();
+        when(
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        when(() => mockCurrentUserDoc.update(any())).thenAnswer((_) async {});
+
+        await friendService.unblockUser('other_uid');
+
+        verify(
+          () => mockCurrentUserDoc.update(
+            any(
+              that: predicate<Map<Object, Object?>>(
+                (m) => m.containsKey('blockedUsers'),
+              ),
+            ),
+          ),
+        ).called(1);
+      });
+    });
+
     group('removeFriend', () {
       test('elimina a ambos de sus listas de amigos', () async {
         final mockBatch = MockWriteBatch();
@@ -685,12 +794,21 @@ void main() {
 
         final mockCurrentUserDoc = MockDocumentReference();
         final mockOtherUserDoc = MockDocumentReference();
+        final mockDirectRequestRef = MockDocumentReference();
+        final mockInverseRequestRef = MockDocumentReference();
         when(
           () => mockUsersRef.doc('current_uid'),
         ).thenReturn(mockCurrentUserDoc);
         when(() => mockUsersRef.doc('other_uid')).thenReturn(mockOtherUserDoc);
+        when(
+          () => mockRequestsRef.doc('current_uid_other_uid'),
+        ).thenReturn(mockDirectRequestRef);
+        when(
+          () => mockRequestsRef.doc('other_uid_current_uid'),
+        ).thenReturn(mockInverseRequestRef);
 
         when(() => mockBatch.update(any(), any())).thenReturn(null);
+        when(() => mockBatch.delete(any())).thenReturn(null);
         when(() => mockBatch.commit()).thenAnswer((_) async {});
 
         await friendService.removeFriend('other_uid');
@@ -724,12 +842,21 @@ void main() {
 
         final mockCurrentUserDoc = MockDocumentReference();
         final mockOtherUserDoc = MockDocumentReference();
+        final mockDirectRequestRef = MockDocumentReference();
+        final mockInverseRequestRef = MockDocumentReference();
         when(
           () => mockUsersRef.doc('current_uid'),
         ).thenReturn(mockCurrentUserDoc);
         when(() => mockUsersRef.doc('other_uid')).thenReturn(mockOtherUserDoc);
+        when(
+          () => mockRequestsRef.doc('current_uid_other_uid'),
+        ).thenReturn(mockDirectRequestRef);
+        when(
+          () => mockRequestsRef.doc('other_uid_current_uid'),
+        ).thenReturn(mockInverseRequestRef);
 
         when(() => mockBatch.update(any(), any())).thenReturn(null);
+        when(() => mockBatch.delete(any())).thenReturn(null);
         when(
           () => mockBatch.commit(),
         ).thenThrow(FirebaseException(plugin: 'firestore'));

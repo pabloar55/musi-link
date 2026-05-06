@@ -16,6 +16,7 @@ class TrackBubble extends ConsumerStatefulWidget {
   final String currentUid;
   final String chatId;
   final ChatService chatService;
+  final bool reactionsEnabled;
 
   const TrackBubble({
     super.key,
@@ -25,6 +26,7 @@ class TrackBubble extends ConsumerStatefulWidget {
     required this.currentUid,
     required this.chatId,
     required this.chatService,
+    this.reactionsEnabled = true,
   });
 
   @override
@@ -42,6 +44,7 @@ class _TrackBubbleState extends ConsumerState<TrackBubble> {
   }
 
   void _showPicker() {
+    if (!widget.reactionsEnabled) return;
     _pickerEntry?.remove();
     _pickerEntry = OverlayEntry(
       builder: (_) => FloatingReactionPicker(
@@ -63,6 +66,7 @@ class _TrackBubbleState extends ConsumerState<TrackBubble> {
   }
 
   void _toggleReaction(String emoji) {
+    if (!widget.reactionsEnabled) return;
     widget.chatService.toggleReaction(widget.chatId, widget.message.id, emoji);
     ref.read(activeReactionPickerProvider.notifier).close();
   }
@@ -85,173 +89,180 @@ class _TrackBubbleState extends ConsumerState<TrackBubble> {
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onLongPress: () => ref
-          .read(activeReactionPickerProvider.notifier)
-          .toggle(widget.message.id),
+      onLongPress: widget.reactionsEnabled
+          ? () => ref
+                .read(activeReactionPickerProvider.notifier)
+                .toggle(widget.message.id)
+          : null,
       child: Align(
-          alignment:
-              widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
-            ),
-            child: Column(
-              crossAxisAlignment: widget.isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: AppTokens.spaceXS),
-                  child: CompositedTransformTarget(
-                    link: _layerLink,
-                    child: GestureDetector(
-                      onTap: track.spotifyUrl.isNotEmpty
-                          ? () async {
-                              final uri = Uri.parse(track.spotifyUrl);
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri,
-                                    mode: LaunchMode.externalApplication);
-                              }
+        alignment: widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          child: Column(
+            crossAxisAlignment: widget.isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: AppTokens.spaceXS),
+                child: CompositedTransformTarget(
+                  link: _layerLink,
+                  child: GestureDetector(
+                    onTap: track.spotifyUrl.isNotEmpty
+                        ? () async {
+                            final uri = Uri.parse(track.spotifyUrl);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
                             }
-                          : null,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: widget.isMe
-                              ? cs.primary
-                              : cs.surfaceContainerHighest,
-                          borderRadius: BorderRadius.only(
-                            topLeft:
-                                const Radius.circular(AppTokens.radiusLG),
-                            topRight:
-                                const Radius.circular(AppTokens.radiusLG),
-                            bottomLeft: Radius.circular(
-                                widget.isMe ? AppTokens.radiusLG : 4),
-                            bottomRight: Radius.circular(
-                                widget.isMe ? 4 : AppTokens.radiusLG),
+                          }
+                        : null,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: widget.isMe
+                            ? cs.primary
+                            : cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(AppTokens.radiusLG),
+                          topRight: const Radius.circular(AppTokens.radiusLG),
+                          bottomLeft: Radius.circular(
+                            widget.isMe ? AppTokens.radiusLG : 4,
+                          ),
+                          bottomRight: Radius.circular(
+                            widget.isMe ? 4 : AppTokens.radiusLG,
                           ),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (track.imageUrl.isNotEmpty)
-                              CachedNetworkImage(
-                                imageUrl: track.imageUrl,
-                                width: double.infinity,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              )
-                            else
-                              Container(
-                                width: double.infinity,
-                                height: 160,
-                                color: cs.surfaceContainerHigh,
-                                child: Icon(
-                                  LucideIcons.music,
-                                  size: 56,
-                                  color: cs.onSurface
-                                      .withAlpha(AppTokens.alphaDisabled),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (track.imageUrl.isNotEmpty)
+                            CachedNetworkImage(
+                              imageUrl: track.imageUrl,
+                              width: double.infinity,
+                              height: 160,
+                              fit: BoxFit.cover,
+                            )
+                          else
+                            Container(
+                              width: double.infinity,
+                              height: 160,
+                              color: cs.surfaceContainerHigh,
+                              child: Icon(
+                                LucideIcons.music,
+                                size: 56,
+                                color: cs.onSurface.withAlpha(
+                                  AppTokens.alphaDisabled,
                                 ),
                               ),
-
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppTokens.spaceMD,
-                                AppTokens.spaceSM + 2,
-                                AppTokens.spaceMD,
-                                AppTokens.spaceXS,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    track.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tt.titleSmall?.copyWith(
-                                      color: widget.isMe
-                                          ? cs.onPrimary
-                                          : cs.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    track.artist,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tt.bodySmall?.copyWith(
-                                      color: widget.isMe
-                                          ? cs.onPrimary
-                                              .withAlpha(AppTokens.alphaMedium)
-                                          : cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ),
 
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppTokens.spaceMD,
-                                0,
-                                AppTokens.spaceMD,
-                                AppTokens.spaceSM,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    time,
-                                    style: tt.labelSmall?.copyWith(
-                                      fontSize: 11,
-                                      color: widget.isMe
-                                          ? cs.onPrimary
-                                              .withAlpha(AppTokens.alphaMedium)
-                                          : cs.onSurface
-                                              .withAlpha(AppTokens.alphaLow),
-                                    ),
-                                  ),
-                                  if (widget.isMe) ...[
-                                    const SizedBox(width: AppTokens.spaceXS),
-                                    Icon(
-                                      widget.message.read
-                                          ? LucideIcons.checkCheck
-                                          : LucideIcons.check,
-                                      size: 14,
-                                      color: widget.message.read
-                                          ? AppTokens.readReceiptColor
-                                          : cs.onPrimary.withAlpha(
-                                              AppTokens.alphaMedium),
-                                    ),
-                                  ],
-                                ],
-                              ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTokens.spaceMD,
+                              AppTokens.spaceSM + 2,
+                              AppTokens.spaceMD,
+                              AppTokens.spaceXS,
                             ),
-                          ],
-                        ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.titleSmall?.copyWith(
+                                    color: widget.isMe
+                                        ? cs.onPrimary
+                                        : cs.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  track.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: widget.isMe
+                                        ? cs.onPrimary.withAlpha(
+                                            AppTokens.alphaMedium,
+                                          )
+                                        : cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTokens.spaceMD,
+                              0,
+                              AppTokens.spaceMD,
+                              AppTokens.spaceSM,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  time,
+                                  style: tt.labelSmall?.copyWith(
+                                    fontSize: 11,
+                                    color: widget.isMe
+                                        ? cs.onPrimary.withAlpha(
+                                            AppTokens.alphaMedium,
+                                          )
+                                        : cs.onSurface.withAlpha(
+                                            AppTokens.alphaLow,
+                                          ),
+                                  ),
+                                ),
+                                if (widget.isMe) ...[
+                                  const SizedBox(width: AppTokens.spaceXS),
+                                  Icon(
+                                    widget.message.read
+                                        ? LucideIcons.checkCheck
+                                        : LucideIcons.check,
+                                    size: 14,
+                                    color: widget.message.read
+                                        ? AppTokens.readReceiptColor
+                                        : cs.onPrimary.withAlpha(
+                                            AppTokens.alphaMedium,
+                                          ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
+              ),
 
-                if (widget.message.reactions.isNotEmpty)
-                  Transform.translate(
-                    offset: const Offset(0, -6),
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.only(bottom: AppTokens.spaceXS),
-                      child: ReactionRow(
-                        reactions: widget.message.reactions,
-                        currentUid: widget.currentUid,
-                        onReact: _toggleReaction,
-                      ),
+              if (widget.message.reactions.isNotEmpty)
+                Transform.translate(
+                  offset: const Offset(0, -6),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppTokens.spaceXS),
+                    child: ReactionRow(
+                      reactions: widget.message.reactions,
+                      currentUid: widget.currentUid,
+                      onReact: widget.reactionsEnabled ? _toggleReaction : null,
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
+      ),
     );
   }
 }

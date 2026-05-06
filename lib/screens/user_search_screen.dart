@@ -315,6 +315,12 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
           tooltip: l10n.friendsSendRequest,
           onPressed: () => _sendRequest(user.uid),
         );
+
+      case RelationshipStatus.blocked:
+        return Icon(
+          LucideIcons.userX,
+          color: colorScheme.onSurfaceVariant,
+        );
     }
   }
 }

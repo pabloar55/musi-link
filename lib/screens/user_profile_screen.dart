@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
+import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/widgets/profile/compatibility_card.dart';
 import 'package:musi_link/widgets/profile/friendship_buttons.dart';
 import 'package:musi_link/widgets/profile/music_taste_section.dart';
@@ -16,6 +18,8 @@ import 'package:musi_link/widgets/profile/profile_header.dart';
 import 'package:musi_link/widgets/remove_friend_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+enum _ProfileMenuAction { block, unblock }
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   final AppUser user;
@@ -100,6 +104,64 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     ref.invalidate(relationshipProvider(widget.user.uid));
   }
 
+  Future<void> _blockUser() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.blockUserBlockConfirmTitle(widget.user.displayName)),
+        content: Text(l10n.blockUserBlockConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.friendsCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.blockUserBlockConfirm,
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(friendServiceProvider).blockUser(widget.user.uid);
+      ref.read(musicProfileServiceProvider).clearCache();
+      if (!mounted) return;
+      ref.invalidate(relationshipProvider(widget.user.uid));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.blockUserBlockedSnackbar(widget.user.displayName),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) _showWriteError(null);
+    }
+  }
+
+  Future<void> _unblockUser() async {
+    try {
+      await ref.read(friendServiceProvider).unblockUser(widget.user.uid);
+      if (!mounted) return;
+      ref.invalidate(relationshipProvider(widget.user.uid));
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.blockUserUnblockedSnackbar(widget.user.displayName),
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) _showWriteError(null);
+    }
+  }
+
   Future<void> _removeFriend() async {
     final confirmed = await showRemoveFriendDialog(context);
     if (confirmed == true) {
@@ -127,7 +189,42 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     final isDeletedProfile = user.isDeleted;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.profileTitle)),
+      appBar: AppBar(
+        title: Text(l10n.profileTitle),
+        actions: [
+          if (!_isOwnProfile && !isDeletedProfile)
+            Consumer(
+              builder: (ctx, ref, _) {
+                final isBlocked =
+                    ref
+                        .watch(relationshipProvider(widget.user.uid))
+                        .asData
+                        ?.value
+                        .status ==
+                    RelationshipStatus.blocked;
+                return PopupMenuButton<_ProfileMenuAction>(
+                  icon: const Icon(LucideIcons.ellipsisVertical),
+                  onSelected: (action) {
+                    if (action == _ProfileMenuAction.block) _blockUser();
+                    if (action == _ProfileMenuAction.unblock) _unblockUser();
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: isBlocked
+                          ? _ProfileMenuAction.unblock
+                          : _ProfileMenuAction.block,
+                      child: Text(
+                        isBlocked
+                            ? l10n.blockUserUnblock
+                            : l10n.blockUserBlock,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
           top: 24,
@@ -172,6 +269,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           onRejectRequest: _rejectRequest,
                           onCancelRequest: _cancelRequest,
                           onRemoveFriend: _removeFriend,
+                          onUnblock: _unblockUser,
                         ),
                       ),
                     ],

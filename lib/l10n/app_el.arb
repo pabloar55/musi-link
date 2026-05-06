@@ -82,6 +82,7 @@
   "chatSearchSong": "Αναζήτηση τραγουδιού...",
   "chatShareSong": "Κοινοποίηση τραγουδιού",
   "chatDeletedUser": "Αυτός ο λογαριασμός έχει διαγραφεί. Δεν μπορείτε πλέον να στέλνετε μηνύματα.",
+  "chatBlockedCannotSend": "Μπορείτε να δείτε το ιστορικό, αλλά δεν μπορείτε να στείλετε μηνύματα σε αυτήν τη συνομιλία.",
   "chatSendFirst": "Στείλτε το πρώτο μήνυμα",
   "chatTypeToSearch": "Πληκτρολογήστε για αναζήτηση τραγουδιών",
   "chatNoResults": "Δεν βρέθηκαν αποτελέσματα",
@@ -225,6 +226,33 @@
   "photoSetupGallery": "Γκαλερί",
   "photoSetupCamera": "Κάμερα",
   "photoSetupError": "Δεν ήταν δυνατή η μεταφόρτωση φωτογραφίας. Δοκιμάστε ξανά.",
+
+  "blockUserBlock": "Αποκλεισμός χρήστη",
+  "blockUserUnblock": "Άρση αποκλεισμού",
+  "blockUserBlockConfirmTitle": "Αποκλεισμός {name};",
+  "@blockUserBlockConfirmTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserBlockConfirmBody": "Θα αφαιρεθεί από τη λίστα φίλων σου και δεν θα εμφανίζεται στις ανακαλύψεις σου.",
+  "blockUserBlockConfirm": "Αποκλεισμός",
+  "blockUserBlockedSnackbar": "Ο {name} αποκλείστηκε",
+  "@blockUserBlockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserUnblockedSnackbar": "Ο αποκλεισμός του {name} αφαιρέθηκε",
+  "@blockUserUnblockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsPrivacy": "Απόρρητο",
+  "settingsBlockedUsers": "Αποκλεισμένοι χρήστες",
+  "blockedUsersTitle": "Αποκλεισμένοι χρήστες",
+  "blockedUsersEmpty": "Δεν έχεις αποκλείσει κανέναν χρήστη",
 
   "genericError": "Κάτι πήγε στραβά. Δοκιμάστε ξανά.",
 

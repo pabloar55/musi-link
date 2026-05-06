@@ -14,6 +14,7 @@ class MessageBubble extends ConsumerStatefulWidget {
   final String currentUid;
   final String chatId;
   final ChatService chatService;
+  final bool reactionsEnabled;
 
   const MessageBubble({
     super.key,
@@ -23,6 +24,7 @@ class MessageBubble extends ConsumerStatefulWidget {
     required this.currentUid,
     required this.chatId,
     required this.chatService,
+    this.reactionsEnabled = true,
   });
 
   @override
@@ -40,6 +42,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
   }
 
   void _showPicker() {
+    if (!widget.reactionsEnabled) return;
     _pickerEntry?.remove();
     _pickerEntry = OverlayEntry(
       builder: (_) => FloatingReactionPicker(
@@ -61,6 +64,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
   }
 
   void _toggleReaction(String emoji) {
+    if (!widget.reactionsEnabled) return;
     widget.chatService.toggleReaction(widget.chatId, widget.message.id, emoji);
     ref.read(activeReactionPickerProvider.notifier).close();
   }
@@ -82,107 +86,110 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onLongPress: () => ref
-          .read(activeReactionPickerProvider.notifier)
-          .toggle(widget.message.id),
+      onLongPress: widget.reactionsEnabled
+          ? () => ref
+                .read(activeReactionPickerProvider.notifier)
+                .toggle(widget.message.id)
+          : null,
       child: Align(
-          alignment:
-              widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: widget.isMe
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: AppTokens.spaceXS),
-                child: CompositedTransformTarget(
-                  link: _layerLink,
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTokens.spaceMD,
-                      vertical: AppTokens.spaceSM + 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: widget.isMe
-                          ? cs.primary
-                          : cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(AppTokens.radiusLG),
-                        topRight: const Radius.circular(AppTokens.radiusLG),
-                        bottomLeft: Radius.circular(
-                            widget.isMe ? AppTokens.radiusLG : 4),
-                        bottomRight: Radius.circular(
-                            widget.isMe ? 4 : AppTokens.radiusLG),
+        alignment: widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment: widget.isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: AppTokens.spaceXS),
+              child: CompositedTransformTarget(
+                link: _layerLink,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTokens.spaceMD,
+                    vertical: AppTokens.spaceSM + 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.isMe
+                        ? cs.primary
+                        : cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(AppTokens.radiusLG),
+                      topRight: const Radius.circular(AppTokens.radiusLG),
+                      bottomLeft: Radius.circular(
+                        widget.isMe ? AppTokens.radiusLG : 4,
+                      ),
+                      bottomRight: Radius.circular(
+                        widget.isMe ? 4 : AppTokens.radiusLG,
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: widget.isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.message.text,
-                          style: tt.bodyMedium?.copyWith(
-                            color: widget.isMe ? cs.onPrimary : cs.onSurface,
-                          ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: widget.isMe
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.message.text,
+                        style: tt.bodyMedium?.copyWith(
+                          color: widget.isMe ? cs.onPrimary : cs.onSurface,
                         ),
-                        const SizedBox(height: AppTokens.spaceXS),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              time,
-                              style: tt.labelSmall?.copyWith(
-                                fontSize: 11,
-                                color: widget.isMe
-                                    ? cs.onPrimary
-                                        .withAlpha(AppTokens.alphaMedium)
-                                    : cs.onSurface
-                                        .withAlpha(AppTokens.alphaLow),
-                              ),
+                      ),
+                      const SizedBox(height: AppTokens.spaceXS),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            time,
+                            style: tt.labelSmall?.copyWith(
+                              fontSize: 11,
+                              color: widget.isMe
+                                  ? cs.onPrimary.withAlpha(
+                                      AppTokens.alphaMedium,
+                                    )
+                                  : cs.onSurface.withAlpha(AppTokens.alphaLow),
                             ),
-                            if (widget.isMe) ...[
-                              const SizedBox(width: AppTokens.spaceXS),
-                              Icon(
-                                widget.message.read
-                                    ? LucideIcons.checkCheck
-                                    : LucideIcons.check,
-                                size: 14,
-                                color: widget.message.read
-                                    ? AppTokens.readReceiptColor
-                                    : cs.onPrimary
-                                        .withAlpha(AppTokens.alphaMedium),
-                              ),
-                            ],
+                          ),
+                          if (widget.isMe) ...[
+                            const SizedBox(width: AppTokens.spaceXS),
+                            Icon(
+                              widget.message.read
+                                  ? LucideIcons.checkCheck
+                                  : LucideIcons.check,
+                              size: 14,
+                              color: widget.message.read
+                                  ? AppTokens.readReceiptColor
+                                  : cs.onPrimary.withAlpha(
+                                      AppTokens.alphaMedium,
+                                    ),
+                            ),
                           ],
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              if (widget.message.reactions.isNotEmpty)
-                Transform.translate(
-                  offset: const Offset(0, -6),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: AppTokens.spaceXS),
-                    child: ReactionRow(
-                      reactions: widget.message.reactions,
-                      currentUid: widget.currentUid,
-                      onReact: _toggleReaction,
-                    ),
+            if (widget.message.reactions.isNotEmpty)
+              Transform.translate(
+                offset: const Offset(0, -6),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppTokens.spaceXS),
+                  child: ReactionRow(
+                    reactions: widget.message.reactions,
+                    currentUid: widget.currentUid,
+                    onReact: widget.reactionsEnabled ? _toggleReaction : null,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
+      ),
     );
   }
 }

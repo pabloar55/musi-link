@@ -223,6 +223,10 @@ class AppLocalizationsEl extends AppLocalizations {
       'Αυτός ο λογαριασμός έχει διαγραφεί. Δεν μπορείτε πλέον να στέλνετε μηνύματα.';
 
   @override
+  String get chatBlockedCannotSend =>
+      'Μπορείτε να δείτε το ιστορικό, αλλά δεν μπορείτε να στείλετε μηνύματα σε αυτήν τη συνομιλία.';
+
+  @override
   String get chatSendFirst => 'Στείλτε το πρώτο μήνυμα';
 
   @override
@@ -531,6 +535,46 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get photoSetupError =>
       'Δεν ήταν δυνατή η μεταφόρτωση φωτογραφίας. Δοκιμάστε ξανά.';
+
+  @override
+  String get blockUserBlock => 'Αποκλεισμός χρήστη';
+
+  @override
+  String get blockUserUnblock => 'Άρση αποκλεισμού';
+
+  @override
+  String blockUserBlockConfirmTitle(String name) {
+    return 'Αποκλεισμός $name;';
+  }
+
+  @override
+  String get blockUserBlockConfirmBody =>
+      'Θα αφαιρεθεί από τη λίστα φίλων σου και δεν θα εμφανίζεται στις ανακαλύψεις σου.';
+
+  @override
+  String get blockUserBlockConfirm => 'Αποκλεισμός';
+
+  @override
+  String blockUserBlockedSnackbar(String name) {
+    return 'Ο $name αποκλείστηκε';
+  }
+
+  @override
+  String blockUserUnblockedSnackbar(String name) {
+    return 'Ο αποκλεισμός του $name αφαιρέθηκε';
+  }
+
+  @override
+  String get settingsPrivacy => 'Απόρρητο';
+
+  @override
+  String get settingsBlockedUsers => 'Αποκλεισμένοι χρήστες';
+
+  @override
+  String get blockedUsersTitle => 'Αποκλεισμένοι χρήστες';
+
+  @override
+  String get blockedUsersEmpty => 'Δεν έχεις αποκλείσει κανέναν χρήστη';
 
   @override
   String get genericError => 'Κάτι πήγε στραβά. Δοκιμάστε ξανά.';

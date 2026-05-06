@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
+import 'package:musi_link/providers/user_profile_provider.dart';
 import 'package:musi_link/services/chat_service.dart';
+import 'package:musi_link/services/friend_service.dart';
 import 'package:musi_link/models/message.dart';
 import 'package:musi_link/models/app_user.dart';
 import 'package:musi_link/widgets/chat/message_bubble.dart';
@@ -43,6 +45,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final Future<AppUser?> _otherUserFuture;
   DateTime? _lastSeenTimestamp;
   bool _isOtherUserDeleted = false;
+  bool _isBlockedByMe = false;
 
   // Paginación: lista única de mensajes acumulados.
   List<Message> _allMessages = [];
@@ -102,9 +105,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
       if (hasNewMessages) {
         _lastSeenTimestamp = latestTimestamp;
-        unawaited(
-          ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId),
-        );
+        if (!_isBlockedByMe) {
+          unawaited(
+            ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId),
+          );
+        }
         _scrollToBottom();
       }
     });
@@ -187,7 +192,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_isOtherUserDeleted) return;
+    if (_isOtherUserDeleted || _isBlockedByMe) return;
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -225,7 +230,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _showWriteError(FirebaseException? error) {
     final l10n = AppLocalizations.of(context)!;
     final message = error?.code == 'permission-denied'
-        ? l10n.authErrorTooManyRequests
+        ? l10n.chatBlockedCannotSend
         : l10n.genericError;
     ScaffoldMessenger.of(
       context,
@@ -245,7 +250,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showTrackSearch() {
-    if (_isOtherUserDeleted) return;
+    if (_isOtherUserDeleted || _isBlockedByMe) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -284,6 +289,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final relationship = ref.watch(relationshipProvider(widget.otherUserId));
+    final isBlockedByMe =
+        relationship.asData?.value.status == RelationshipStatus.blocked;
+    _isBlockedByMe = isBlockedByMe;
 
     return Scaffold(
       appBar: AppBar(
@@ -314,9 +323,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Lista de mensajes
           Expanded(child: _buildMessageList(colorScheme, l10n)),
-          _isOtherUserDeleted
-              ? _buildDeletedAccountBar(colorScheme, l10n)
-              : _buildInputBar(colorScheme),
+          if (_isOtherUserDeleted)
+            _buildDeletedAccountBar(colorScheme, l10n)
+          else if (isBlockedByMe)
+            _buildBlockedChatBar(colorScheme, l10n)
+          else
+            _buildInputBar(colorScheme),
         ],
       ),
     );
@@ -364,6 +376,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   currentUid: _currentUid,
                   chatId: widget.chatId,
                   chatService: ref.read(chatServiceProvider),
+                  reactionsEnabled: !_isBlockedByMe,
                 );
               }
 
@@ -374,6 +387,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 currentUid: _currentUid,
                 chatId: widget.chatId,
                 chatService: ref.read(chatServiceProvider),
+                reactionsEnabled: !_isBlockedByMe,
               );
             },
           ),
@@ -451,6 +465,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
           l10n.chatDeletedUser,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlockedChatBar(ColorScheme colorScheme, AppLocalizations l10n) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Text(
+          l10n.chatBlockedCannotSend,
           textAlign: TextAlign.center,
           style: TextStyle(color: colorScheme.onSurfaceVariant),
         ),

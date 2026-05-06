@@ -242,10 +242,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           final displayName = appUser?.displayName ?? l10n.socialUser;
           final email = firebaseUser?.email ?? '';
 
+          final bottomInset = MediaQuery.paddingOf(context).bottom;
           return ListView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTokens.spaceLG,
-              vertical: AppTokens.spaceXL,
+            padding: EdgeInsets.only(
+              left: AppTokens.spaceLG,
+              right: AppTokens.spaceLG,
+              top: AppTokens.spaceXL,
+              bottom: AppTokens.spaceMD + bottomInset,
             ),
             children: [
               // ── Profile header ─────────────────────────────────────
@@ -296,6 +299,21 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     value: vibrationEnabled,
                     onChanged: (_) =>
                         ref.read(vibrationEnabledProvider.notifier).toggle(),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppTokens.spaceLG),
+
+              // ── Privacy ───────────────────────────────────────────
+              _SectionHeader(label: l10n.settingsPrivacy),
+              const SizedBox(height: AppTokens.spaceSM),
+              _SettingsCard(
+                children: [
+                  _ChevronTile(
+                    icon: LucideIcons.userX,
+                    label: l10n.settingsBlockedUsers,
+                    onTap: () => context.push('/blocked-users'),
                   ),
                 ],
               ),

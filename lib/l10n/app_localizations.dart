@@ -510,6 +510,12 @@ abstract class AppLocalizations {
   /// **'This account has been deleted. You can no longer send messages.'**
   String get chatDeletedUser;
 
+  /// No description provided for @chatBlockedCannotSend.
+  ///
+  /// In en, this message translates to:
+  /// **'You can view the history, but you cannot send messages in this chat.'**
+  String get chatBlockedCannotSend;
+
   /// No description provided for @chatSendFirst.
   ///
   /// In en, this message translates to:
@@ -1037,6 +1043,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not upload photo. Please try again.'**
   String get photoSetupError;
+
+  /// No description provided for @blockUserBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUserBlock;
+
+  /// No description provided for @blockUserUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get blockUserUnblock;
+
+  /// No description provided for @blockUserBlockConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}?'**
+  String blockUserBlockConfirmTitle(String name);
+
+  /// No description provided for @blockUserBlockConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'They will be removed from your friends list and won\'t appear in your discovery.'**
+  String get blockUserBlockConfirmBody;
+
+  /// No description provided for @blockUserBlockConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockUserBlockConfirm;
+
+  /// No description provided for @blockUserBlockedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has been blocked'**
+  String blockUserBlockedSnackbar(String name);
+
+  /// No description provided for @blockUserUnblockedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has been unblocked'**
+  String blockUserUnblockedSnackbar(String name);
+
+  /// No description provided for @settingsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsPrivacy;
+
+  /// No description provided for @settingsBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get settingsBlockedUsers;
+
+  /// No description provided for @blockedUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsersTitle;
+
+  /// No description provided for @blockedUsersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t blocked any users'**
+  String get blockedUsersEmpty;
 
   /// No description provided for @genericError.
   ///

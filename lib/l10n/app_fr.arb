@@ -77,6 +77,7 @@
   "chatSearchSong": "Rechercher une chanson...",
   "chatShareSong": "Partager une chanson",
   "chatDeletedUser": "Ce compte a été supprimé. Vous ne pouvez plus envoyer de messages.",
+  "chatBlockedCannotSend": "Vous pouvez voir l'historique, mais pas envoyer de messages dans ce chat.",
   "chatSendFirst": "Envoyez le premier message",
   "chatTypeToSearch": "Tapez pour rechercher des chansons",
   "chatNoResults": "Aucun résultat",
@@ -190,6 +191,33 @@
   "photoSetupGallery": "Galerie",
   "photoSetupCamera": "Appareil photo",
   "photoSetupError": "Impossible de télécharger la photo. Veuillez réessayer.",
+
+  "blockUserBlock": "Bloquer l'utilisateur",
+  "blockUserUnblock": "Débloquer",
+  "blockUserBlockConfirmTitle": "Bloquer {name} ?",
+  "@blockUserBlockConfirmTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserBlockConfirmBody": "Cette personne sera retirée de votre liste d'amis et n'apparaîtra plus dans vos découvertes.",
+  "blockUserBlockConfirm": "Bloquer",
+  "blockUserBlockedSnackbar": "{name} a été bloqué",
+  "@blockUserBlockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "blockUserUnblockedSnackbar": "{name} a été débloqué",
+  "@blockUserUnblockedSnackbar": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsPrivacy": "Confidentialité",
+  "settingsBlockedUsers": "Utilisateurs bloqués",
+  "blockedUsersTitle": "Utilisateurs bloqués",
+  "blockedUsersEmpty": "Vous n'avez bloqué aucun utilisateur",
 
   "genericError": "Une erreur s'est produite. Veuillez réessayer.",
 

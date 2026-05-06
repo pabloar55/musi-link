@@ -160,6 +160,16 @@ final sentRequestsProvider = StreamProvider<List<FriendRequest>>((ref) {
   return ref.watch(friendServiceProvider).getSentRequests();
 });
 
+final blockedUsersProvider = StreamProvider<List<String>>((ref) {
+  final authUser =
+      ref
+          .watch(authStateProvider)
+          .maybeWhen(data: (user) => user, orElse: () => null) ??
+      ref.watch(firebaseAuthProvider).currentUser;
+  if (authUser == null) return Stream.value(const <String>[]);
+  return ref.watch(friendServiceProvider).getBlockedUsersStream();
+});
+
 final friendsStreamProvider = StreamProvider<List<String>>((ref) {
   final authUser =
       ref

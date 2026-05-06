@@ -15,6 +15,7 @@ class FriendshipButtons extends StatefulWidget {
   final void Function(String requestId) onRejectRequest;
   final void Function(String requestId) onCancelRequest;
   final VoidCallback onRemoveFriend;
+  final VoidCallback onUnblock;
 
   const FriendshipButtons({
     super.key,
@@ -25,6 +26,7 @@ class FriendshipButtons extends StatefulWidget {
     required this.onRejectRequest,
     required this.onCancelRequest,
     required this.onRemoveFriend,
+    required this.onUnblock,
   });
 
   @override
@@ -150,6 +152,19 @@ class _FriendshipButtonsState extends State<FriendshipButtons> {
           onPressed: () => unawaited(_handleSendRequest()),
           icon: const Icon(LucideIcons.userPlus),
           label: Text(l10n.profileAddFriend),
+        );
+
+      case RelationshipStatus.blocked:
+        return SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: widget.onUnblock,
+            icon: Icon(LucideIcons.userCheck, color: cs.error),
+            label: Text(
+              l10n.blockUserUnblock,
+              style: TextStyle(color: cs.error),
+            ),
+          ),
         );
     }
   }

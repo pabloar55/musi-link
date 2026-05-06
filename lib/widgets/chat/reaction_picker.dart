@@ -38,12 +38,14 @@ class _FloatingReactionPickerState extends State<FloatingReactionPicker>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _scale = Tween<double>(
+      begin: 0.6,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _controller.forward();
   }
 
@@ -55,8 +57,9 @@ class _FloatingReactionPickerState extends State<FloatingReactionPicker>
 
   @override
   Widget build(BuildContext context) {
-    final alignment =
-        widget.isMe ? Alignment.bottomRight : Alignment.bottomLeft;
+    final alignment = widget.isMe
+        ? Alignment.bottomRight
+        : Alignment.bottomLeft;
     return Stack(
       children: [
         Positioned.fill(
@@ -68,8 +71,7 @@ class _FloatingReactionPickerState extends State<FloatingReactionPicker>
         CompositedTransformFollower(
           link: widget.layerLink,
           showWhenUnlinked: false,
-          targetAnchor:
-              widget.isMe ? Alignment.topRight : Alignment.topLeft,
+          targetAnchor: widget.isMe ? Alignment.topRight : Alignment.topLeft,
           followerAnchor: alignment,
           offset: const Offset(0, -AppTokens.spaceXS),
           child: Material(
@@ -158,7 +160,7 @@ class ReactionPicker extends StatelessWidget {
 class ReactionRow extends StatelessWidget {
   final Map<String, List<String>> reactions;
   final String currentUid;
-  final void Function(String emoji) onReact;
+  final void Function(String emoji)? onReact;
 
   const ReactionRow({
     super.key,
@@ -173,7 +175,10 @@ class ReactionRow extends StatelessWidget {
 
     final sortedKeys = reactions.keys.toList()
       ..sort((a, b) => _kEmojis.indexOf(a).compareTo(_kEmojis.indexOf(b)));
-    final totalCount = reactions.values.fold(0, (sum, list) => sum + list.length);
+    final totalCount = reactions.values.fold(
+      0,
+      (sum, list) => sum + list.length,
+    );
     final allEmojis = sortedKeys.join(' ');
     final myEmoji = reactions.entries
         .where((e) => e.value.contains(currentUid))
@@ -181,7 +186,9 @@ class ReactionRow extends StatelessWidget {
         .firstOrNull;
 
     return GestureDetector(
-      onTap: myEmoji != null ? () => onReact(myEmoji) : null,
+      onTap: myEmoji != null && onReact != null
+          ? () => onReact!(myEmoji)
+          : null,
       child: AnimatedContainer(
         duration: AppTokens.durationFast,
         padding: const EdgeInsets.symmetric(

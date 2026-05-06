@@ -8,6 +8,29 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(userId)).data.username != 'deleted_user';
     }
 
+    function hasBlocked(blockerId, blockedId) {
+      return exists(/databases/$(database)/documents/user_private/$(blockerId))
+        && get(/databases/$(database)/documents/user_private/$(blockerId))
+          .data
+          .get('blockedUsers', [])
+          .hasAny([blockedId]);
+    }
+
+    function canUsersInteract(userA, userB) {
+      return userA != userB
+        && !hasBlocked(userA, userB)
+        && !hasBlocked(userB, userA);
+    }
+
+    function validBlockedUsers(userId, data) {
+      return !('blockedUsers' in data)
+        || (
+          data.blockedUsers is list
+          && data.blockedUsers.size() <= 1000
+          && !data.blockedUsers.hasAny([userId])
+        );
+    }
+
     // ─── Usuarios ───────────────────────────────────────
     match /users/{userId} {
       // Cualquier usuario autenticado puede leer perfiles (necesario para búsqueda y avatares)
@@ -83,11 +106,13 @@ service cloud.firestore {
           'createdAt',
           'lastLogin',
           'friends',
+          'blockedUsers',
           'fcmToken',
           'preferredLocale',
           'notifSound',
           'notifVibration',
-        ]);
+        ])
+        && validBlockedUsers(userId, request.resource.data);
       allow update: if request.auth != null && (
         (
           request.auth.uid == userId
@@ -95,12 +120,14 @@ service cloud.firestore {
             'email',
             'lastLogin',
             'friends',
+            'blockedUsers',
             'fcmToken',
             'preferredLocale',
             'deletedAt',
             'notifSound',
             'notifVibration',
           ])
+          && validBlockedUsers(userId, request.resource.data)
         )
         ||
         (
@@ -144,6 +171,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time
         && friendRequestRateLimitAllows(request.auth.uid)
         && isActiveUser(request.resource.data.receiverId)
+        && canUsersInteract(request.resource.data.senderId, request.resource.data.receiverId)
         && requestId == request.resource.data.senderId + '_' + request.resource.data.receiverId
         && !exists(/databases/$(database)/documents/friend_requests/$(request.resource.data.receiverId + '_' + request.resource.data.senderId));
       // El destinatario puede aceptar/rechazar; el remitente puede actualizar para cancelar.
@@ -151,7 +179,11 @@ service cloud.firestore {
       allow update: if request.auth != null
         && (request.auth.uid == resource.data.senderId
             || request.auth.uid == resource.data.receiverId)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && (
+          request.resource.data.status != 'accepted'
+          || canUsersInteract(resource.data.senderId, resource.data.receiverId)
+        );
       // Ambos pueden eliminar
       allow delete: if request.auth != null
         && (request.auth.uid == resource.data.senderId
@@ -324,6 +356,10 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid in request.resource.data.participants
         && request.resource.data.participants.size() == 2
+        && canUsersInteract(
+          request.resource.data.participants[0],
+          request.resource.data.participants[1]
+        )
         && (
           chatId == request.resource.data.participants[0] + '_' + request.resource.data.participants[1]
           || chatId == request.resource.data.participants[1] + '_' + request.resource.data.participants[0]
@@ -332,6 +368,7 @@ service cloud.firestore {
       // Solo los participantes pueden actualizar, y únicamente los campos de metadatos del chat
       allow update: if request.auth != null
         && request.auth.uid in resource.data.participants
+        && canUsersInteract(resource.data.participants[0], resource.data.participants[1])
         && request.resource.data.diff(resource.data)
              .affectedKeys()
              .hasOnly(['lastMessage', 'lastMessageTime', 'unreadCounts']);
@@ -349,6 +386,10 @@ service cloud.firestore {
         // Solo un participante puede crear un mensaje, y debe ser el remitente
         allow create: if request.auth != null
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+          && canUsersInteract(
+            get(/databases/$(database)/documents/chats/$(chatId)).data.participants[0],
+            get(/databases/$(database)/documents/chats/$(chatId)).data.participants[1]
+          )
           && request.resource.data.senderId == request.auth.uid
           && request.resource.data.timestamp == request.time
           && messageRateLimitAllows(request.auth.uid)
@@ -360,9 +401,15 @@ service cloud.firestore {
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'reactions'])
           && (!('reactions' in request.resource.data.diff(resource.data).affectedKeys())
-              || validReactions(
-                request.resource.data.reactions,
-                get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+              || (
+                canUsersInteract(
+                  get(/databases/$(database)/documents/chats/$(chatId)).data.participants[0],
+                  get(/databases/$(database)/documents/chats/$(chatId)).data.participants[1]
+                )
+                && validReactions(
+                  request.resource.data.reactions,
+                  get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+                )
               ));
 
         // Solo los participantes pueden eliminar mensajes
