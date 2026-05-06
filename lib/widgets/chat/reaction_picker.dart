@@ -192,13 +192,6 @@ class ReactionRow extends StatelessWidget {
           color: cs.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(AppTokens.radiusFull),
           border: Border.all(color: cs.surface, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: cs.shadow.withAlpha(20),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
         ),
         child: Text(
           totalCount > 1 ? '$allEmojis $totalCount' : allEmojis,

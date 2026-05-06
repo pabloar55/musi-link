@@ -458,6 +458,8 @@ class FriendService with AuthenticatedService {
       batch.update(_privateUsersRef.doc(otherUid), {
         'friends': FieldValue.arrayRemove([currentUid]),
       });
+      batch.delete(_requestsRef.doc('${currentUid}_$otherUid'));
+      batch.delete(_requestsRef.doc('${otherUid}_$currentUid'));
       await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);

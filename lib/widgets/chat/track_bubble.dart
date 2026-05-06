@@ -237,7 +237,7 @@ class _TrackBubbleState extends ConsumerState<TrackBubble> {
 
                 if (widget.message.reactions.isNotEmpty)
                   Transform.translate(
-                    offset: const Offset(0, -1),
+                    offset: const Offset(0, -6),
                     child: Padding(
                       padding:
                           const EdgeInsets.only(bottom: AppTokens.spaceXS),
