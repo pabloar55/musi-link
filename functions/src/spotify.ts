@@ -64,6 +64,7 @@ function normalizeArtistName(value: string): string {
 const genreAliases = new Map<string, string>([
   ['alt rock', 'alternative rock'],
   ['alternative music', 'alternative'],
+  ['corridos belicos', 'corridos belicos'],
   ['drum and bass', 'drum and bass'],
   ['dnb', 'drum and bass'],
   ['edm', 'electronic'],
@@ -114,15 +115,19 @@ const blockedGenreTags = new Set<string>([
   'korean',
   'male vocalists',
   'mexican',
+  'mexico',
   'new zealand',
   'norwegian',
   'polish',
   'portuguese',
+  'puerto rican',
+  'puerto rico',
   'romanian',
   'russian',
   'scottish',
   'seen live',
   'spanish',
+  'spain',
   'swedish',
   'turkish',
   'uk',
@@ -141,7 +146,10 @@ const lastFmGenreKeywords = [
   'bachata',
   'bluegrass',
   'blues',
+  'bebop',
   'classical',
+  'corrido',
+  'corridos',
   'country',
   'dance',
   'dancehall',
@@ -155,6 +163,7 @@ const lastFmGenreKeywords = [
   'flamenco',
   'folk',
   'funk',
+  'fusion',
   'gospel',
   'grunge',
   'hardcore',
@@ -171,6 +180,7 @@ const lastFmGenreKeywords = [
   'post punk',
   'punk',
   'r&b',
+  'regional mexicano',
   'reggae',
   'reggaeton',
   'rock',
@@ -187,6 +197,8 @@ const lastFmGenreKeywords = [
 function normalizeGenreName(value: string): string | null {
   const key = value
     .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/\br\s*&\s*b\b/g, 'rnb')
     .replace(/&/g, ' and ')

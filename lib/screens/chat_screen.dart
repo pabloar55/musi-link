@@ -36,7 +36,8 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
   late final Stream<List<Message>> _messagesStream;
@@ -52,6 +53,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isInitialLoading = true;
   bool _isLoadingMore = false;
   bool _hasMoreMessages = true;
+  bool _isAtBottom = true;
 
   /// UID of the authenticated user from the Riverpod provider.
   /// Returns empty string if session was lost — message bubbles fall back to
@@ -62,6 +64,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _activeChatNotifier = ref.read(activeChatIdProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _activeChatNotifier.setChat(widget.chatId);
@@ -110,7 +113,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ref.read(chatServiceProvider).markMessagesAsRead(widget.chatId),
           );
         }
-        _scrollToBottom();
+        // Primera carga: saltar sin animación para no ver el scroll desde arriba.
+        _scrollToBottom(animate: !isFirst);
       }
     });
 
@@ -118,7 +122,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   @override
+  void didChangeMetrics() {
+    final bottomInset =
+        WidgetsBinding.instance.platformDispatcher.views.first.viewInsets.bottom;
+    if (bottomInset > 0 && _isAtBottom) {
+      // El teclado ya tiene su propia animación; saltar sin animar evita el lag.
+      _scrollToBottom(animate: false);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _activeChatNotifier.setChat(null);
     });
@@ -131,9 +146,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
-    if (_scrollController.position.pixels <= 100 &&
-        !_isLoadingMore &&
-        _hasMoreMessages) {
+    final pos = _scrollController.position;
+    _isAtBottom = pos.pixels >= pos.maxScrollExtent - 80;
+    if (pos.pixels <= 100 && !_isLoadingMore && _hasMoreMessages) {
       _loadMoreMessages();
     }
   }
@@ -237,14 +252,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (!_scrollController.hasClients) return;
+      final max = _scrollController.position.maxScrollExtent;
+      if (animate) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          max,
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
+      } else {
+        _scrollController.jumpTo(max);
       }
     });
   }

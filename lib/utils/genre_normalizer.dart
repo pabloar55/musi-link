@@ -2,6 +2,7 @@ const _genreAliases = <String, String>{
   'alt rock': 'alternative rock',
   'alternative': 'alternative',
   'alternative music': 'alternative',
+  'corridos belicos': 'corridos belicos',
   'drum and bass': 'drum and bass',
   'dnb': 'drum and bass',
   'edm': 'electronic',
@@ -52,15 +53,19 @@ const _blockedGenreTags = <String>{
   'korean',
   'male vocalists',
   'mexican',
+  'mexico',
   'new zealand',
   'norwegian',
   'polish',
   'portuguese',
+  'puerto rican',
+  'puerto rico',
   'romanian',
   'russian',
   'scottish',
   'seen live',
   'spanish',
+  'spain',
   'swedish',
   'turkish',
   'uk',
@@ -75,6 +80,20 @@ final _decadeOrYearPattern = RegExp(r'^(?:[0-9]{2}s|[12][0-9]{3}s?)$');
 String? normalizeGenreName(String value) {
   final key = value
       .trim()
+      .replaceAll(RegExp(r'[áàäâãåā]'), 'a')
+      .replaceAll(RegExp(r'[ÁÀÄÂÃÅĀ]'), 'A')
+      .replaceAll(RegExp(r'[éèëêē]'), 'e')
+      .replaceAll(RegExp(r'[ÉÈËÊĒ]'), 'E')
+      .replaceAll(RegExp(r'[íìïîī]'), 'i')
+      .replaceAll(RegExp(r'[ÍÌÏÎĪ]'), 'I')
+      .replaceAll(RegExp(r'[óòöôõō]'), 'o')
+      .replaceAll(RegExp(r'[ÓÒÖÔÕŌ]'), 'O')
+      .replaceAll(RegExp(r'[úùüûū]'), 'u')
+      .replaceAll(RegExp(r'[ÚÙÜÛŪ]'), 'U')
+      .replaceAll(RegExp(r'[ñ]'), 'n')
+      .replaceAll(RegExp(r'[Ñ]'), 'N')
+      .replaceAll(RegExp(r'[ç]'), 'c')
+      .replaceAll(RegExp(r'[Ç]'), 'C')
       .toLowerCase()
       .replaceAll(RegExp(r'\br\s*&\s*b\b'), 'rnb')
       .replaceAll('&', ' and ')
