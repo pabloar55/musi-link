@@ -317,8 +317,16 @@ class AppTheme {
         borderSide: BorderSide(color: cs.error, width: 2),
       ),
       labelStyle: TextStyle(color: cs.onSurfaceVariant),
-      floatingLabelStyle: TextStyle(color: cs.primary),
-      prefixIconColor: cs.onSurfaceVariant,
+      floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+        if (states.contains(WidgetState.error)) {
+          return TextStyle(color: cs.error);
+        }
+        return TextStyle(color: cs.primary);
+      }),
+      prefixIconColor: WidgetStateColor.resolveWith((states) {
+        if (states.contains(WidgetState.error)) return cs.error;
+        return cs.onSurfaceVariant;
+      }),
       suffixIconColor: cs.onSurfaceVariant,
     );
   }
