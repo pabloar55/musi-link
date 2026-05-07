@@ -1,7 +1,7 @@
 {
   "@@locale": "es",
 
-  "authTagline": "Conecta con personas que comparten tu gusto musical",
+  "authTagline": "Conecta con personas que comparten tus gustos musicales",
 
   "authName": "Nombre",
   "authEmail": "Email",
@@ -172,7 +172,7 @@
   "dailySongNoFriends": "Añade amigos para ver sus canciones del día",
 
   "onboardingDiscoverTitle": "Descubre personas",
-  "onboardingDiscoverDesc": "MusiLink te conecta con personas que comparten tu gusto musical. Descubre lo compatibles que sois según vuestros artistas favoritos.",
+  "onboardingDiscoverDesc": "MusiLink te conecta con personas que comparten tus gustos musicales. Descubre lo compatibles que sois según vuestros artistas favoritos.",
   "onboardingProfileTitle": "Construye tu perfil musical",
   "onboardingProfileDesc": "Añade los artistas que más escuchas. Cuantos más añadas, mejores serán tus matches y más personas descubrirás.",
   "onboardingConnectTitle": "Chatea, comparte, conecta",

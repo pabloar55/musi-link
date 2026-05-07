@@ -471,61 +471,53 @@ class _ArtistSelectorScreenState extends ConsumerState<ArtistSelectorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Visibility(
-                visible: !isKeyboardVisible,
-                maintainState: true,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    widget.isEditMode ? 4 : 24,
-                    widget.isEditMode ? 8 : 24,
-                    24,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      if (widget.isEditMode) BackButton(onPressed: _saveAndPop),
-                      Text(
-                        l10n.artistSelectorTitle,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  widget.isEditMode ? 4 : 24,
+                  widget.isEditMode ? 8 : 24,
+                  24,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    if (widget.isEditMode) BackButton(onPressed: _saveAndPop),
+                    Text(
+                      l10n.artistSelectorTitle,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   24,
-                  isKeyboardVisible ? 12 : (widget.isEditMode ? 4 : 8),
+                  widget.isEditMode ? 4 : 8,
                   24,
                   0,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Visibility(
-                      visible: !isKeyboardVisible,
-                      maintainState: true,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.artistSelectorSubtitle(_selected.length),
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.artistSelectorSubtitle(_selected.length),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 13,
                           ),
-                          const SizedBox(height: 12),
-                          _ProfileProgressBar(
-                            count: _selected.length,
-                            l10n: l10n,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 12),
+                        _ProfileProgressBar(
+                          count: _selected.length,
+                          l10n: l10n,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                     TextField(
                       focusNode: _searchFocusNode,

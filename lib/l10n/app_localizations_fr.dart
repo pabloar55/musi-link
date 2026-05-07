@@ -10,7 +10,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authTagline =>
-      'Connecte-toi avec des personnes qui partagent tes goûts musicaux';
+      'Connectez-vous avec des personnes qui partagent vos goûts musicaux';
 
   @override
   String get authName => 'Nom';

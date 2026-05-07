@@ -10,7 +10,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get authTagline =>
-      'Conecta con personas que comparten tu gusto musical';
+      'Conecta con personas que comparten tus gustos musicales';
 
   @override
   String get authName => 'Nombre';
@@ -474,7 +474,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get onboardingDiscoverDesc =>
-      'MusiLink te conecta con personas que comparten tu gusto musical. Descubre lo compatibles que sois según vuestros artistas favoritos.';
+      'MusiLink te conecta con personas que comparten tus gustos musicales. Descubre lo compatibles que sois según vuestros artistas favoritos.';
 
   @override
   String get onboardingProfileTitle => 'Construye tu perfil musical';
