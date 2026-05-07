@@ -370,13 +370,25 @@ class FriendService with AuthenticatedService {
       if (!controller.isClosed) controller.add(relationshipFromSnapshots());
     }
 
+    void handleRelationshipStreamError(Object error, StackTrace stack) {
+      if (isNetworkError(error)) {
+        if (userDoc == null && sentDoc == null && receivedDoc == null) {
+          emitRelationship();
+        }
+        return;
+      }
+
+      unawaited(reportError(error, stack));
+      if (!controller.isClosed) controller.addError(error, stack);
+    }
+
     controller = StreamController<RelationshipResult>(
       onListen: () {
         subscriptions.add(
           _privateUsersRef.doc(currentUid).snapshots().listen((snapshot) {
             userDoc = snapshot;
             emitRelationship();
-          }),
+          }, onError: handleRelationshipStreamError),
         );
         subscriptions.add(
           _requestsRef.doc('${currentUid}_$otherUid').snapshots().listen((
@@ -384,7 +396,7 @@ class FriendService with AuthenticatedService {
           ) {
             sentDoc = snapshot;
             emitRelationship();
-          }),
+          }, onError: handleRelationshipStreamError),
         );
         subscriptions.add(
           _requestsRef.doc('${otherUid}_$currentUid').snapshots().listen((
@@ -392,7 +404,7 @@ class FriendService with AuthenticatedService {
           ) {
             receivedDoc = snapshot;
             emitRelationship();
-          }),
+          }, onError: handleRelationshipStreamError),
         );
       },
       onCancel: () async {

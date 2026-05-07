@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -7,6 +6,7 @@ import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/services/chat_service.dart';
 import 'package:musi_link/theme/app_theme.dart';
 import 'package:musi_link/widgets/chat/reaction_picker.dart';
+import 'package:musi_link/widgets/track_artwork.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TrackBubble extends ConsumerStatefulWidget {
@@ -142,26 +142,12 @@ class _TrackBubbleState extends ConsumerState<TrackBubble> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (track.imageUrl.isNotEmpty)
-                            CachedNetworkImage(
-                              imageUrl: track.imageUrl,
-                              width: double.infinity,
-                              height: 160,
-                              fit: BoxFit.cover,
-                            )
-                          else
-                            Container(
-                              width: double.infinity,
-                              height: 160,
-                              color: cs.surfaceContainerHigh,
-                              child: Icon(
-                                LucideIcons.music,
-                                size: 56,
-                                color: cs.onSurface.withAlpha(
-                                  AppTokens.alphaDisabled,
-                                ),
-                              ),
-                            ),
+                          TrackArtwork(
+                            imageUrl: track.imageUrl,
+                            width: double.infinity,
+                            height: 160,
+                            iconSize: 56,
+                          ),
 
                           Padding(
                             padding: const EdgeInsets.fromLTRB(

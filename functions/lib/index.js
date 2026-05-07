@@ -101,7 +101,7 @@ tag) {
                     ...(tag ? { tag } : {}),
                 },
             },
-            apns: { payload: { aps: { sound: sound ? 'default' : '' } } },
+            apns: { payload: { aps: { ...(sound ? { sound: 'default' } : {}) } } },
         });
     }
     catch (error) {

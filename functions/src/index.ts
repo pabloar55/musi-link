@@ -101,7 +101,7 @@ async function sendNotification(
           ...(tag ? { tag } : {}),
         },
       },
-      apns: { payload: { aps: { sound: sound ? 'default' : '' } } },
+      apns: { payload: { aps: { ...(sound ? { sound: 'default' } : {}) } } },
     });
   } catch (error: unknown) {
     const fcmError = error as { code?: string };

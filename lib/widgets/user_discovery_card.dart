@@ -48,8 +48,8 @@ class UserDiscoveryCard extends StatelessWidget {
                       colors: isHighScore
                           ? [AppTokens.spotifyGreen, AppTokens.spotifyGreenDark]
                           : isMediumScore
-                              ? [cs.secondary, cs.secondary.withAlpha(180)]
-                              : [cs.outline, cs.outlineVariant],
+                          ? [cs.secondary, cs.secondary.withAlpha(180)]
+                          : [cs.outline, cs.outlineVariant],
                     ),
                   ),
                 ),
@@ -110,7 +110,6 @@ class UserDiscoveryCard extends StatelessWidget {
                                   textTheme: tt,
                                 ),
                               ],
-
                             ],
                           ),
                         ),
@@ -146,35 +145,32 @@ class _UserAvatar extends StatelessWidget {
     final isHighScore = score >= 70;
 
     return Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isHighScore
-                ? AppTokens.spotifyGreen
-                : cs.outline,
-            width: isHighScore ? 2.5 : 1.5,
-          ),
-          boxShadow: isHighScore
-              ? [
-                  BoxShadow(
-                    color: AppTokens.spotifyGreen.withAlpha(80),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isHighScore ? AppTokens.spotifyGreen : cs.outline,
+          width: isHighScore ? 2.5 : 1.5,
         ),
-        child: CircleAvatar(
-          radius: 26,
-          backgroundColor: cs.surfaceContainerHighest,
-          backgroundImage:
-              hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
-          child: hasPhoto
-              ? null
-              : Icon(LucideIcons.user, size: 26, color: cs.onSurfaceVariant),
-        ),
+        boxShadow: isHighScore
+            ? [
+                BoxShadow(
+                  color: AppTokens.spotifyGreen.withAlpha(80),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: CircleAvatar(
+        radius: 26,
+        backgroundColor: cs.surfaceContainerHighest,
+        backgroundImage: hasPhoto ? CachedNetworkImageProvider(photoUrl) : null,
+        child: hasPhoto
+            ? null
+            : Icon(LucideIcons.user, size: 26, color: cs.onSurfaceVariant),
+      ),
     );
   }
 }
@@ -238,11 +234,13 @@ class _MetaRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sharedSet = sharedArtists.map((a) => a.toLowerCase()).toSet();
+    final visibleSharedArtists = sharedArtists.take(5).toList();
+    final extrasCount = 5 - visibleSharedArtists.length;
     final extras = allArtists
         .where((a) => !sharedSet.contains(a.toLowerCase()))
-        .take(5 - sharedArtists.length)
+        .take(extrasCount)
         .toList();
-    final artists = [...sharedArtists, ...extras].take(5).toList();
+    final artists = [...visibleSharedArtists, ...extras];
 
     return Row(
       children: [
@@ -257,11 +255,15 @@ class _MetaRow extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 4),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTokens.spotifyGreen.withAlpha(30),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusFull,
+                        ),
                       ),
                       child: Text(
                         artist,
@@ -348,8 +350,9 @@ class _GenreRow extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: cs.primary.withAlpha(22),
-                          borderRadius:
-                              BorderRadius.circular(AppTokens.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusFull,
+                          ),
                         ),
                         child: Text(
                           g,
@@ -370,4 +373,3 @@ class _GenreRow extends StatelessWidget {
     );
   }
 }
-

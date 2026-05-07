@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/widgets/skeleton_loader.dart';
+import 'package:musi_link/widgets/track_artwork.dart';
 
 class TrackSearchSheet extends ConsumerStatefulWidget {
   final ValueChanged<Track> onTrackSelected;
@@ -45,14 +45,19 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
     }
 
     setState(() => _loading = true);
-    final results = await ref
-        .read(musicCatalogServiceProvider)
-        .searchTracks(query);
-    if (mounted) {
-      setState(() {
-        _results = results;
-        _loading = false;
-      });
+    try {
+      final results = await ref
+          .read(musicCatalogServiceProvider)
+          .searchTracks(query);
+      if (!mounted) return;
+      setState(() => _results = results);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _results = []);
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -124,17 +129,12 @@ class _TrackSearchSheetState extends ConsumerState<TrackSearchSheet> {
                       itemBuilder: (context, index) {
                         final track = _results[index];
                         return ListTile(
-                          leading: track.imageUrl.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: CachedNetworkImage(
-                                    imageUrl: track.imageUrl,
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(LucideIcons.music, size: 40),
+                          leading: TrackArtwork(
+                            imageUrl: track.imageUrl,
+                            width: 48,
+                            height: 48,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           title: Text(
                             track.title,
                             maxLines: 1,

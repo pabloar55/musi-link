@@ -1,7 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/track.dart';
+import 'package:musi_link/widgets/track_artwork.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DailySongCard extends StatelessWidget {
@@ -29,26 +29,12 @@ class DailySongCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              if (song.imageUrl.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    imageUrl: song.imageUrl,
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              else
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(LucideIcons.music, size: 28),
-                ),
+              TrackArtwork(
+                imageUrl: song.imageUrl,
+                width: 56,
+                height: 56,
+                borderRadius: BorderRadius.circular(8),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

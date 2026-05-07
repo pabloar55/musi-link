@@ -1,8 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/models/track.dart';
 import 'package:musi_link/theme/app_theme.dart';
+import 'package:musi_link/widgets/track_artwork.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
@@ -38,18 +37,11 @@ class TrackTile extends StatelessWidget {
           if (rank != null) const SizedBox(width: AppTokens.spaceSM),
 
           // Carátula
-          ClipRRect(
+          TrackArtwork(
+            imageUrl: track.imageUrl,
+            width: 52,
+            height: 52,
             borderRadius: BorderRadius.circular(AppTokens.radiusSM),
-            child: track.imageUrl.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: track.imageUrl,
-                    width: 52,
-                    height: 52,
-                    fit: BoxFit.cover,
-                    placeholder: (ctx, url) => _placeholder(cs),
-                    errorWidget: (ctx, url, err) => _placeholder(cs),
-                  )
-                : _placeholder(cs),
           ),
           const SizedBox(width: AppTokens.spaceMD),
 
@@ -77,15 +69,6 @@ class TrackTile extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _placeholder(ColorScheme cs) {
-    return Container(
-      width: 52,
-      height: 52,
-      color: cs.surfaceContainerHighest,
-      child: Icon(LucideIcons.music, size: 24, color: cs.onSurfaceVariant),
     );
   }
 }
