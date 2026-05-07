@@ -16,7 +16,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
     // Carga sincrónica desde el SharedPreferences ya inicializado en main.
     final prefs = ref.read(sharedPreferencesProvider);
     final saved = prefs.getString(_kThemeKey);
-    return _values[saved] ?? ThemeMode.system;
+    return _values[saved] ?? ThemeMode.dark;
   }
 
   bool get isDark {

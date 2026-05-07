@@ -64,7 +64,9 @@ class MusicProfileService with AuthenticatedService {
     List<app.Artist> selectedArtists,
   ) async {
     try {
-      final artists = selectedArtists.take(50).toList();
+      final artists = await _hydrateMissingArtistDetails(
+        selectedArtists.take(50).toList(),
+      );
       final genres = _musicCatalogService.getTopGenresFromArtists(artists, 10);
 
       await _usersRef.doc(uid).update({
@@ -78,6 +80,41 @@ class MusicProfileService with AuthenticatedService {
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;
+    }
+  }
+
+  Future<List<app.Artist>> _hydrateMissingArtistDetails(
+    List<app.Artist> artists,
+  ) {
+    return Future.wait(artists.map(_hydrateMissingArtistDetailsFor));
+  }
+
+  Future<app.Artist> _hydrateMissingArtistDetailsFor(app.Artist artist) async {
+    if (artist.imageUrl.trim().isNotEmpty) return artist;
+
+    try {
+      final results = await _musicCatalogService.searchArtists(
+        artist.name,
+        limit: 1,
+      );
+      if (results.isEmpty) return artist;
+
+      final enriched = results.first;
+      if (_normalizedMusicKey(enriched.name) !=
+          _normalizedMusicKey(artist.name)) {
+        return artist;
+      }
+
+      return app.Artist(
+        name: artist.name,
+        imageUrl: enriched.imageUrl.isNotEmpty
+            ? enriched.imageUrl
+            : artist.imageUrl,
+        genres: enriched.genres.isNotEmpty ? enriched.genres : artist.genres,
+        spotifyId: enriched.spotifyId ?? artist.spotifyId,
+      );
+    } catch (_) {
+      return artist;
     }
   }
 

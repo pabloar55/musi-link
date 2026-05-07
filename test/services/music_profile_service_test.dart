@@ -2,7 +2,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:musi_link/models/artist.dart' as app;
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/genre.dart';
 import 'package:musi_link/services/music_profile_service.dart';
 import 'package:musi_link/services/music_catalog_service.dart';
 
@@ -346,6 +348,7 @@ void main() {
     late MockQuery mockRecommendationOrderQuery;
     late MockQuery mockRecommendationLimitQuery;
     late MockQuery mockUsersByIdQuery;
+    late MockMusicCatalogService mockMusicCatalogService;
     late MusicProfileService service;
 
     const myUid = 'me';
@@ -392,9 +395,11 @@ void main() {
       mockRecommendationOrderQuery = MockQuery();
       mockRecommendationLimitQuery = MockQuery();
       mockUsersByIdQuery = MockQuery();
+      mockMusicCatalogService = MockMusicCatalogService();
 
       registerFallbackValues();
       registerFallbackValue(<Object?>[]);
+      registerFallbackValue(<app.Artist>[]);
 
       when(() => mockAuth.currentUser).thenReturn(mockCurrentUser);
       when(() => mockCurrentUser.uid).thenReturn(myUid);
@@ -417,10 +422,58 @@ void main() {
       ).thenReturn(mockUsersByIdQuery);
 
       service = MusicProfileService(
-        MockMusicCatalogService(),
+        mockMusicCatalogService,
         firestore: mockFirestore,
         auth: mockAuth,
       );
+    });
+
+    group('saveManualArtists', () {
+      test('completa fotos pendientes antes de guardar artistas', () async {
+        when(
+          () => mockMusicCatalogService.searchArtists('Radiohead', limit: 1),
+        ).thenAnswer(
+          (_) async => const [
+            app.Artist(
+              name: 'Radiohead',
+              imageUrl: 'https://example.com/radiohead.jpg',
+              genres: ['alternative rock'],
+              spotifyId: 'spotify-radiohead',
+            ),
+          ],
+        );
+        when(
+          () => mockMusicCatalogService.getTopGenresFromArtists(
+            any<List<app.Artist>>(),
+            10,
+          ),
+        ).thenReturn(const <Genre>[]);
+
+        await service.saveManualArtists(myUid, const [
+          app.Artist(name: 'Radiohead', imageUrl: '', genres: []),
+          app.Artist(
+            name: 'Queen',
+            imageUrl: 'https://example.com/queen.jpg',
+            genres: ['rock'],
+          ),
+        ]);
+
+        final update = Map<String, dynamic>.from(
+          verify(() => mockMyDocRef.update(captureAny())).captured.single
+              as Map,
+        );
+        final artists = List<Map<String, dynamic>>.from(
+          (update['topArtists'] as List).map(
+            (artist) => Map<String, dynamic>.from(artist as Map),
+          ),
+        );
+
+        expect(artists[0]['name'], 'Radiohead');
+        expect(artists[0]['imageUrl'], 'https://example.com/radiohead.jpg');
+        expect(artists[0]['genres'], ['alternative rock']);
+        expect(artists[0]['spotifyId'], 'spotify-radiohead');
+        expect(artists[1]['imageUrl'], 'https://example.com/queen.jpg');
+      });
     });
 
     group('getDiscoveryUsers', () {
