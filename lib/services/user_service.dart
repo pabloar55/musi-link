@@ -215,6 +215,7 @@ class UserService {
         'dailySong': track.toMap(),
         'dailySongUpdatedAt': Timestamp.fromDate(DateTime.now()),
       });
+      _userCache.remove(uid);
     } catch (e, stack) {
       await reportError(e, stack);
     }

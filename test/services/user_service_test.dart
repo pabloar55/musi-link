@@ -346,6 +346,56 @@ void main() {
         expect(songData['artist'], 'Queen');
         expect(captured.containsKey('dailySongUpdatedAt'), true);
       });
+
+      test('invalida la cachÃ© del usuario tras guardar la canciÃ³n', () async {
+        final mockDocRef = MockDocumentReference();
+        final oldSnapshot = MockDocumentSnapshot();
+        final updatedSnapshot = MockDocumentSnapshot();
+        var getCalls = 0;
+
+        when(() => mockUsersRef.doc('uid123')).thenReturn(mockDocRef);
+        when(() => mockDocRef.update(any())).thenAnswer((_) async {});
+        when(() => oldSnapshot.exists).thenReturn(true);
+        when(() => oldSnapshot.id).thenReturn('uid123');
+        when(() => oldSnapshot.data()).thenReturn({
+          'displayName': 'Test User',
+          'username': 'test',
+          'photoUrl': '',
+        });
+        when(() => updatedSnapshot.exists).thenReturn(true);
+        when(() => updatedSnapshot.id).thenReturn('uid123');
+        when(() => updatedSnapshot.data()).thenReturn({
+          'displayName': 'Test User',
+          'username': 'test',
+          'photoUrl': '',
+          'dailySong': {
+            'title': 'Bohemian Rhapsody',
+            'artist': 'Queen',
+            'imageUrl': 'https://img.url',
+            'spotifyUrl': 'https://spotify.url',
+          },
+          'dailySongUpdatedAt': Timestamp.fromDate(DateTime(2026)),
+        });
+        when(() => mockDocRef.get()).thenAnswer((_) async {
+          getCalls++;
+          return getCalls == 1 ? oldSnapshot : updatedSnapshot;
+        });
+
+        const track = Track(
+          title: 'Bohemian Rhapsody',
+          artist: 'Queen',
+          imageUrl: 'https://img.url',
+          spotifyUrl: 'https://spotify.url',
+        );
+
+        final before = await userService.getUser('uid123');
+        await userService.setDailySong('uid123', track);
+        final after = await userService.getUser('uid123');
+
+        expect(before?.dailySong, isNull);
+        expect(after?.dailySong?.title, 'Bohemian Rhapsody');
+        expect(getCalls, 2);
+      });
     });
 
     group('getUsersByIds', () {
