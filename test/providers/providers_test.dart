@@ -65,11 +65,11 @@ void main() {
   });
 
   group('ThemeModeNotifier', () {
-    test('estado inicial es ThemeMode.system', () {
+    test('estado inicial es ThemeMode.dark', () {
       final container = _themeContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(themeModeProvider), ThemeMode.system);
+      expect(container.read(themeModeProvider), ThemeMode.dark);
     });
 
     test('toggleDarkLight alterna entre dark y light', () {
