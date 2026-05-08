@@ -14,8 +14,10 @@ const db = admin.firestore();
 const messaging = admin.messaging();
 
 const userPrivateCollection = 'user_private';
+const friendRequestNotificationLimitsCollection = 'friend_request_notification_limits';
 const recommendationIndexCollection = 'music_recommendation_index';
 const recommendationsCollection = 'recommendations';
+const friendRequestNotificationCooldownMs = 24 * 60 * 60 * 1000;
 const maxRecommendationInputArtists = 15;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
@@ -101,7 +103,10 @@ async function sendNotification(
           ...(tag ? { tag } : {}),
         },
       },
-      apns: { payload: { aps: { ...(sound ? { sound: 'default' } : {}) } } },
+      apns: {
+        ...(tag ? { headers: { 'apns-collapse-id': tag.slice(0, 64) } } : {}),
+        payload: { aps: { ...(sound ? { sound: 'default' } : {}) } },
+      },
     });
   } catch (error: unknown) {
     const fcmError = error as { code?: string };
@@ -122,6 +127,35 @@ function preferredLocale(data: admin.firestore.DocumentData | undefined): Suppor
   return supportedLocales.has(languageCode as SupportedLocale)
     ? languageCode as SupportedLocale
     : defaultLocale;
+}
+
+async function shouldNotifyFriendRequest(
+  senderId: string,
+  receiverId: string,
+): Promise<boolean> {
+  const limitRef = db
+    .collection(friendRequestNotificationLimitsCollection)
+    .doc(`${senderId}_${receiverId}`);
+
+  return db.runTransaction(async (tx) => {
+    const limitSnap = await tx.get(limitRef);
+    const lastNotifiedAt = limitSnap.data()?.lastNotifiedAt as Timestamp | undefined;
+    const now = Timestamp.now();
+
+    if (
+      lastNotifiedAt &&
+      now.toMillis() - lastNotifiedAt.toMillis() < friendRequestNotificationCooldownMs
+    ) {
+      return false;
+    }
+
+    tx.set(limitRef, {
+      senderId,
+      receiverId,
+      lastNotifiedAt: now,
+    }, { merge: true });
+    return true;
+  });
 }
 
 function stringList(value: unknown): string[] {
@@ -596,6 +630,8 @@ export const onFriendRequest = onDocumentCreated(
       const senderId = request.senderId as string;
       const receiverId = request.receiverId as string;
 
+      if (!await shouldNotifyFriendRequest(senderId, receiverId)) return;
+
       const [receiverSnap, senderSnap] = await Promise.all([
         db.doc(`${userPrivateCollection}/${receiverId}`).get(),
         db.doc(`users/${senderId}`).get(),
@@ -613,6 +649,7 @@ export const onFriendRequest = onDocumentCreated(
         fcmToken,
         { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) },
         { type: 'friend_request', senderId },
+        `friend_request_${senderId}`,
       );
     } catch (error) {
       logger.error('onFriendRequest: unhandled error', { requestId: event.params.requestId, error });

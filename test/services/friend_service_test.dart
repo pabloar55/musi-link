@@ -789,8 +789,8 @@ void main() {
 
     group('removeFriend', () {
       test('elimina a ambos de sus listas de amigos', () async {
-        final mockBatch = MockWriteBatch();
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
 
         final mockCurrentUserDoc = MockDocumentReference();
         final mockOtherUserDoc = MockDocumentReference();
@@ -807,38 +807,39 @@ void main() {
           () => mockRequestsRef.doc('other_uid_current_uid'),
         ).thenReturn(mockInverseRequestRef);
 
-        when(() => mockBatch.update(any(), any())).thenReturn(null);
-        when(() => mockBatch.delete(any())).thenReturn(null);
-        when(() => mockBatch.commit()).thenAnswer((_) async {});
+        final mockDirectRequestSnap = MockDocumentSnapshot();
+        final mockInverseRequestSnap = MockDocumentSnapshot();
+        when(() => mockDirectRequestSnap.exists).thenReturn(true);
+        when(() => mockInverseRequestSnap.exists).thenReturn(true);
+        fakeTransaction.getResults.addAll([
+          mockDirectRequestSnap,
+          mockInverseRequestSnap,
+        ]);
 
         await friendService.removeFriend('other_uid');
 
-        verify(
-          () => mockBatch.update(
-            mockCurrentUserDoc,
-            any(
-              that: predicate<Map<Object, Object?>>(
-                (m) => m.containsKey('friends'),
-              ),
-            ),
+        expect(
+          fakeTransaction.updates.any(
+            (e) =>
+                e.key == mockCurrentUserDoc && e.value.containsKey('friends'),
           ),
-        ).called(1);
-        verify(
-          () => mockBatch.update(
-            mockOtherUserDoc,
-            any(
-              that: predicate<Map<Object, Object?>>(
-                (m) => m.containsKey('friends'),
-              ),
-            ),
+          isTrue,
+        );
+        expect(
+          fakeTransaction.updates.any(
+            (e) => e.key == mockOtherUserDoc && e.value.containsKey('friends'),
           ),
-        ).called(1);
-        verify(() => mockBatch.commit()).called(1);
+          isTrue,
+        );
+        expect(fakeTransaction.deletes, [
+          mockDirectRequestRef,
+          mockInverseRequestRef,
+        ]);
       });
 
-      test('propaga error si batch falla', () async {
-        final mockBatch = MockWriteBatch();
-        when(() => mockFirestore.batch()).thenReturn(mockBatch);
+      test('no intenta borrar solicitudes inexistentes', () async {
+        final fakeTransaction = FakeTransaction();
+        mockFirestore.fakeTransaction = fakeTransaction;
 
         final mockCurrentUserDoc = MockDocumentReference();
         final mockOtherUserDoc = MockDocumentReference();
@@ -855,10 +856,30 @@ void main() {
           () => mockRequestsRef.doc('other_uid_current_uid'),
         ).thenReturn(mockInverseRequestRef);
 
-        when(() => mockBatch.update(any(), any())).thenReturn(null);
-        when(() => mockBatch.delete(any())).thenReturn(null);
+        final mockDirectRequestSnap = MockDocumentSnapshot();
+        final mockInverseRequestSnap = MockDocumentSnapshot();
+        when(() => mockDirectRequestSnap.exists).thenReturn(false);
+        when(() => mockInverseRequestSnap.exists).thenReturn(false);
+        fakeTransaction.getResults.addAll([
+          mockDirectRequestSnap,
+          mockInverseRequestSnap,
+        ]);
+
+        await friendService.removeFriend('other_uid');
+
+        expect(fakeTransaction.updates, hasLength(2));
+        expect(fakeTransaction.deletes, isEmpty);
+      });
+
+      test('propaga error si Firestore falla', () async {
+        final mockCurrentUserDoc = MockDocumentReference();
+        final mockOtherUserDoc = MockDocumentReference();
         when(
-          () => mockBatch.commit(),
+          () => mockUsersRef.doc('current_uid'),
+        ).thenReturn(mockCurrentUserDoc);
+        when(() => mockUsersRef.doc('other_uid')).thenReturn(mockOtherUserDoc);
+        when(
+          () => mockRequestsRef.doc(any()),
         ).thenThrow(FirebaseException(plugin: 'firestore'));
 
         expect(

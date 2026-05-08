@@ -165,8 +165,16 @@ service cloud.firestore {
       // El ID determinista hace que un segundo intento sea tratado como update
       // (rechazado por la regla de update), previniendo solicitudes duplicadas.
       allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly([
+          'senderId',
+          'receiverId',
+          'status',
+          'createdAt',
+          'updatedAt',
+        ])
         && request.resource.data.senderId == request.auth.uid
         && request.resource.data.receiverId != request.auth.uid
+        && request.resource.data.status == 'pending'
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
         && friendRequestRateLimitAllows(request.auth.uid)
@@ -183,10 +191,11 @@ service cloud.firestore {
         && (
           request.resource.data.status != 'accepted'
           || canUsersInteract(resource.data.senderId, resource.data.receiverId)
-        );
+      );
       // Ambos pueden eliminar
       allow delete: if request.auth != null
-        && (request.auth.uid == resource.data.senderId
+        && (resource == null
+            || request.auth.uid == resource.data.senderId
             || request.auth.uid == resource.data.receiverId);
     }
 

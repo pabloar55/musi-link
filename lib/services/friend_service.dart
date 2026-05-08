@@ -548,16 +548,24 @@ class FriendService with AuthenticatedService {
   /// Elimina a [otherUid] de la lista de amigos de ambos.
   Future<void> removeFriend(String otherUid) async {
     try {
-      final batch = _firestore.batch();
-      batch.update(_privateUsersRef.doc(currentUid), {
-        'friends': FieldValue.arrayRemove([otherUid]),
+      final currentUserRef = _privateUsersRef.doc(currentUid);
+      final otherUserRef = _privateUsersRef.doc(otherUid);
+      final directRequestRef = _requestsRef.doc('${currentUid}_$otherUid');
+      final inverseRequestRef = _requestsRef.doc('${otherUid}_$currentUid');
+
+      await _firestore.runTransaction((tx) async {
+        final directRequest = await tx.get(directRequestRef);
+        final inverseRequest = await tx.get(inverseRequestRef);
+
+        tx.update(currentUserRef, {
+          'friends': FieldValue.arrayRemove([otherUid]),
+        });
+        tx.update(otherUserRef, {
+          'friends': FieldValue.arrayRemove([currentUid]),
+        });
+        if (directRequest.exists) tx.delete(directRequestRef);
+        if (inverseRequest.exists) tx.delete(inverseRequestRef);
       });
-      batch.update(_privateUsersRef.doc(otherUid), {
-        'friends': FieldValue.arrayRemove([currentUid]),
-      });
-      batch.delete(_requestsRef.doc('${currentUid}_$otherUid'));
-      batch.delete(_requestsRef.doc('${otherUid}_$currentUid'));
-      await batch.commit();
     } catch (e, stack) {
       await reportError(e, stack);
       rethrow;

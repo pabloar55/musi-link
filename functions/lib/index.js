@@ -47,8 +47,10 @@ admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
 const userPrivateCollection = 'user_private';
+const friendRequestNotificationLimitsCollection = 'friend_request_notification_limits';
 const recommendationIndexCollection = 'music_recommendation_index';
 const recommendationsCollection = 'recommendations';
+const friendRequestNotificationCooldownMs = 24 * 60 * 60 * 1000;
 const maxRecommendationInputArtists = 15;
 const maxRecommendationInputGenres = 10;
 const maxIndexUsersPerToken = 80;
@@ -101,7 +103,10 @@ tag) {
                     ...(tag ? { tag } : {}),
                 },
             },
-            apns: { payload: { aps: { ...(sound ? { sound: 'default' } : {}) } } },
+            apns: {
+                ...(tag ? { headers: { 'apns-collapse-id': tag.slice(0, 64) } } : {}),
+                payload: { aps: { ...(sound ? { sound: 'default' } : {}) } },
+            },
         });
     }
     catch (error) {
@@ -122,6 +127,26 @@ function preferredLocale(data) {
     return supportedLocales.has(languageCode)
         ? languageCode
         : defaultLocale;
+}
+async function shouldNotifyFriendRequest(senderId, receiverId) {
+    const limitRef = db
+        .collection(friendRequestNotificationLimitsCollection)
+        .doc(`${senderId}_${receiverId}`);
+    return db.runTransaction(async (tx) => {
+        const limitSnap = await tx.get(limitRef);
+        const lastNotifiedAt = limitSnap.data()?.lastNotifiedAt;
+        const now = firestore_2.Timestamp.now();
+        if (lastNotifiedAt &&
+            now.toMillis() - lastNotifiedAt.toMillis() < friendRequestNotificationCooldownMs) {
+            return false;
+        }
+        tx.set(limitRef, {
+            senderId,
+            receiverId,
+            lastNotifiedAt: now,
+        }, { merge: true });
+        return true;
+    });
 }
 function stringList(value) {
     if (!Array.isArray(value))
@@ -483,6 +508,8 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
             return;
         const senderId = request.senderId;
         const receiverId = request.receiverId;
+        if (!await shouldNotifyFriendRequest(senderId, receiverId))
+            return;
         const [receiverSnap, senderSnap] = await Promise.all([
             db.doc(`${userPrivateCollection}/${receiverId}`).get(),
             db.doc(`users/${senderId}`).get(),
@@ -493,7 +520,7 @@ exports.onFriendRequest = (0, firestore_1.onDocumentCreated)({ document: 'friend
         if (!fcmToken || !senderName)
             return;
         const locale = preferredLocale(receiver);
-        await sendNotification(receiverId, receiver, fcmToken, { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) }, { type: 'friend_request', senderId });
+        await sendNotification(receiverId, receiver, fcmToken, { title: 'MusiLink', body: notificationText.friendRequest[locale](senderName) }, { type: 'friend_request', senderId }, `friend_request_${senderId}`);
     }
     catch (error) {
         v2_1.logger.error('onFriendRequest: unhandled error', { requestId: event.params.requestId, error });
