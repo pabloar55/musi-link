@@ -39,7 +39,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen>
     with WidgetsBindingObserver {
   final _messageController = TextEditingController();
-  final _scrollController = ScrollController();
+  final _scrollController = ScrollController(keepScrollOffset: false);
   late final Stream<List<Message>> _messagesStream;
   StreamSubscription<List<Message>>? _messagesSubscription;
   late final ActiveChatNotifier _activeChatNotifier;
@@ -123,8 +123,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void didChangeMetrics() {
-    final bottomInset =
-        WidgetsBinding.instance.platformDispatcher.views.first.viewInsets.bottom;
+    final bottomInset = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .views
+        .first
+        .viewInsets
+        .bottom;
     if (bottomInset > 0 && _isAtBottom) {
       // El teclado ya tiene su propia animación; saltar sin animar evita el lag.
       _scrollToBottom(animate: false);
@@ -147,8 +152,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
-    _isAtBottom = pos.pixels >= pos.maxScrollExtent - 80;
-    if (pos.pixels <= 100 && !_isLoadingMore && _hasMoreMessages) {
+    _isAtBottom = pos.pixels <= pos.minScrollExtent + 80;
+    if (pos.pixels >= pos.maxScrollExtent - 100 &&
+        !_isLoadingMore &&
+        _hasMoreMessages) {
       _loadMoreMessages();
     }
   }
@@ -191,7 +198,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       setState(() {
         _isLoadingMore = false;
         _allMessages = [...newMessages, ..._allMessages];
-        if (older.length < 30) _hasMoreMessages = false;
+        if (older.length < ChatService.messagesPageSize) {
+          _hasMoreMessages = false;
+        }
       });
 
       // Ajustar scroll para que el contenido visible no salte.
@@ -255,15 +264,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   void _scrollToBottom({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      final max = _scrollController.position.maxScrollExtent;
+      final bottom = _scrollController.position.minScrollExtent;
       if (animate) {
         _scrollController.animateTo(
-          max,
+          bottom,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       } else {
-        _scrollController.jumpTo(max);
+        _scrollController.jumpTo(bottom);
       }
     });
   }
@@ -381,10 +390,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
+            reverse: true,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             itemCount: _allMessages.length,
             itemBuilder: (context, index) {
-              final msg = _allMessages[index];
+              final msg = _allMessages[_allMessages.length - 1 - index];
               final isMe = msg.senderId == _currentUid;
 
               if (msg.isTrack) {
