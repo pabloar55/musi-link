@@ -1,7 +1,7 @@
 name: musi_link
 description: "MusiLink - Connect through music."
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.1+3
 
 environment:
   sdk: ^3.11.5
@@ -47,7 +47,8 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/images/IconoApp1024.png"
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "assets/images/IconoApp_padded.png"
+  adaptive_icon_foreground: "assets/images/IconoApp.png"
+  adaptive_icon_foreground_inset: 22
   remove_alpha_ios: true
 
 flutter:
