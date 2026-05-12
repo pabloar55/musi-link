@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/router/app_router.dart';
 import 'package:musi_link/screens/account_settings_screen.dart';
@@ -69,11 +70,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         redirect: (context, state) {
-          if (state.extra is! AppUser) return '/';
+          final extra = state.extra;
+          if (extra is! AppUser && extra is! DiscoveryResult) return '/';
           return null;
         },
-        builder: (context, state) =>
-            UserProfileScreen(user: state.extra! as AppUser),
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is DiscoveryResult) {
+            return UserProfileScreen(
+              user: extra.user,
+              initialCompatibility: extra,
+            );
+          }
+          return UserProfileScreen(user: extra! as AppUser);
+        },
       ),
       GoRoute(
         path: '/chat',

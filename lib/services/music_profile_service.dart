@@ -279,20 +279,7 @@ class MusicProfileService with AuthenticatedService {
         if (user.topArtistNames.isEmpty && user.topGenreNames.isEmpty) continue;
 
         results.add(
-          DiscoveryResult(
-            user: user,
-            score: ((data['score'] as num?) ?? 0).toDouble(),
-            sharedArtistNames:
-                (data['sharedArtistNames'] as List<dynamic>?)
-                    ?.map((value) => value.toString())
-                    .toList() ??
-                const [],
-            sharedGenreNames:
-                (data['sharedGenreNames'] as List<dynamic>?)
-                    ?.map((value) => value.toString())
-                    .toList() ??
-                const [],
-          ),
+          _discoveryResultFromStoredRecommendation(user: user, data: data),
         );
       }
 
@@ -321,6 +308,48 @@ class MusicProfileService with AuthenticatedService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<DiscoveryResult?> getStoredCompatibilityWith(AppUser otherUser) async {
+    try {
+      final doc = await _usersRef
+          .doc(currentUid)
+          .collection(FirestoreCollections.recommendations)
+          .doc(otherUser.uid)
+          .get();
+      final data = doc.data();
+      if (!doc.exists || data == null) return null;
+
+      return _discoveryResultFromStoredRecommendation(
+        user: otherUser,
+        data: data,
+      );
+    } on FirebaseException catch (e, stack) {
+      await reportError(e, stack);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  DiscoveryResult _discoveryResultFromStoredRecommendation({
+    required AppUser user,
+    required Map<String, dynamic> data,
+  }) {
+    return DiscoveryResult(
+      user: user,
+      score: ((data['score'] as num?) ?? 0).toDouble(),
+      sharedArtistNames:
+          (data['sharedArtistNames'] as List<dynamic>?)
+              ?.map((value) => value.toString())
+              .toList() ??
+          const [],
+      sharedGenreNames:
+          (data['sharedGenreNames'] as List<dynamic>?)
+              ?.map((value) => value.toString())
+              .toList() ??
+          const [],
+    );
   }
 
   Future<DiscoveryResult> getCompatibilityWith(

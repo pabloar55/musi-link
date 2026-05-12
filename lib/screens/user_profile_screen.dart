@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:musi_link/l10n/app_localizations.dart';
 import 'package:musi_link/models/app_user.dart';
+import 'package:musi_link/models/discovery_result.dart';
 import 'package:musi_link/providers/firebase_providers.dart';
 import 'package:musi_link/providers/service_providers.dart';
 import 'package:musi_link/providers/user_profile_provider.dart';
@@ -23,8 +24,13 @@ enum _ProfileMenuAction { block, unblock }
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   final AppUser user;
+  final DiscoveryResult? initialCompatibility;
 
-  const UserProfileScreen({super.key, required this.user});
+  const UserProfileScreen({
+    super.key,
+    required this.user,
+    this.initialCompatibility,
+  });
 
   @override
   ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -248,9 +254,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             if (!_isOwnProfile && !isDeletedProfile)
               Builder(
                 builder: (context) {
-                  final compatibilityValue = ref.watch(
-                    compatibilityProvider(widget.user),
-                  );
+                  final initialCompatibility = widget.initialCompatibility;
+                  final compatibilityValue =
+                      initialCompatibility != null &&
+                          initialCompatibility.user.uid == user.uid
+                      ? AsyncValue<DiscoveryResult>.data(initialCompatibility)
+                      : ref.watch(compatibilityProvider(user));
                   final relationshipValue = ref.watch(
                     relationshipProvider(widget.user.uid),
                   );

@@ -32,9 +32,11 @@ final compatibilityProvider = FutureProvider.family<DiscoveryResult, AppUser>((
       sharedGenreNames: [],
     );
   }
-  return ref
-      .read(musicProfileServiceProvider)
-      .getCompatibilityWith(myUser, user);
+  final service = ref.read(musicProfileServiceProvider);
+  final storedResult = await service.getStoredCompatibilityWith(user);
+  if (storedResult != null) return storedResult;
+
+  return service.getCompatibilityWith(myUser, user);
 });
 
 final relationshipProvider = StreamProvider.family<RelationshipResult, String>((

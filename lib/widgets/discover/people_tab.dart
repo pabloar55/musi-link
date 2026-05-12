@@ -143,7 +143,7 @@ class _PeopleTabState extends State<PeopleTab> {
           final result = widget.results[index];
           return UserDiscoveryCard(
             result: result,
-            onTap: () => context.push('/profile', extra: result.user),
+            onTap: () => context.push('/profile', extra: result),
           );
         },
       ),

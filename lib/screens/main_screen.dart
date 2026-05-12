@@ -18,7 +18,8 @@ class MainScreen extends ConsumerStatefulWidget {
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
+class _MainScreenState extends ConsumerState<MainScreen>
+    with WidgetsBindingObserver {
   int currentPageIndex = 0;
   final PageController _pageController = PageController();
   final List<Widget> screens = [
@@ -68,10 +69,9 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
     });
 
     final unreadChats = ref.watch(unreadChatsCountProvider);
-    final pendingCount = ref.watch(receivedRequestsProvider).maybeWhen(
-          data: (list) => list.length,
-          orElse: () => 0,
-        );
+    final pendingCount = ref
+        .watch(receivedRequestsProvider)
+        .maybeWhen(data: (list) => list.length, orElse: () => 0);
 
     return Scaffold(
       appBar: AppBar(
@@ -90,35 +90,48 @@ class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObse
         children: screens,
       ),
 
-      bottomNavigationBar: NavigationBar(
-        destinations: [
-          NavigationDestination(icon: const Icon(LucideIcons.compass500), label: l10n.navDiscover),
-          NavigationDestination(icon: const Icon(LucideIcons.crown), label: l10n.navStats),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: unreadChats > 0,
-              label: unreadChats > 9 ? const Text('9+') : Text('$unreadChats'),
-              child: const Icon(LucideIcons.messageCircle500),
+      bottomNavigationBar: TooltipVisibility(
+        visible: false,
+        child: NavigationBar(
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(LucideIcons.compass500),
+              label: l10n.navDiscover,
             ),
-            label: l10n.navMessages,
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: pendingCount > 0,
-              label: pendingCount > 9 ? const Text('9+') : Text('$pendingCount'),
-              child: const Icon(LucideIcons.users500),
+            NavigationDestination(
+              icon: const Icon(LucideIcons.crown),
+              label: l10n.navStats,
             ),
-            label: l10n.navFriends,
-          ),
-        ],
-        selectedIndex: currentPageIndex,
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: unreadChats > 0,
+                label: unreadChats > 9
+                    ? const Text('9+')
+                    : Text('$unreadChats'),
+                child: const Icon(LucideIcons.messageCircle500),
+              ),
+              label: l10n.navMessages,
+            ),
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: pendingCount > 0,
+                label: pendingCount > 9
+                    ? const Text('9+')
+                    : Text('$pendingCount'),
+                child: const Icon(LucideIcons.users500),
+              ),
+              label: l10n.navFriends,
+            ),
+          ],
+          selectedIndex: currentPageIndex,
 
-        onDestinationSelected: (int index) {
-          _pageController.jumpToPage(index);
-          setState(() {
-            currentPageIndex = index;
-          });
-        },
+          onDestinationSelected: (int index) {
+            _pageController.jumpToPage(index);
+            setState(() {
+              currentPageIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

@@ -345,6 +345,8 @@ void main() {
     late MockCollectionReference mockRecommendationsRef;
     late MockDocumentReference mockMyDocRef;
     late MockDocumentSnapshot mockMyDocSnap;
+    late MockDocumentReference mockStoredRecommendationDocRef;
+    late MockDocumentSnapshot mockStoredRecommendationDocSnap;
     late MockQuery mockRecommendationOrderQuery;
     late MockQuery mockRecommendationLimitQuery;
     late MockQuery mockUsersByIdQuery;
@@ -392,6 +394,8 @@ void main() {
       mockRecommendationsRef = MockCollectionReference();
       mockMyDocRef = MockDocumentReference();
       mockMyDocSnap = MockDocumentSnapshot();
+      mockStoredRecommendationDocRef = MockDocumentReference();
+      mockStoredRecommendationDocSnap = MockDocumentSnapshot();
       mockRecommendationOrderQuery = MockQuery();
       mockRecommendationLimitQuery = MockQuery();
       mockUsersByIdQuery = MockQuery();
@@ -427,6 +431,33 @@ void main() {
         auth: mockAuth,
       );
     });
+
+    test(
+      'getStoredCompatibilityWith uses stored score and shared names',
+      () async {
+        const otherUser = AppUser(uid: 'other1', displayName: 'Other');
+        when(
+          () => mockRecommendationsRef.doc(otherUser.uid),
+        ).thenReturn(mockStoredRecommendationDocRef);
+        when(
+          () => mockStoredRecommendationDocRef.get(),
+        ).thenAnswer((_) async => mockStoredRecommendationDocSnap);
+        when(() => mockStoredRecommendationDocSnap.exists).thenReturn(true);
+        when(() => mockStoredRecommendationDocSnap.data()).thenReturn({
+          'score': 50,
+          'sharedArtistNames': ['A', 'B'],
+          'sharedGenreNames': ['rock'],
+        });
+
+        final result = await service.getStoredCompatibilityWith(otherUser);
+
+        expect(result, isNotNull);
+        expect(result!.user.uid, otherUser.uid);
+        expect(result.score, 50);
+        expect(result.sharedArtistNames, ['A', 'B']);
+        expect(result.sharedGenreNames, ['rock']);
+      },
+    );
 
     group('saveManualArtists', () {
       test('completa fotos pendientes antes de guardar artistas', () async {
